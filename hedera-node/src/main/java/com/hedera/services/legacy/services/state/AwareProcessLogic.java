@@ -104,7 +104,7 @@ public class AwareProcessLogic implements ProcessLogic {
 		try {
 			ctx.ledger().begin();
 			ctx.txnCtx().resetFor(accessor, consensusTime, submittingMember);
-			processTxnInCtx();
+			doProcess(ctx.txnCtx().accessor(), ctx.txnCtx().consensusTime());
 		} catch (Exception unhandled) {
 			warnOf(unhandled, "txn processing");
 			ctx.txnCtx().setStatus(FAIL_INVALID);
@@ -126,10 +126,6 @@ public class AwareProcessLogic implements ProcessLogic {
 				}
 			}
 		}
-	}
-
-	private void processTxnInCtx() {
-		doProcess(ctx.txnCtx().accessor(), ctx.txnCtx().consensusTime());
 	}
 
 	private void warnOf(Exception e, String context) {

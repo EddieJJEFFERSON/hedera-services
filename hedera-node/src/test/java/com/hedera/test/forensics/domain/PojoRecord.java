@@ -50,6 +50,8 @@ import static java.util.stream.Collectors.toList;
 public class PojoRecord {
 	private long fee;
 	private long expiry;
+
+	private String opType;
 	private String hash;
 	private String txnId;
 	private String receipt;
@@ -156,6 +158,14 @@ public class PojoRecord {
 
 	public void setReceipt(String receipt) {
 		this.receipt = receipt;
+	}
+
+	public String getOpType() {
+		return opType;
+	}
+
+	public void setOpType(String opType) {
+		this.opType = opType;
 	}
 
 	public static String asString(JAccountID id) {

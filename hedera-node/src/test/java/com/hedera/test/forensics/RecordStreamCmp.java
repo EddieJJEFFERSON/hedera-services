@@ -23,11 +23,13 @@ package com.hedera.test.forensics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.hedera.services.exceptions.UnknownHederaFunctionality;
 import com.hedera.services.txns.validation.PureValidation;
 import com.hedera.services.utils.SignedTxnAccessor;
 import com.hedera.test.forensics.domain.PojoRecord;
 import com.hedera.test.forensics.records.RecordParser;
 import com.hederahashgraph.api.proto.java.Transaction;
+import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import org.junit.jupiter.api.Test;
@@ -35,9 +37,11 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -45,6 +49,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.hedera.services.utils.MiscUtils.functionalityOfTxn;
 import static com.hedera.test.forensics.records.RecordParser.TxnHistory;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.US_ASCII;
@@ -56,6 +61,19 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @RunWith(JUnitPlatform.class)
 public class RecordStreamCmp {
 	static ObjectMapper om = new ObjectMapper();
+
+	@Test
+	public void examine() throws IOException, UnknownHederaFunctionality {
+		var DIR = "/Users/tinkerm/Dev/iss/weirdness/record0.0.3";
+		var EXPLICIT_LOC = "/Users/tinkerm/Dev/iss/weirdness/records.txt";
+		var consensusStream = orderedStreamFrom(DIR);
+		summarize(consensusStream, "consensus");
+		List<String> jsonRecords = new ArrayList<>();
+		for (StreamEntry entry : consensusStream) {
+			jsonRecords.add(entry.typedReadable());
+		}
+		Files.write(Paths.get(EXPLICIT_LOC), jsonRecords);
+	}
 
 	@Test
 	public void compare() throws JsonProcessingException, InvalidProtocolBufferException {
@@ -211,6 +229,13 @@ public class RecordStreamCmp {
 
 		public String readable() throws JsonProcessingException {
 			return om.writerWithDefaultPrettyPrinter().writeValueAsString(pojo());
+		}
+
+		public String typedReadable() throws JsonProcessingException, UnknownHederaFunctionality, InvalidProtocolBufferException {
+			var me = pojo();
+			var body = TransactionBody.parseFrom(signedTxn().getBodyBytes());
+			me.setOpType(functionalityOfTxn(body).toString());
+			return om.writerWithDefaultPrettyPrinter().writeValueAsString(me);
 		}
 
 		public Instant consensusTime() {

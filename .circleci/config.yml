@@ -848,6 +848,7 @@ workflows:
               ignore:
                 - /.*-PERF/
                 - /.*-REGRESSION/
+                - 0154-M-DupClassMgmt
       - start-singlejob-testnet:
           requires:
             - build-artifact
