@@ -21,5 +21,5 @@ package com.hedera.services.txns.diligence;
  */
 
 public enum DuplicateClassification {
-	BELIEVED_UNIQUE, NODE_DUPLICATE, DUPLICATE
+	BELIEVED_UNIQUE, NODE_DUPLICATE, DUPLICATE, INELIGIBLE
 }

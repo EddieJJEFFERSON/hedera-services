@@ -20,35 +20,29 @@ package com.hedera.services.txns.duplicity;
  * ‍
  */
 
-import static java.util.stream.Collectors.toList;
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.hedera.services.context.properties.PropertySource;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
-import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.stream.Collectors;
 
+import static com.hedera.services.txns.diligence.DuplicateClassification.BELIEVED_UNIQUE;
+import static com.hedera.services.txns.diligence.DuplicateClassification.DUPLICATE;
+import static com.hedera.services.txns.diligence.DuplicateClassification.NODE_DUPLICATE;
+import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.DUPLICATE_TRANSACTION;
+import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_NODE_ACCOUNT;
+import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_PAYER_SIGNATURE;
+import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_TRANSACTION_DURATION;
+import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.SUCCESS;
+import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.TRANSACTION_EXPIRED;
+import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static com.hedera.test.utils.IdUtils.asAccount;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.BDDMockito.*;
-import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.*;
 
 @RunWith(JUnitPlatform.class)
 class PayerRecordHistoryTest {
@@ -59,6 +53,45 @@ class PayerRecordHistoryTest {
 	@BeforeEach
 	private void setup() {
 		subject = new PayerRecordHistory();
+	}
+
+	@Test
+	public void classifiesDuplicityAsExpected() {
+		// expect:
+		subject.observe(1, recordOf(1, 0, INVALID_TRANSACTION_DURATION));
+		assertEquals(BELIEVED_UNIQUE, subject.duplicityGiven(1));
+		subject.observe(1, recordOf(1, 1, SUCCESS));
+		assertEquals(NODE_DUPLICATE, subject.duplicityGiven(1));
+		assertEquals(DUPLICATE, subject.duplicityGiven(2));
+	}
+
+	@Test
+	public void expiresAsExpected() {
+		// given:
+		subject.observe(1, recordOf(1, 0, INVALID_PAYER_SIGNATURE));
+		subject.observe(1, recordOf(1, 1, SUCCESS));
+		subject.observe(1, recordOf(1, 2, DUPLICATE_TRANSACTION));
+		subject.observe(2, recordOf(2, 3, DUPLICATE_TRANSACTION));
+		subject.observe(2, recordOf(2, 4, DUPLICATE_TRANSACTION));
+		subject.observe(3, recordOf(3, 5, DUPLICATE_TRANSACTION));
+		subject.observe(1, recordOf(1, 6, TRANSACTION_EXPIRED));
+		subject.observe(2, recordOf(2, 7, INVALID_NODE_ACCOUNT));
+
+		// when:
+		subject.forgetExpiredAt(expiryAtOffset(4));
+
+		// then:
+		assertEquals(
+				List.of(
+						memoIdentifying(3, 5, DUPLICATE_TRANSACTION),
+						memoIdentifying(2, 4, DUPLICATE_TRANSACTION)
+				), subject.duplicateRecords().stream().map(JTransactionRecord::getMemo).collect(toList()));
+		// and:
+		assertEquals(
+				List.of(
+						memoIdentifying(1, 6, TRANSACTION_EXPIRED),
+						memoIdentifying(2, 7, INVALID_NODE_ACCOUNT)
+				), subject.brokenRecords().stream().map(JTransactionRecord::getMemo).collect(toList()));
 	}
 
 	@Test
@@ -100,8 +133,12 @@ class PayerRecordHistoryTest {
 				.setReceipt(TransactionReceipt.newBuilder().setStatus(status))
 				.build();
 		var jPayerRecord = JTransactionRecord.convert(payerRecord);
-		jPayerRecord.setExpirationTime(now.getEpochSecond() + 1 + consensusOffsetSecs);
+		jPayerRecord.setExpirationTime(expiryAtOffset(consensusOffsetSecs));
 		return jPayerRecord;
+	}
+
+	private long expiryAtOffset(long l) {
+		return now.getEpochSecond() + 1 + l;
 	}
 
 	private String memoIdentifying(long submittingMember, long consensusOffsetSecs, ResponseCodeEnum status) {

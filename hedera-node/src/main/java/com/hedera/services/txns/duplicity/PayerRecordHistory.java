@@ -30,14 +30,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static com.hedera.services.txns.diligence.DuplicateClassification.BELIEVED_UNIQUE;
+import static com.hedera.services.txns.diligence.DuplicateClassification.DUPLICATE;
+import static com.hedera.services.txns.diligence.DuplicateClassification.NODE_DUPLICATE;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_NODE_ACCOUNT;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_PAYER_SIGNATURE;
+import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_TRANSACTION_DURATION;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.TRANSACTION_EXPIRED;
 import static java.util.stream.Collectors.toList;
 
 public class PayerRecordHistory {
 	private static EnumSet<ResponseCodeEnum> INELIGIBLE_STATUSES = EnumSet.of(
-		INVALID_NODE_ACCOUNT, INVALID_PAYER_SIGNATURE, TRANSACTION_EXPIRED
+			INVALID_NODE_ACCOUNT,
+			INVALID_PAYER_SIGNATURE,
+			TRANSACTION_EXPIRED,
+			INVALID_TRANSACTION_DURATION
 	);
 
 	private int numDuplicates = 0;
@@ -45,10 +52,19 @@ public class PayerRecordHistory {
 	private List<JTransactionRecord> broken = new LinkedList<>();
 
 	public static Predicate<ResponseCodeEnum> IS_DUPLICATE_ELIGIBLE =
-			((Predicate<ResponseCodeEnum>)INELIGIBLE_STATUSES::contains).negate();
+			((Predicate<ResponseCodeEnum>) INELIGIBLE_STATUSES::contains).negate();
 
-	public DuplicateClassification duplicityFor(long submittingMember) {
-		throw new AssertionError("Not implemented!");
+	public DuplicateClassification duplicityGiven(long submittingMember) {
+		if (numDuplicates == 0) {
+			return BELIEVED_UNIQUE;
+		}
+		var iter = duplicates.listIterator();
+		for (int i = 0; i < numDuplicates; i++) {
+			if (iter.next().submittingMember == submittingMember) {
+				return NODE_DUPLICATE;
+			}
+		}
+		return DUPLICATE;
 	}
 
 	public void observe(long submittingMember, JTransactionRecord payerRecord) {
@@ -80,8 +96,9 @@ public class PayerRecordHistory {
 		}
 	}
 
-	public void forgetExpired(long now) {
-		throw new AssertionError("Not implemented!");
+	public void forgetExpiredAt(long now) {
+		broken.removeIf(record -> record.getExpirationTime() < now);
+		duplicates.removeIf(recordWithOrigin -> recordWithOrigin.payerRecord.getExpirationTime() < now);
 	}
 
 	public List<JTransactionRecord> duplicateRecords() {

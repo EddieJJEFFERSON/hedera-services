@@ -526,7 +526,6 @@ public class HapiApiSpec implements Runnable {
 		return this;
 	}
 
-
 	public HapiApiSpec withContext(String migrationPath) {
 		if (migrationPath.isEmpty())
 		{

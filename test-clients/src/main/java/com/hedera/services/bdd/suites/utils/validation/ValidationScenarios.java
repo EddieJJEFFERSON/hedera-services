@@ -49,6 +49,7 @@ import com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.ContractScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.CryptoScenario;
 
+import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.TRANSFERS;
 import static com.hedera.services.bdd.suites.utils.validation.domain.Network.SCENARIO_PAYER_NAME;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYSTEM_KEYS;
 import static com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario.NOVEL_TOPIC_NAME;
@@ -108,6 +109,7 @@ import java.util.function.LongSupplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.hedera.services.bdd.spec.HapiApiSpec.customHapiSpec;
@@ -123,6 +125,7 @@ import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_SIGNAT
 public class ValidationScenarios extends HapiApiSuite {
 	private static final Logger log = LogManager.getLogger(ValidationScenarios.class);
 
+	private static long POST_MUTATE_PAUSE_MS = 5_000L;
 	private static long TINYBARS_PER_HBAR = 100_000_000L;
 
 	private static String LUCKY_NO_LOOKUP_ABI = "{\"constant\":true,\"inputs\":[],\"name\":\"pick\"," +
@@ -173,6 +176,7 @@ public class ValidationScenarios extends HapiApiSuite {
 					Optional.ofNullable(params.getScenarios().contains(FILE) ? fileScenario() : null),
 					Optional.ofNullable(params.getScenarios().contains(CONTRACT) ? contractScenario() : null),
 					Optional.ofNullable(params.getScenarios().contains(CONSENSUS) ? consensusScenario() : null),
+					Optional.ofNullable(params.getScenarios().contains(TRANSFERS) ? transferBurstScenario() : null),
 					Optional.ofNullable(params.getScenarios().contains(SYSTEM_KEYS) ? getSystemKeys() : null),
 					Optional.ofNullable(params.getScenarios().isEmpty() ? null : recordPayerBalance(endingBalance::set)))
 				.flatMap(Optional::stream)
@@ -186,6 +190,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			return customHapiSpec("GetSystemKeys")
 					.withProperties(Map.of(
 							"nodes", nodes(),
+							"default.node", defaultNode(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given( ).when( ).then(flattened(
@@ -212,6 +217,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			return customHapiSpec("RecordPayerBalance")
 					.withProperties(Map.of(
 							"nodes", nodes(),
+							"default.node", defaultNode(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given( ).when( ).then(
@@ -235,6 +241,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			return customHapiSpec("EnsureScenarioPayer")
 					.withProperties(Map.of(
 							"nodes", nodes(),
+							"default.node", defaultNode(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given(
@@ -266,6 +273,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			return customHapiSpec("CryptoScenario")
 					.withProperties(Map.of(
 							"nodes", nodes(),
+							"default.node", defaultNode(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given(
@@ -293,7 +301,7 @@ public class ValidationScenarios extends HapiApiSuite {
 							withOpContext((spec, opLog) -> {
 								var lookup = getTxnRecord("transferTxn")
 										.payingWith(SCENARIO_PAYER_NAME)
-										.setNodeFrom(ValidationScenarios::nextNode)
+										.setNodeFrom(ValidationScenarios::lastNode)
 										.logged();
 								allRunFor(spec, lookup);
 								var record = lookup.getResponseRecord();
@@ -326,10 +334,12 @@ public class ValidationScenarios extends HapiApiSuite {
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.balance(ignore -> 2 * transferFee.get())
 						.key("novelAccountFirstKey"),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				cryptoUpdate(NOVEL_ACCOUNT_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.key("novelAccountSecondKey"),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				cryptoTransfer(tinyBarsFromTo(SENDER_NAME, RECEIVER_NAME, 1L))
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
@@ -414,6 +424,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			return customHapiSpec("FileScenario")
 					.withProperties(Map.of(
 							"nodes", nodes(),
+							"default.node", defaultNode(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given(
@@ -454,18 +465,20 @@ public class ValidationScenarios extends HapiApiSuite {
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.key("novelFileFirstKey")
 						.contents("abcdefghijklm"),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				fileAppend(NOVEL_FILE_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.content("nopqrstuvwxyz"),
 				getFileContents(NOVEL_FILE_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
-						.setNodeFrom(ValidationScenarios::nextNode)
+						.setNodeFrom(ValidationScenarios::lastNode)
 						.hasContents(ignore -> "abcdefghijklmnopqrstuvwxyz".getBytes()),
 				fileUpdate(NOVEL_FILE_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.wacl("novelFileSecondKey"),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				fileDelete(NOVEL_FILE_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
@@ -550,7 +563,7 @@ public class ValidationScenarios extends HapiApiSuite {
 		});
 	}
 
-	private HapiApiSpec contractScenario() {
+	private static HapiApiSpec contractScenario() {
 		try {
 			ensureScenarios();
 			if (scenarios.getContract() == null) {
@@ -565,6 +578,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			return customHapiSpec("ContractScenario")
 					.withProperties(Map.of(
 							"nodes", nodes(),
+							"default.node", defaultNode(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given(
@@ -592,7 +606,7 @@ public class ValidationScenarios extends HapiApiSuite {
 									.via("donation"),
 							getTxnRecord("donation")
 									.payingWith(SCENARIO_PAYER_NAME)
-									.setNodeFrom(ValidationScenarios::nextNode)
+									.setNodeFrom(ValidationScenarios::lastNode)
 									.logged()
 									.has(recordWith().transfers(
 											includingDeduction(contract.getPersistent()::getNum, 1))),
@@ -620,10 +634,12 @@ public class ValidationScenarios extends HapiApiSuite {
 						.adminKey("firstNovelKey")
 						.balance(1)
 						.bytecode(() -> idLiteral(contract.getPersistent().getBytecode())),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				contractUpdate(NOVEL_CONTRACT_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.newKey("secondNovelKey"),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				contractDelete(NOVEL_CONTRACT_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
@@ -740,7 +756,46 @@ public class ValidationScenarios extends HapiApiSuite {
 				.orElse(-1L);
 	}
 
-	private HapiApiSpec consensusScenario() {
+	private static HapiApiSpec transferBurstScenario() {
+		long SMOL = 1L;
+		try {
+			ensureScenarios();
+			if (scenarios.getCrypto() == null) {
+				scenarios.setCrypto(new CryptoScenario());
+			}
+			var crypto = scenarios.getCrypto();
+			return customHapiSpec("TransferBurstScenario")
+					.withProperties(Map.of(
+							"nodes", nodes(),
+							"default.node", defaultNode(),
+							"default.payer", primaryPayer(),
+							"startupAccounts.literal", payerKeystoreLiteral()
+					)).given(
+							keyFromPem(() -> pemForAccount(targetNetwork().getScenarioPayer()))
+									.name(SCENARIO_PAYER_NAME)
+									.linkedTo(() -> String.format("0.0.%d", targetNetwork().getScenarioPayer())),
+							ensureValidatedAccountExistence(
+									RECEIVER_NAME,
+									0L,
+									pemForAccount(receiverOrNegativeOne(crypto).getAsLong()),
+									receiverOrNegativeOne(crypto),
+									crypto::setReceiver)
+					).when(
+					).then(
+							inParallel(IntStream.range(0, 10000)
+									.mapToObj(i ->
+											cryptoTransfer(tinyBarsFromTo(SCENARIO_PAYER_NAME, RECEIVER_NAME, SMOL))
+													.deferStatusResolution())
+									.toArray(HapiSpecOperation[]::new))
+					);
+		} catch (Exception e) {
+			log.warn("Unable to initialize transfer burst scenario, skipping it!", e);
+			errorsOccurred.set(true);
+			return null;
+		}
+	}
+
+	private static HapiApiSpec consensusScenario() {
 		try {
 			ensureScenarios();
 			if (scenarios.getConsensus() == null) {
@@ -752,6 +807,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			return customHapiSpec("ConsensusScenario")
 					.withProperties(Map.of(
 							"nodes", nodes(),
+							"default.node", defaultNode(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given(
@@ -797,6 +853,7 @@ public class ValidationScenarios extends HapiApiSuite {
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.adminKeyName("novelTopicAdmin")
 						.submitKeyShape(KeyShape.SIMPLE),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				submitMessageTo(NOVEL_TOPIC_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
@@ -807,6 +864,7 @@ public class ValidationScenarios extends HapiApiSuite {
 						.setNodeFrom(ValidationScenarios::nextNode)
 						.signedBy(SCENARIO_PAYER_NAME, "novelTopicAdmin")
 						.submitKey(EMPTY_KEY),
+				sleepFor(POST_MUTATE_PAUSE_MS),
 				submitMessageTo(NOVEL_TOPIC_NAME)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.setNodeFrom(ValidationScenarios::nextNode)
@@ -923,7 +981,7 @@ public class ValidationScenarios extends HapiApiSuite {
 		return m.group(2);
 	}
 
-	enum Scenario { CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS }
+	enum Scenario { CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS, TRANSFERS}
 
 	private static class ScenarioParams {
 		static long DEFAULT_NODE_PAYMENT_TINYBARS = 25;
@@ -1017,6 +1075,18 @@ public class ValidationScenarios extends HapiApiSuite {
 		var account = nodeAccounts.get(nextAccount++);
 		nextAccount %= nodeAccounts.size();
 		return account;
+	}
+
+	private static String lastNode() {
+		var prevAccount = nextAccount - 1;
+		if (prevAccount < 0) {
+			prevAccount = nodeAccounts.size() - 1;
+		}
+		return nodeAccounts.get(prevAccount);
+	}
+
+	private static String defaultNode() {
+		return Optional.ofNullable(System.getenv("DEFAULT_NODE")).orElse("0.0.3");
 	}
 
 	private static String nodes() {

@@ -1,13 +1,12 @@
 networks:
   testnet:
     bootstrap: 50
-    ensureScenarioPayerHbars: 30
+    ensureScenarioPayerHbars: 300
     nodes:
     - {account: 3, ipv4Addr: 34.94.106.61}
     - {account: 4, ipv4Addr: 35.237.119.55}
     - {account: 5, ipv4Addr: 35.245.27.193}
     - {account: 6, ipv4Addr: 34.83.112.116}
-    scenarioPayer: 49542
     scenarios:
       consensus: {persistent: 39045}
       contract:
@@ -72,11 +71,11 @@ networks:
     bootstrap: 50
     ensureScenarioPayerHbars: 300
     nodes:
-    - {account: 3, ipv4Addr: 104.196.48.231}
-    - {account: 4, ipv4Addr: 35.245.168.191}
-    - {account: 5, ipv4Addr: 35.192.152.7}
-    - {account: 6, ipv4Addr: 35.203.163.15}
-    scenarioPayer: 49542
+    - {account: 3, ipv4Addr: 35.227.78.100}
+    - {account: 4, ipv4Addr: 35.245.38.130}
+    - {account: 5, ipv4Addr: 35.192.158.160}
+    - {account: 6, ipv4Addr: 35.230.35.99}
+    scenarioPayer: 48553
     scenarios:
       consensus: {persistent: 39045}
       contract:

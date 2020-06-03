@@ -55,6 +55,7 @@ public class ProviderRun extends UtilOp {
 	private static final long DEFAULT_DURATION = 30;
 	private static final TimeUnit DEFAULT_UNIT = TimeUnit.SECONDS;
 
+	private boolean parallelize = true;
 	private final Function<HapiApiSpec, OpProvider> providerFn;
 	private IntSupplier maxOpsPerSecSupplier = () -> DEFAULT_MAX_OPS_PER_SEC;
 	private IntSupplier maxPendingOpsSupplier = () -> DEFAULT_MAX_PENDING_OPS;
@@ -86,6 +87,11 @@ public class ProviderRun extends UtilOp {
 
 	public ProviderRun backoffSleepSecs(IntSupplier backoffSleepSecsSupplier) {
 		this.backoffSleepSecsSupplier = backoffSleepSecsSupplier;
+		return this;
+	}
+
+	public ProviderRun sequentially() {
+		parallelize = false;
 		return this;
 	}
 
@@ -141,7 +147,11 @@ public class ProviderRun extends UtilOp {
 						.peek(op -> counts.get(op.type()).getAndIncrement())
 						.toArray(HapiSpecOperation[]::new);
 				if (burst.length > 0) {
-					allRunFor(spec, inParallel(burst));
+					if (parallelize) {
+						allRunFor(spec, inParallel(burst));
+					} else {
+						allRunFor(spec, burst);
+					}
 					submittedSoFar += burst.length;
 					opsThisSecond.getAndAdd(burst.length);
 				}
