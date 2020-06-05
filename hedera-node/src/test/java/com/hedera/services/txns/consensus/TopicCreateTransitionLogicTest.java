@@ -72,7 +72,7 @@ class TopicCreateTransitionLogicTest {
 	private PlatformTxnAccessor accessor;
 	private OptionValidator validator;
 	private TopicCreateTransitionLogic subject;
-	private FCMap<MapKey, HederaAccount> accounts = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+	private FCMap<MapKey, HederaAccount> accounts = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
 	private FCMap<MapKey, Topic> topics = new FCMap<>(MapKey::deserialize, Topic::deserialize);
 	private EntityIdSource entityIdSource;
 	final private AccountID payer = AccountID.newBuilder().setAccountNum(2_345L).build();

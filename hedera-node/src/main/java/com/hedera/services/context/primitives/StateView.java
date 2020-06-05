@@ -54,7 +54,7 @@ public class StateView {
 	public static final FCMap<MapKey, Topic> EMPTY_TOPICS =
 			new FCMap<>(MapKey::deserialize, Topic::deserialize);
 	public static final FCMap<MapKey, HederaAccount> EMPTY_ACCOUNTS =
-			new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+			new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
 	public static final FCMap<StorageKey, StorageValue> EMPTY_STORAGE =
 			new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
 	public static final StateView EMPTY_VIEW = new StateView(EMPTY_TOPICS, EMPTY_ACCOUNTS);

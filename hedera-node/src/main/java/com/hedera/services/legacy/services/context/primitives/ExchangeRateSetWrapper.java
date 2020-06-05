@@ -22,8 +22,8 @@ package com.hedera.services.legacy.services.context.primitives;
 
 import com.hederahashgraph.api.proto.java.ExchangeRateSet;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 
 import java.io.IOException;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -105,32 +105,32 @@ public class ExchangeRateSetWrapper implements FastCopyable {
   }
 
   @Override
-  public synchronized void copyTo(FCDataOutputStream fcDataOutputStream) throws IOException {
-    fcDataOutputStream.writeLong(VERSION);
-    fcDataOutputStream.writeLong(OBJECT_ID);
-    fcDataOutputStream.writeInt(currentHbarEquiv);
-    fcDataOutputStream.writeInt(currentCentEquiv);
-    fcDataOutputStream.writeLong(currentExpirationTime);
-    fcDataOutputStream.writeInt(nextHbarEquiv);
-    fcDataOutputStream.writeInt(nextCentEquiv);
-    fcDataOutputStream.writeLong(nextExpirationTime);
+  public synchronized void copyTo(SerializableDataOutputStream SerializableDataOutputStream) throws IOException {
+    SerializableDataOutputStream.writeLong(VERSION);
+    SerializableDataOutputStream.writeLong(OBJECT_ID);
+    SerializableDataOutputStream.writeInt(currentHbarEquiv);
+    SerializableDataOutputStream.writeInt(currentCentEquiv);
+    SerializableDataOutputStream.writeLong(currentExpirationTime);
+    SerializableDataOutputStream.writeInt(nextHbarEquiv);
+    SerializableDataOutputStream.writeInt(nextCentEquiv);
+    SerializableDataOutputStream.writeLong(nextExpirationTime);
   }
 
   @Override
-  public synchronized void copyFrom(FCDataInputStream fcDataInputStream) throws IOException {
+  public synchronized void copyFrom(SerializableDataInputStream SerializableDataInputStream) throws IOException {
     //version number
-    fcDataInputStream.readLong();
-    long objectId = fcDataInputStream.readLong();
+    SerializableDataInputStream.readLong();
+    long objectId = SerializableDataInputStream.readLong();
     if (objectId != OBJECT_ID) {
       throw new IOException(
           "Read Invalid ObjectID while calling ExchangeRateSetWrapper.copyFrom()");
     }
-    currentHbarEquiv = fcDataInputStream.readInt();
-    currentCentEquiv = fcDataInputStream.readInt();
-    currentExpirationTime = fcDataInputStream.readLong();
-    nextHbarEquiv = fcDataInputStream.readInt();
-    nextCentEquiv = fcDataInputStream.readInt();
-    nextExpirationTime = fcDataInputStream.readLong();
+    currentHbarEquiv = SerializableDataInputStream.readInt();
+    currentCentEquiv = SerializableDataInputStream.readInt();
+    currentExpirationTime = SerializableDataInputStream.readLong();
+    nextHbarEquiv = SerializableDataInputStream.readInt();
+    nextCentEquiv = SerializableDataInputStream.readInt();
+    nextExpirationTime = SerializableDataInputStream.readLong();
   }
 
   @Override
@@ -143,22 +143,22 @@ public class ExchangeRateSetWrapper implements FastCopyable {
   }
 
   @Override
-  public void copyToExtra(FCDataOutputStream fcDataOutputStream) throws IOException {
+  public void copyToExtra(SerializableDataOutputStream SerializableDataOutputStream) throws IOException {
     //NoOp method
   }
 
   @Override
-  public void copyFromExtra(FCDataInputStream fcDataInputStream) throws IOException {
+  public void copyFromExtra(SerializableDataInputStream SerializableDataInputStream) throws IOException {
     //NoOp method
   }
 
   @Override
-  public void diffCopyTo(FCDataOutputStream outStream, FCDataInputStream inStream) throws IOException {
+  public void diffCopyTo(SerializableDataOutputStream outStream, SerializableDataInputStream inStream) throws IOException {
     //NoOp method
   }
 
   @Override
-  public void diffCopyFrom(FCDataOutputStream outStream, FCDataInputStream inStream) throws IOException {
+  public void diffCopyFrom(SerializableDataOutputStream outStream, SerializableDataInputStream inStream) throws IOException {
     //NoOp method
   }
 

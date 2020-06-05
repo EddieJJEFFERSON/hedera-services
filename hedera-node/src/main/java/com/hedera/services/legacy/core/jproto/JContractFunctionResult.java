@@ -26,8 +26,8 @@ import com.hederahashgraph.api.proto.java.ContractID;
 import com.hederahashgraph.api.proto.java.ContractLoginfo;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -308,7 +308,7 @@ public class JContractFunctionResult implements FastCopyable {
 	 * @return serialized byte array of this class
 	 */
 
-	private void serialize(final FCDataOutputStream outStream) throws IOException {
+	private void serialize(final SerializableDataOutputStream outStream) throws IOException {
 		outStream.writeLong(versionToSerialize.orElse(CURRENT_VERSION));
 		outStream.writeLong(JObjectType.JContractFunctionResult.longValue());
 
@@ -463,32 +463,32 @@ public class JContractFunctionResult implements FastCopyable {
 	}
 
 	@Override
-	public void copyTo(final FCDataOutputStream outStream) throws IOException {
+	public void copyTo(final SerializableDataOutputStream outStream) throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void copyFrom(final FCDataInputStream inStream) throws IOException {
+	public void copyFrom(final SerializableDataInputStream inStream) throws IOException {
 
 	}
 
 	@Override
-	public void copyToExtra(final FCDataOutputStream outStream) throws IOException {
+	public void copyToExtra(final SerializableDataOutputStream outStream) throws IOException {
 
 	}
 
 	@Override
-	public void copyFromExtra(final FCDataInputStream inStream) throws IOException {
+	public void copyFromExtra(final SerializableDataInputStream inStream) throws IOException {
 
 	}
 
 	@Override
-	public void diffCopyTo(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+	public void diffCopyTo(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void diffCopyFrom(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+	public void diffCopyFrom(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
 		deserialize(inStream, this);
 	}
 

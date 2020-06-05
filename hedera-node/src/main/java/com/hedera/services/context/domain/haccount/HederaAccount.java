@@ -25,10 +25,10 @@ import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
+import com.swirlds.common.FCMValue;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
-import com.swirlds.fcmap.fclist.FCLinkedList;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import com.swirlds.common.merkle.MerkleLeaf;
+import com.swirlds.common.merkle.utility.AbstractMerkleNode;
 import com.swirlds.fcqueue.FCQueue;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +47,7 @@ import static com.hedera.services.context.domain.haccount.HederaAccountDeseriali
 import static com.hedera.services.legacy.core.jproto.JKey.equalUpToDecodability;
 import static java.util.Comparator.comparingLong;
 
-public class HederaAccount implements FastCopyable {
+public class HederaAccount extends AbstractMerkleNode implements FCMValue, MerkleLeaf {
 	private static final Logger log = LogManager.getLogger(HederaAccount.class);
 
 	JKey accountKeys;
@@ -96,7 +98,7 @@ public class HederaAccount implements FastCopyable {
 	/* ---- SerializedObjProvider ---- */
 	/* ------------------------------- */
 	@SuppressWarnings("unchecked")
-	public static <T extends FastCopyable> T deserialize(final DataInputStream in) throws IOException {
+	public static <T extends FastCopyable> T legacyDeserialize(final DataInputStream in) throws IOException {
 		return (T)HEDERA_ACCOUNT_DESERIALIZER.deserialize(in);
 	}
 
@@ -104,18 +106,18 @@ public class HederaAccount implements FastCopyable {
 	/* ------    FastCopyable    ----- */
 	/* ------------------------------- */
 	@Override
-	public FastCopyable copy() {
+	public HederaAccount copy() {
 		return new HederaAccount(this, true);
 	}
 
 	@Override
-	public void copyTo(FCDataOutputStream out) throws IOException {
+	public void copyTo(SerializableDataOutputStream out) throws IOException {
 		HEDERA_ACCOUNT_SERIALIZER.serializeExceptRecords(this, out);
 		records.copyTo(out);
 	}
 
 	@Override
-	public void copyToExtra(FCDataOutputStream out) throws IOException {
+	public void copyToExtra(SerializableDataOutputStream out) throws IOException {
 		records.copyToExtra(out);
 	}
 
@@ -126,20 +128,25 @@ public class HederaAccount implements FastCopyable {
 	}
 
 	@Override
-	public void copyFrom(FCDataInputStream in) {
+	public void copyFrom(SerializableDataInputStream in) {
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public void copyFromExtra(FCDataInputStream in) {
+	public void copyFromExtra(SerializableDataInputStream in) {
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public void diffCopyTo(FCDataOutputStream out, FCDataInputStream in) {
+	public void diffCopyTo(SerializableDataOutputStream out, SerializableDataInputStream in) {
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public void diffCopyFrom(final FCDataOutputStream out, final FCDataInputStream in) {
+	public void diffCopyFrom(final SerializableDataOutputStream out, final SerializableDataInputStream in) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isLeaf() {
+		return true;
 	}
 
 	/* ------------------------------- */
@@ -218,7 +225,7 @@ public class HederaAccount implements FastCopyable {
 		return records.iterator();
 	}
 
-	public void resetRecordsToContain(FCLinkedList<JTransactionRecord> records) {
+	public void resetRecordsToContain(List<JTransactionRecord> records) {
 		List<JTransactionRecord> recordList = new ArrayList<>(records);
 		recordList.sort(comparingLong(JTransactionRecord::getExpirationTime));
 		for (JTransactionRecord record : recordList) {
@@ -323,5 +330,26 @@ public class HederaAccount implements FastCopyable {
 
 	public void setExpirationTime(long expirationTime) {
 		this.expirationTime = expirationTime;
+	}
+
+	@Override
+	public long getClassId() {
+		return 0;
+	}
+
+	@Override
+	public int getVersion() {
+		return 1;
+	}
+
+	@Override
+	public void deserialize(SerializableDataInputStream serializableDataInputStream, int i) throws IOException {
+		legacyDeserialize(serializableDataInputStream);
+	}
+
+	@Override
+	public void serialize(SerializableDataOutputStream serializableDataOutputStream) throws IOException {
+		this.copyTo(serializableDataOutputStream);
+		this.copyToExtra(serializableDataOutputStream);
 	}
 }

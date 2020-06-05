@@ -25,11 +25,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 
+import com.swirlds.common.FCMValue;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.blob.BinaryObject;
 import com.swirlds.blob.BinaryObjectStore;
+import com.swirlds.common.merkle.utility.AbstractMerkleNode;
 
 /**
  * This storage details will be stored in FCM which in memory map.
@@ -37,7 +39,7 @@ import com.swirlds.blob.BinaryObjectStore;
  * @author plynn
  * @Date : 4/26/2019
  */
-public class StorageValue implements FastCopyable {
+public class StorageValue extends AbstractMerkleNode implements FCMValue {
 
 	private static final long LEGACY_VERSION = 1;
     private static final long CURRENT_VERSION = 2;
@@ -78,8 +80,8 @@ public class StorageValue implements FastCopyable {
 	      final boolean hasData = inStream.readBoolean();
           if (hasData) {
             val.data = new BinaryObject();
-            val.data.copyFrom((FCDataInputStream)inStream);
-            val.data.copyFromExtra((FCDataInputStream)inStream);
+            val.data.copyFrom((SerializableDataInputStream)inStream);
+            val.data.copyFromExtra((SerializableDataInputStream)inStream);
           }
 		}
 	}
@@ -98,6 +100,11 @@ public class StorageValue implements FastCopyable {
 		} else {
 			this.data = BinaryObjectStore.getInstance().put(data);
 		}
+	}
+
+	@Override
+	public boolean isLeaf() {
+		return true;
 	}
 
 	@Override
@@ -132,8 +139,8 @@ public class StorageValue implements FastCopyable {
 
 		if (data != null) {
 			outStream.writeBoolean(true);
-			data.copyTo((FCDataOutputStream) outStream);
-			data.copyToExtra((FCDataOutputStream) outStream);
+			data.copyTo((SerializableDataOutputStream) outStream);
+			data.copyToExtra((SerializableDataOutputStream) outStream);
 		} else {
 			outStream.writeBoolean(false);
 		}
@@ -144,38 +151,38 @@ public class StorageValue implements FastCopyable {
 	}
 
 	@Override
-	public FastCopyable copy() {
+	public StorageValue copy() {
 		return new StorageValue(this);
 	}
 
 	@Override
-	public void copyTo(final FCDataOutputStream outStream) throws IOException {
+	public void copyTo(final SerializableDataOutputStream outStream) throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void copyFrom(final FCDataInputStream inStream) throws IOException {
+	public void copyFrom(final SerializableDataInputStream inStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void copyToExtra(final FCDataOutputStream outStream) throws IOException {
+	public void copyToExtra(final SerializableDataOutputStream outStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void copyFromExtra(final FCDataInputStream inStream) throws IOException {
+	public void copyFromExtra(final SerializableDataInputStream inStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void diffCopyTo(final FCDataOutputStream outStream, final FCDataInputStream inStream)
+	public void diffCopyTo(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream)
 			throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void diffCopyFrom(final FCDataOutputStream outStream, final FCDataInputStream inStream)
+	public void diffCopyFrom(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream)
 			throws IOException {
 		deserialize(inStream, this);
 	}
@@ -185,5 +192,15 @@ public class StorageValue implements FastCopyable {
 		if (data != null) {
 			data.delete();
 		}
+	}
+
+	@Override
+	public long getClassId() {
+		return 0;
+	}
+
+	@Override
+	public int getVersion() {
+		return 0;
 	}
 }

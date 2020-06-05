@@ -35,8 +35,8 @@ import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.proto.utils.KeyExpansion;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.commons.codec.DecoderException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,7 +57,7 @@ public class FCMapSerializationTest {
 
 	public static <T extends FastCopyable> byte[] serialize(final T copyable) throws IOException {
 		try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-			try (final FCDataOutputStream dos = new FCDataOutputStream(bos)) {
+			try (final SerializableDataOutputStream dos = new SerializableDataOutputStream(bos)) {
 				copyable.copyTo(dos);
 				copyable.copyToExtra(dos);
 
@@ -93,7 +93,7 @@ public class FCMapSerializationTest {
 		final byte[] serialize = serialize(mapValue);
 
 		HederaAccount deserilise = HederaAccount
-				.deserialize(new FCDataInputStream(new ByteArrayInputStream(serialize)));
+				.legacyDeserialize(new SerializableDataInputStream(new ByteArrayInputStream(serialize)));
 		Assert.assertEquals(mapValue.toString(), deserilise.toString());
 
 

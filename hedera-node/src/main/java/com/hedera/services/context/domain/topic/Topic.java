@@ -25,9 +25,11 @@ import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
+import com.swirlds.common.FCMValue;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
+import com.swirlds.common.merkle.utility.AbstractMerkleNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -65,7 +67,7 @@ import static com.hedera.services.context.domain.topic.TopicSerializer.TOPIC_SER
  *   replace the Topic in the map.</li>
  * </ul>
  */
-public final class Topic implements FastCopyable {
+public final class Topic extends AbstractMerkleNode implements FCMValue {
     public static Logger log = LogManager.getLogger(Topic.class);
 
     private String memo; // Null if empty/unset.
@@ -195,6 +197,11 @@ public final class Topic implements FastCopyable {
         this.runningHash = ((null != runningHash) && (0 != runningHash.length)) ? runningHash : null;
     }
 
+    @Override
+    public boolean isLeaf() {
+        return true;
+    }
+
     /**
      * adminKeys and submitKeys will be considered unequal in cases where the objects structures are unequal.
      * So an adminKey with an empty Threshold key will NOT be considered equal to an adminKey with an empty KeyList,
@@ -242,12 +249,12 @@ public final class Topic implements FastCopyable {
     }
 
     @Override
-    public FastCopyable copy() {
+    public Topic copy() {
         return new Topic(this);
     }
 
     @Override
-    public void copyTo(FCDataOutputStream out) throws IOException {
+    public void copyTo(SerializableDataOutputStream out) throws IOException {
         TOPIC_SERIALIZER.serialize(this, out);
     }
 
@@ -257,7 +264,7 @@ public final class Topic implements FastCopyable {
      * @throws IOException
      */
     @Override
-    public void copyToExtra(FCDataOutputStream out) throws IOException {}
+    public void copyToExtra(SerializableDataOutputStream out) throws IOException {}
 
     /**
      * This has to be a NoOp method.
@@ -266,18 +273,18 @@ public final class Topic implements FastCopyable {
     public void delete() {}
 
     @Override
-    public void copyFrom(FCDataInputStream in) { throw new UnsupportedOperationException(); }
+    public void copyFrom(SerializableDataInputStream in) { throw new UnsupportedOperationException(); }
 
     @Override
-    public void copyFromExtra(FCDataInputStream in) { throw new UnsupportedOperationException(); }
+    public void copyFromExtra(SerializableDataInputStream in) { throw new UnsupportedOperationException(); }
 
     @Override
-    public void diffCopyTo(FCDataOutputStream out, FCDataInputStream in) {
+    public void diffCopyTo(SerializableDataOutputStream out, SerializableDataInputStream in) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void diffCopyFrom(final FCDataOutputStream out, final FCDataInputStream in) {
+    public void diffCopyFrom(final SerializableDataOutputStream out, final SerializableDataInputStream in) {
         throw new UnsupportedOperationException();
     }
 
@@ -324,6 +331,16 @@ public final class Topic implements FastCopyable {
             out.flush();
             runningHash = MessageDigest.getInstance("SHA-384").digest(bos.toByteArray());
         }
+    }
+
+    @Override
+    public long getClassId() {
+        return 0;
+    }
+
+    @Override
+    public int getVersion() {
+        return 0;
     }
 
     public static class KeySerializationException extends RuntimeException {

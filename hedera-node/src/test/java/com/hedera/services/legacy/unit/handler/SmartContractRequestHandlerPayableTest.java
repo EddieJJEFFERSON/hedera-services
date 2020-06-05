@@ -63,7 +63,6 @@ import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
-import com.hedera.services.legacy.exception.NoFeeScheduleExistsException;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
 import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
@@ -170,7 +169,7 @@ public class SmartContractRequestHandlerPayableTest {
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
     //Init FCMap
-    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     // Create accounts
     createAccount(payerAccountId, INITIAL_BALANCE);

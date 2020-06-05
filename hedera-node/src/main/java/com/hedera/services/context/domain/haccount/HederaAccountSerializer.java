@@ -21,7 +21,7 @@ package com.hedera.services.context.domain.haccount;
  */
 
 import com.hedera.services.context.domain.serdes.DomainSerdes;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -37,7 +37,7 @@ public enum HederaAccountSerializer {
 
 	DomainSerdes serdes = new DomainSerdes();
 
-	public void serializeExceptRecords(HederaAccount account, FCDataOutputStream out) throws IOException {
+	public void serializeExceptRecords(HederaAccount account, SerializableDataOutputStream out) throws IOException {
 		out.writeLong(SERIALIZED_VERSION);
 		out.writeLong(OBJECT_ID);
 		out.writeLong(account.balance);

@@ -221,7 +221,6 @@ import com.swirlds.common.AddressBook;
 import com.swirlds.common.Console;
 import com.swirlds.common.NodeId;
 import com.swirlds.common.Platform;
-import com.swirlds.crypto.DigitalSignature;
 import com.swirlds.fcmap.FCMap;
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.Source;
@@ -635,7 +634,7 @@ public class HederaNodeContext {
 
 	public SyncVerifier syncVerifier() {
 		if (syncVerifier == null) {
-			syncVerifier = DigitalSignature::verifySync;
+			syncVerifier = platform().getCryptography()::verifySync;
 		}
 		return syncVerifier;
 	}

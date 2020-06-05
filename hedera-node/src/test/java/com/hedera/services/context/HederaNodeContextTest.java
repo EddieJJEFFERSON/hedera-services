@@ -96,6 +96,7 @@ import com.swirlds.common.Console;
 import com.swirlds.common.NodeId;
 import com.swirlds.common.Platform;
 import com.swirlds.common.PlatformStatus;
+import com.swirlds.common.crypto.Cryptography;
 import com.swirlds.fcmap.FCMap;
 import org.ethereum.db.ServicesRepositoryRoot;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,12 +119,15 @@ public class HederaNodeContextTest {
 	private final NodeId id = new NodeId(false, 1L);
 
 	Platform platform;
+	Cryptography crypto;
 	PropertySource properties;
 	PropertySources propertySources;
 
 	@BeforeEach
 	void setup() {
+		crypto = mock(Cryptography.class);
 		platform = mock(Platform.class);
+		given(platform.getCryptography()).willReturn(crypto);
 		properties = mock(PropertySource.class);
 		propertySources = mock(PropertySources.class);
 		given(propertySources.asResolvingSource()).willReturn(properties);

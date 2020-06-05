@@ -24,8 +24,8 @@ import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -192,7 +192,7 @@ public class JTransactionReceiptTest {
 
     // Serialize
     try (ByteArrayOutputStream bs = new ByteArrayOutputStream()) {
-      try (FCDataOutputStream os = new FCDataOutputStream(bs)) {
+      try (SerializableDataOutputStream os = new SerializableDataOutputStream(bs)) {
         expected.copyTo(os);
         serialized = bs.toByteArray();
       }
@@ -200,7 +200,7 @@ public class JTransactionReceiptTest {
 
     // Deserialize
     try (ByteArrayInputStream bs = new ByteArrayInputStream(serialized)) {
-      try (FCDataInputStream is = new FCDataInputStream(bs)) {
+      try (SerializableDataInputStream is = new SerializableDataInputStream(bs)) {
         actual = JTransactionReceipt.deserialize(is);
       }
     }
@@ -219,7 +219,7 @@ public class JTransactionReceiptTest {
     // when:
     byte[] serialized;
     try (ByteArrayOutputStream bs = new ByteArrayOutputStream()) {
-      try (FCDataOutputStream os = new FCDataOutputStream(bs)) {
+      try (SerializableDataOutputStream os = new SerializableDataOutputStream(bs)) {
         fcReceipt.copyTo(os);
         serialized = bs.toByteArray();
       }
@@ -246,7 +246,7 @@ public class JTransactionReceiptTest {
     // when:
     byte[] serialized;
     try (ByteArrayOutputStream bs = new ByteArrayOutputStream()) {
-      try (FCDataOutputStream os = new FCDataOutputStream(bs)) {
+      try (SerializableDataOutputStream os = new SerializableDataOutputStream(bs)) {
         fcReceipt.copyTo(os);
         serialized = bs.toByteArray();
       }
@@ -270,7 +270,7 @@ public class JTransactionReceiptTest {
 
     // Serialize
     try (ByteArrayOutputStream bs = new ByteArrayOutputStream()) {
-      try (FCDataOutputStream os = new FCDataOutputStream(bs)) {
+      try (SerializableDataOutputStream os = new SerializableDataOutputStream(bs)) {
         expected.copyTo(os);
         serialized = bs.toByteArray();
       }
@@ -278,7 +278,7 @@ public class JTransactionReceiptTest {
 
     // Deserialize
     try (ByteArrayInputStream bs = new ByteArrayInputStream(serialized)) {
-      try (FCDataInputStream is = new FCDataInputStream(bs)) {
+      try (SerializableDataInputStream is = new SerializableDataInputStream(bs)) {
         actual = JTransactionReceipt.deserialize(is);
       }
     }

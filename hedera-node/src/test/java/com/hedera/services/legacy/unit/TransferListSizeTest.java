@@ -122,7 +122,7 @@ public class TransferListSizeTest {
     nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
     feeCollAccountId = RequestBuilder.getAccountIdBuild(feeCollAccount, 0l, 0l);
 
-    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
     createAccount(feeCollAccountId, 10_000L);

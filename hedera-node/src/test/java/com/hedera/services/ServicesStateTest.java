@@ -47,8 +47,8 @@ import com.swirlds.common.AddressBook;
 import com.swirlds.common.NodeId;
 import com.swirlds.common.Platform;
 import com.swirlds.common.Transaction;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,8 +84,8 @@ class ServicesStateTest {
 	FCMap<MapKey, HederaAccount> accounts;
 	FCMap<StorageKey, StorageValue> storage;
 	NodeId self = new NodeId(false, 1);
-	FCDataInputStream in;
-	FCDataOutputStream out;
+	SerializableDataInputStream in;
+	SerializableDataOutputStream out;
 	SystemExits systemExits;
 
 	ServicesState subject;
@@ -94,8 +94,8 @@ class ServicesStateTest {
 	private void setup() {
 		CONTEXTS.clear();
 
-		out = mock(FCDataOutputStream.class);
-		in = mock(FCDataInputStream.class);
+		out = mock(SerializableDataOutputStream.class);
+		in = mock(SerializableDataInputStream.class);
 		platformTxn = mock(Transaction.class);
 
 		address = mock(Address.class);

@@ -150,7 +150,6 @@ public class SmartContractServiceImplTest {
   FCMap<MapKey, HederaAccount> accountFCMap = null;
   FCMap<MapKey, Topic> topicFCMap = null;
   private FCMap<StorageKey, StorageValue> storageMap;
-  FCMap<SolidityAddress, MapKey> solAddressMap = null;
   ServicesRepositoryRoot repository;
   SmartContractServiceImpl smartContractImpl = null;
   TransactionHandler transactionHandler = null;
@@ -192,7 +191,7 @@ public class SmartContractServiceImplTest {
     receiverAccountId = RequestBuilder.getAccountIdBuild(8888l, 0l, 0l);
     storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     // Init FCMap & Put Balances
-    accountFCMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    accountFCMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     topicFCMap = new FCMap<>(MapKey::deserialize, Topic::deserialize);
     MapKey mk = new MapKey();
     mk.setAccountNum(payerAccount);
@@ -201,10 +200,8 @@ public class SmartContractServiceImplTest {
     HederaAccount mv = new HederaAccount();
     mv.setBalance(500000000000l);
     accountFCMap.put(mk, mv);
-    solAddressMap = new FCMap<>(SolidityAddress::deserialize, MapKey::deserialize);
     SolidityAddress solAddress = new SolidityAddress(tempSolidityId);
     MapKey solMapKey = new MapKey(0l, 0l, 9999l);
-    solAddressMap.put(solAddress, solMapKey);
 
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
     TransactionalLedger<AccountID, MapValueProperty, HederaAccount> delegate = new TransactionalLedger<>(

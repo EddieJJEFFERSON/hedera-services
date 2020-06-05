@@ -26,8 +26,8 @@ import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -251,24 +251,24 @@ public class JTransactionReceipt implements FastCopyable {
 
     if (this.accountID != null) {
       outStream.writeBoolean(true);
-      this.accountID.copyTo((FCDataOutputStream) outStream);
-      this.accountID.copyToExtra((FCDataOutputStream) outStream);
+      this.accountID.copyTo((SerializableDataOutputStream) outStream);
+      this.accountID.copyToExtra((SerializableDataOutputStream) outStream);
     } else {
       outStream.writeBoolean(false);
     }
 
     if (this.fileID != null) {
       outStream.writeBoolean(true);
-      this.fileID.copyTo((FCDataOutputStream) outStream);
-      this.fileID.copyToExtra((FCDataOutputStream) outStream);
+      this.fileID.copyTo((SerializableDataOutputStream) outStream);
+      this.fileID.copyToExtra((SerializableDataOutputStream) outStream);
     } else {
       outStream.writeBoolean(false);
     }
 
     if (this.contractID != null) {
       outStream.writeBoolean(true);
-      this.contractID.copyTo((FCDataOutputStream) outStream);
-      this.contractID.copyToExtra((FCDataOutputStream) outStream);
+      this.contractID.copyTo((SerializableDataOutputStream) outStream);
+      this.contractID.copyToExtra((SerializableDataOutputStream) outStream);
     } else {
       outStream.writeBoolean(false);
     }
@@ -283,8 +283,8 @@ public class JTransactionReceipt implements FastCopyable {
 
     if (this.exchangeRate != null) {
       outStream.writeBoolean(true);
-      this.exchangeRate.copyTo((FCDataOutputStream) outStream);
-      this.exchangeRate.copyToExtra((FCDataOutputStream) outStream);
+      this.exchangeRate.copyTo((SerializableDataOutputStream) outStream);
+      this.exchangeRate.copyToExtra((SerializableDataOutputStream) outStream);
     } else {
       outStream.writeBoolean(false);
     }
@@ -292,8 +292,8 @@ public class JTransactionReceipt implements FastCopyable {
     // new fields after VERSION_BEFORE_HCS
     if (this.topicID != null) {
       outStream.writeBoolean(true);
-      this.topicID.copyTo((FCDataOutputStream) outStream);
-      this.topicID.copyToExtra((FCDataOutputStream) outStream);
+      this.topicID.copyTo((SerializableDataOutputStream) outStream);
+      this.topicID.copyToExtra((SerializableDataOutputStream) outStream);
     } else {
       outStream.writeBoolean(false);
     }
@@ -394,32 +394,32 @@ public class JTransactionReceipt implements FastCopyable {
   }
 
   @Override
-  public void copyTo(final FCDataOutputStream outStream) throws IOException {
+  public void copyTo(final SerializableDataOutputStream outStream) throws IOException {
     serialize(outStream);
   }
 
   @Override
-  public void copyFrom(final FCDataInputStream inStream) throws IOException {
+  public void copyFrom(final SerializableDataInputStream inStream) throws IOException {
   }
 
   @Override
-  public void copyToExtra(final FCDataOutputStream outStream) throws IOException {
-
-  }
-
-  @Override
-  public void copyFromExtra(final FCDataInputStream inStream) throws IOException {
+  public void copyToExtra(final SerializableDataOutputStream outStream) throws IOException {
 
   }
 
   @Override
-  public void diffCopyTo(final FCDataOutputStream outStream, final FCDataInputStream inStream)
+  public void copyFromExtra(final SerializableDataInputStream inStream) throws IOException {
+
+  }
+
+  @Override
+  public void diffCopyTo(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream)
       throws IOException {
     serialize(outStream);
   }
 
   @Override
-  public void diffCopyFrom(final FCDataOutputStream outStream, final FCDataInputStream inStream)
+  public void diffCopyFrom(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream)
       throws IOException {
     deserialize(inStream, this);
   }

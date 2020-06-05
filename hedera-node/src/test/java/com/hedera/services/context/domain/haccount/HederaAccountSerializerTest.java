@@ -21,7 +21,7 @@ package com.hedera.services.context.domain.haccount;
  */
 
 import com.hedera.services.context.domain.serdes.DomainSerdes;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,12 +39,12 @@ import static com.hedera.services.legacy.logic.ApplicationConstants.P;
 @RunWith(JUnitPlatform.class)
 class HederaAccountSerializerTest {
 	DomainSerdes serdes;
-	FCDataOutputStream out;
+	SerializableDataOutputStream out;
 	HederaAccountSerializer subject = HEDERA_ACCOUNT_SERIALIZER;
 
 	@BeforeEach
 	private void setup() {
-		out = mock(FCDataOutputStream.class);
+		out = mock(SerializableDataOutputStream.class);
 
 		serdes = mock(DomainSerdes.class);
 		subject.serdes = serdes;

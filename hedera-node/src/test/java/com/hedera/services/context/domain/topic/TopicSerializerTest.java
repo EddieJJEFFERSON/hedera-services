@@ -24,7 +24,7 @@ import com.hedera.services.context.domain.serdes.DomainSerdes;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.commons.codec.binary.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,13 +38,13 @@ import static org.mockito.BDDMockito.*;
 
 @RunWith(JUnitPlatform.class)
 class TopicSerializerTest {
-	FCDataOutputStream out;
+	SerializableDataOutputStream out;
 	DomainSerdes serdes;
 	TopicSerializer subject = TopicSerializer.TOPIC_SERIALIZER;
 
 	@BeforeEach
 	private void setup() {
-		out = mock(FCDataOutputStream.class);
+		out = mock(SerializableDataOutputStream.class);
 		serdes = mock(DomainSerdes.class);
 
 		subject.serdes = serdes;
@@ -100,8 +100,7 @@ class TopicSerializerTest {
 		inOrder.verify(out).writeShort(TopicSerializer.OBJECT_ID);
 		inOrder.verify(out).writeShort(TopicSerializer.CURRENT_VERSION);
 		inOrder.verify(out).writeBoolean(true);
-		var memoBytes = StringUtils.getBytesUtf8(memo);
-		inOrder.verify(out).writeBytes(memoBytes);
+		inOrder.verify(out).writeBytes(memo);
 		inOrder.verify(out).writeBoolean(true);
 		inOrder.verify(serdes).serializeKey(adminKey, out);
 		inOrder.verify(out).writeBoolean(true);
@@ -114,6 +113,6 @@ class TopicSerializerTest {
 		inOrder.verify(out).writeBoolean(false); // deleted
 		inOrder.verify(out).writeLong(sequenceNumber);
 		inOrder.verify(out).writeBoolean(true);
-		inOrder.verify(out).writeBytes(runningHash);
+		inOrder.verify(out).writeByteArray(runningHash);
 	}
 }

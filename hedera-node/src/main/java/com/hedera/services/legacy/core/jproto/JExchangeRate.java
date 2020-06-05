@@ -29,8 +29,8 @@ import java.util.Objects;
 
 import com.hedera.services.legacy.exception.DeserializationException;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.hederahashgraph.api.proto.java.ExchangeRate;
@@ -174,22 +174,22 @@ public class JExchangeRate implements FastCopyable {
   }
 
   @Override
-  public void copyFrom(final FCDataInputStream inStream) throws IOException {
+  public void copyFrom(final SerializableDataInputStream inStream) throws IOException {
   
   }
 
   @Override
-  public void copyFromExtra(final FCDataInputStream inStream) throws IOException {
+  public void copyFromExtra(final SerializableDataInputStream inStream) throws IOException {
   
   }
 
   @Override
-  public void copyTo(final FCDataOutputStream outStream) throws IOException {
+  public void copyTo(final SerializableDataOutputStream outStream) throws IOException {
   	serialize(outStream);
   }
 
   @Override
-  public void copyToExtra(final FCDataOutputStream outStream) throws IOException {
+  public void copyToExtra(final SerializableDataOutputStream outStream) throws IOException {
   
   }
 
@@ -199,12 +199,12 @@ public class JExchangeRate implements FastCopyable {
   }
 
   @Override
-  public void diffCopyFrom(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+  public void diffCopyFrom(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
   	deserialize(inStream, this);
   }
 
   @Override
-  public void diffCopyTo(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+  public void diffCopyTo(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
   	serialize(outStream);
   }
 

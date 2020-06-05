@@ -64,7 +64,7 @@ public class RepoNewCacheTest {
 
   @Ignore
   public void test() {
-    FCMap<MapKey, HederaAccount> accountMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    FCMap<MapKey, HederaAccount> accountMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize,
         StorageValue::deserialize);
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
@@ -165,7 +165,7 @@ public class RepoNewCacheTest {
 
   @Test
   public void rollbackTest() {
-    FCMap<MapKey, HederaAccount> accountMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    FCMap<MapKey, HederaAccount> accountMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
 

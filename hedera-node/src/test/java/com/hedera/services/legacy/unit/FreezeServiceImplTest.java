@@ -114,7 +114,7 @@ public class FreezeServiceImplTest {
             .thenReturn(true);
 
     //Init FCMap; Add account 58
-    accountFCMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    accountFCMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     MapKey mk = new MapKey();
     mk.setAccountNum(payerAccount);
     mk.setRealmNum(0);

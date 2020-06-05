@@ -23,7 +23,7 @@ package com.hedera.test.forensics.domain;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.MapKey;
-import com.swirlds.common.io.FCDataInputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.fcmap.FCMap;
 
 import java.io.File;
@@ -39,8 +39,8 @@ public class PojoLedger {
 	private List<PojoAccount> accounts;
 
 	public static PojoLedger fromDisk(String dumpLoc) throws Exception {
-		try (FCDataInputStream fin = new FCDataInputStream(Files.newInputStream(Path.of(dumpLoc)))) {
-			FCMap<MapKey, HederaAccount> fcm = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+		try (SerializableDataInputStream fin = new SerializableDataInputStream(Files.newInputStream(Path.of(dumpLoc)))) {
+			FCMap<MapKey, HederaAccount> fcm = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
 			fcm.copyFrom(fin);
 			fcm.copyFromExtra(fin);
 			return from(fcm);

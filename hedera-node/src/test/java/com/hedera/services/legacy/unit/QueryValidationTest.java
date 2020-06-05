@@ -75,7 +75,7 @@ class QueryValidationTest {
 
   long payerAccountInitialBalance = 100000;
   private RecordCache recordCache;
-  private FCMap<MapKey, HederaAccount> map = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+  private FCMap<MapKey, HederaAccount> map = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
   private FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize,
       StorageValue::deserialize);
   ;

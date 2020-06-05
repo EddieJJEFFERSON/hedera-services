@@ -30,8 +30,12 @@ import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.swirlds.fcmap.fclist.FCLinkedList;
+import com.swirlds.common.constructable.ClassConstructorPair;
+import com.swirlds.common.constructable.ConstructableRegistry;
+import com.swirlds.common.constructable.ConstructableRegistryException;
 import com.swirlds.fcqueue.FCQueue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
@@ -47,6 +51,13 @@ import static com.hedera.test.utils.IdUtils.*;
 public class DomainSerdesTest {
 	private DomainSerdes subject = new DomainSerdes();
 
+	@BeforeAll
+	public static void setupAll() throws ConstructableRegistryException {
+		/* Per Cody, this will be unnecessary at some point. */
+		ConstructableRegistry.registerConstructable(
+				new ClassConstructorPair(JTransactionRecord.class, JTransactionRecord::new));
+	}
+
 	@Test
 	public void recordsSerdesWork() throws Exception {
 		// given:
@@ -59,23 +70,6 @@ public class DomainSerdesTest {
 		// and:
 		FCQueue<JTransactionRecord> recordsOut = new FCQueue<>(JTransactionRecord::deserialize);
 		deOutcome(in -> { subject.deserializeIntoRecords(in, recordsOut); return recordsOut; }, repr);
-
-		// then:
-		assertEquals(recordsIn, recordsOut);
-	}
-
-	@Test
-	public void legacyRecordsSerdesWork() throws Exception {
-		// given:
-		FCLinkedList<JTransactionRecord> recordsIn = new FCLinkedList<>(JTransactionRecord::deserialize);
-		recordsIn.add(recordOne());
-		recordsIn.add(recordTwo());
-
-		// when:
-		byte[] repr = serOutcome(out -> subject.serializeLegacyRecords(recordsIn, out));
-		// and:
-		FCLinkedList<JTransactionRecord> recordsOut = new FCLinkedList<>(JTransactionRecord::deserialize);
-		deOutcome(in -> { subject.deserializeIntoLegacyRecords(in, recordsOut); return recordsOut; }, repr);
 
 		// then:
 		assertEquals(recordsIn, recordsOut);

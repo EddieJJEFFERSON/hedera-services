@@ -42,8 +42,9 @@ import com.swirlds.common.NodeId;
 import com.swirlds.common.Platform;
 import com.swirlds.common.SwirldState;
 import com.swirlds.common.Transaction;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
+import com.swirlds.common.merkle.utility.AbstractMerkleNode;
 import com.swirlds.fcmap.FCMap;
 
 import java.io.IOException;
@@ -58,7 +59,7 @@ import static com.hedera.services.context.SingletonContextsManager.CONTEXTS;
 import static com.hedera.services.sigs.HederaToPlatformSigOps.expandIn;
 import static com.hedera.services.utils.EntityIdUtils.accountParsedFromString;
 
-public class ServicesState implements SwirldState.SwirldState2 {
+public class ServicesState extends AbstractMerkleNode implements SwirldState.SwirldState2 {
 	private static final Logger log = LogManager.getLogger(ServicesState.class);
 
 	NodeId nodeId;
@@ -95,7 +96,7 @@ public class ServicesState implements SwirldState.SwirldState2 {
 	}
 
 	@Override
-	public synchronized void copyFrom(FCDataInputStream inputStream) throws IOException {
+	public synchronized void copyFrom(SerializableDataInputStream inputStream) throws IOException {
 		primitives.copyFrom(inputStream);
 		log.info("Restoring context of Services node {} from saved state...", nodeId);
 		ctx = new HederaNodeContext(
@@ -108,17 +109,17 @@ public class ServicesState implements SwirldState.SwirldState2 {
 	}
 
 	@Override
-	public void copyFromExtra(FCDataInputStream inputStream) throws IOException {
+	public void copyFromExtra(SerializableDataInputStream inputStream) throws IOException {
 		primitives.copyFromExtra(inputStream);
 	}
 
 	@Override
-	public synchronized void copyTo(FCDataOutputStream outputStream) throws IOException {
+	public synchronized void copyTo(SerializableDataOutputStream outputStream) throws IOException {
 		primitives.copyTo(outputStream);
 	}
 
 	@Override
-	public void copyToExtra(FCDataOutputStream outputStream) throws IOException {
+	public void copyToExtra(SerializableDataOutputStream outputStream) throws IOException {
 		primitives.copyToExtra(outputStream);
 	}
 
@@ -189,5 +190,20 @@ public class ServicesState implements SwirldState.SwirldState2 {
 
 	public FCMap<MapKey, Topic> getTopicsMap() {
 		return primitives.getTopics();
+	}
+
+	@Override
+	public boolean isLeaf() {
+		return false;
+	}
+
+	@Override
+	public long getClassId() {
+		return 0;
+	}
+
+	@Override
+	public int getVersion() {
+		return 0;
 	}
 }

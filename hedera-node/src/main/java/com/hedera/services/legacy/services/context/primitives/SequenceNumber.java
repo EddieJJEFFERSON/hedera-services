@@ -21,8 +21,8 @@ package com.hedera.services.legacy.services.context.primitives;
  */
 
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -74,22 +74,22 @@ public class SequenceNumber implements FastCopyable {
   }
 
   @Override
-  public synchronized void copyTo(FCDataOutputStream fcDataOutputStream) throws IOException {
-    fcDataOutputStream.writeLong(sequenceNum);
+  public synchronized void copyTo(SerializableDataOutputStream SerializableDataOutputStream) throws IOException {
+    SerializableDataOutputStream.writeLong(sequenceNum);
   }
 
   @Override
-  public synchronized void copyFrom(FCDataInputStream fcDataInputStream) throws IOException {
-    this.sequenceNum = fcDataInputStream.readLong();
+  public synchronized void copyFrom(SerializableDataInputStream SerializableDataInputStream) throws IOException {
+    this.sequenceNum = SerializableDataInputStream.readLong();
   }
 
   @Override
-  public void copyFromExtra(FCDataInputStream arg0) throws IOException {
+  public void copyFromExtra(SerializableDataInputStream arg0) throws IOException {
     //NoOp method
   }
 
   @Override
-  public void copyToExtra(FCDataOutputStream arg0) throws IOException {
+  public void copyToExtra(SerializableDataOutputStream arg0) throws IOException {
     //NoOp method
   }
 

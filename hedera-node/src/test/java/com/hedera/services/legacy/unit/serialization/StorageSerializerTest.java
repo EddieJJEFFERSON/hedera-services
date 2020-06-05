@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.swirlds.blob.BinaryObjectStore;
-import com.swirlds.common.io.FCDataInputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import org.junit.FixMethodOrder;
@@ -72,11 +72,11 @@ public class StorageSerializerTest {
      // Now take the bytearray and build it back
 
     ByteArrayInputStream in = null;
-    FCDataInputStream dis = null;
+    SerializableDataInputStream dis = null;
     StorageKey sKeyReborn = new StorageKey();
     try {
       in = new ByteArrayInputStream(serial_skey);
-      dis = new FCDataInputStream(in);
+      dis = new SerializableDataInputStream(in);
 
       sKeyReborn = StorageKey.deserialize(dis);
       //Write Assertions Here
@@ -125,7 +125,7 @@ public class StorageSerializerTest {
     StorageValue sValReborn;
     try {
       in = new ByteArrayInputStream(serial_sval);
-      dis = new FCDataInputStream(in);
+      dis = new SerializableDataInputStream(in);
       BinaryObjectStore.getInstance().startInit();
       sValReborn = StorageValue.deserialize(dis);
       BinaryObjectStore.getInstance().stopInit();

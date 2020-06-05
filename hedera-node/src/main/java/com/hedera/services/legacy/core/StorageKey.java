@@ -21,9 +21,11 @@ package com.hedera.services.legacy.core;
  */
 
 import com.swirlds.common.CommonUtils;
+import com.swirlds.common.FCMKey;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
+import com.swirlds.common.merkle.utility.AbstractMerkleNode;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -33,7 +35,7 @@ import java.util.Arrays;
  * @author Plynn
  * @Date : 4/26/2019
  */
-public class StorageKey implements FastCopyable {
+public class StorageKey extends AbstractMerkleNode implements FCMKey {
 	private static final long CURRENT_VERSION = 1;
 	private static final long OBJECT_ID = 15487002;
 	private String path;
@@ -61,13 +63,18 @@ public class StorageKey implements FastCopyable {
 		long version = inStream.readLong();
 		long objectId = inStream.readLong();
 
-		key.path = ((FCDataInputStream)inStream).readNormalisedString();
+		key.path = ((SerializableDataInputStream)inStream).readNormalisedString(4_096);
 	}
 
 	public String getPath() {
 		return path;
 	}
-	
+
+	@Override
+	public boolean isLeaf() {
+		return true;
+	}
+
 	@Override
 	public boolean equals(final Object o) {
 		if (this == o) {
@@ -92,49 +99,59 @@ public class StorageKey implements FastCopyable {
 		return path;
 	}
 
-	private void serialize(final FCDataOutputStream outStream) throws IOException {
+	private void serialize(final SerializableDataOutputStream outStream) throws IOException {
 		outStream.writeLong(CURRENT_VERSION);
 		outStream.writeLong(OBJECT_ID);
 		outStream.writeNormalisedString(path);
 	}
 
 	@Override
-	public FastCopyable copy() {
+	public StorageKey copy() {
 		return new StorageKey(this);
 	}
 
 	@Override
-	public void copyTo(final FCDataOutputStream outStream) throws IOException {
+	public void copyTo(final SerializableDataOutputStream outStream) throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void copyFrom(final FCDataInputStream inStream) throws IOException {
+	public void copyFrom(final SerializableDataInputStream inStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void copyToExtra(final FCDataOutputStream outStream) throws IOException {
+	public void copyToExtra(final SerializableDataOutputStream outStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void copyFromExtra(final FCDataInputStream inStream) throws IOException {
+	public void copyFromExtra(final SerializableDataInputStream inStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void diffCopyTo(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+	public void diffCopyTo(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void diffCopyFrom(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+	public void diffCopyFrom(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
 		deserialize(inStream, this);
 	}
 
 	@Override
 	public void delete() {
 		//NoOp method
+	}
+
+	@Override
+	public long getClassId() {
+		return 0;
+	}
+
+	@Override
+	public int getVersion() {
+		return 0;
 	}
 }

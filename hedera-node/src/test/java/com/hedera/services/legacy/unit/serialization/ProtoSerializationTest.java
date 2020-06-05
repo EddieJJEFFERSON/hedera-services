@@ -44,7 +44,7 @@ import com.hedera.services.legacy.core.jproto.JTransactionReceipt;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.hedera.services.legacy.core.jproto.JTransferList;
 import com.hedera.services.legacy.exception.DeserializationException;
-import com.swirlds.common.io.FCDataInputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -76,7 +76,7 @@ public class ProtoSerializationTest {
 		Assert.assertNotNull(serialize);
 		Assert.assertTrue(serialize.length > 0);
 		JTransactionReceipt deserilized = JTransactionReceipt.deserialize(
-				new FCDataInputStream(new ByteArrayInputStream(serialize)));
+				new SerializableDataInputStream(new ByteArrayInputStream(serialize)));
 
 		Assert.assertNotNull(deserilized);
 		Assert.assertEquals(deserilized.getAccountID(), jTransactionReceipt.getAccountID());
@@ -92,7 +92,7 @@ public class ProtoSerializationTest {
 		Assert.assertNotNull(serialize);
 		Assert.assertTrue(serialize.length > 0);
 		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(serialize);
-		JAccountID deserialize = JAccountID.deserialize(new FCDataInputStream(byteArrayInputStream));
+		JAccountID deserialize = JAccountID.deserialize(new SerializableDataInputStream(byteArrayInputStream));
 		Assert.assertNotNull(deserialize);
 		Assert.assertEquals(accountID1.getAccountNum(), deserialize.getAccountNum());
 		Assert.assertEquals(accountID1.getRealmNum(), deserialize.getRealmNum());
@@ -110,7 +110,7 @@ public class ProtoSerializationTest {
 		Assert.assertNotNull(serialize);
 		Assert.assertTrue(serialize.length > 0);
 		JTransactionID deserialize = JTransactionID.deserialize(
-				new FCDataInputStream(new ByteArrayInputStream(serialize)));
+				new SerializableDataInputStream(new ByteArrayInputStream(serialize)));
 		Assert.assertNotNull(deserialize);
 	}
 
@@ -120,7 +120,7 @@ public class ProtoSerializationTest {
 		byte[] serialize = serialize(jTimestamp);
 		Assert.assertNotNull(serialize);
 		Assert.assertTrue(serialize.length > 0);
-		JTimestamp deserialize = JTimestamp.deserialize(new FCDataInputStream(new ByteArrayInputStream(serialize)));
+		JTimestamp deserialize = JTimestamp.deserialize(new SerializableDataInputStream(new ByteArrayInputStream(serialize)));
 		Assert.assertNotNull(deserialize);
 		Assert.assertEquals(jTimestamp.getSeconds(), deserialize.getSeconds());
 		Assert.assertEquals(jTimestamp.getNano(), deserialize.getNano());
@@ -142,7 +142,7 @@ public class ProtoSerializationTest {
 		Assert.assertNotNull(serialize);
 		Assert.assertTrue(serialize.length > 0);
 		List<JAccountAmount> deserialize = ((JTransferList) JTransferList.deserialize(
-				new FCDataInputStream(new ByteArrayInputStream(serialize)))).getjAccountAmountsList();
+				new SerializableDataInputStream(new ByteArrayInputStream(serialize)))).getjAccountAmountsList();
 		Assert.assertNotNull(deserialize);
 		Assert.assertEquals(2, deserialize.size());
 		Assert.assertEquals(JAccountID.convert(a1.getAccountID()), deserialize.get(0).getAccountID());
@@ -172,7 +172,7 @@ public class ProtoSerializationTest {
 		Assert.assertNotNull(serialize);
 		Assert.assertTrue(serialize.length > 0);
 		JContractFunctionResult deserialize = JContractFunctionResult.deserialize(
-				new FCDataInputStream(new ByteArrayInputStream(serialize)));
+				new SerializableDataInputStream(new ByteArrayInputStream(serialize)));
 		Assert.assertNotNull(deserialize);
 		Assert.assertEquals(contractID, deserialize.getContractID());
 		Assert.assertEquals(result, new String(deserialize.getResult()));
@@ -211,7 +211,7 @@ public class ProtoSerializationTest {
 		Assert.assertNotNull(serialize);
 		Assert.assertTrue(serialize.length > 0);
 		JTransactionRecord deserialize = JTransactionRecord.deserialize(
-				new FCDataInputStream(new ByteArrayInputStream(serialize)));
+				new SerializableDataInputStream(new ByteArrayInputStream(serialize)));
 		Assert.assertNotNull(deserialize);
 		Assert.assertEquals(jTransactionRecord.getTxReceipt().getStatus(),
 				deserialize.getTxReceipt().getStatus());
@@ -264,7 +264,7 @@ public class ProtoSerializationTest {
     Assert.assertNotNull(serialize);
     Assert.assertTrue(serialize.length > 0);
     JTransactionRecord deserialize = JTransactionRecord.deserialize(
-            new FCDataInputStream(new ByteArrayInputStream(serialize)));
+            new SerializableDataInputStream(new ByteArrayInputStream(serialize)));
     
     TransactionRecord reborn = JTransactionRecord.convert(deserialize);    
     System.out.println(">>>> reborn transactionRecord = " + reborn);

@@ -21,7 +21,7 @@ package com.hedera.services.context.domain.topic;
  */
 
 import com.hedera.services.context.domain.serdes.DomainSerdes;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.commons.codec.binary.StringUtils;
 
 import java.io.IOException;
@@ -34,13 +34,13 @@ public enum TopicSerializer {
 	public static final short CURRENT_VERSION = 1;
 	public static final short OBJECT_ID = 6112;
 
-	public void serialize(Topic topic, FCDataOutputStream out) throws IOException {
+	public void serialize(Topic topic, SerializableDataOutputStream out) throws IOException {
 		out.writeShort(OBJECT_ID);
 		out.writeShort(CURRENT_VERSION);
 
 		if (topic.hasMemo()) {
 			out.writeBoolean(true);
-			out.writeBytes(StringUtils.getBytesUtf8(topic.getMemo()));
+			out.writeBytes(topic.getMemo());
 		} else {
 			out.writeBoolean(false);
 		}
@@ -80,7 +80,7 @@ public enum TopicSerializer {
 
 		if (topic.hasRunningHash()) {
 			out.writeBoolean(true);
-			out.writeBytes(topic.getRunningHash());
+			out.writeByteArray(topic.getRunningHash());
 		} else {
 			out.writeBoolean(false);
 		}

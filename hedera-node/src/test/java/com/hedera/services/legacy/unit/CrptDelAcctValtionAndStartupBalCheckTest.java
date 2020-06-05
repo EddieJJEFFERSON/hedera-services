@@ -85,7 +85,7 @@ public class CrptDelAcctValtionAndStartupBalCheckTest {
 		nodeAccount = 3l;
 		payerAccountId = RequestBuilder.getAccountIdBuild(payerAccount, 0l, 0l);
 		nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
-		fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+		fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
 		feeAccount = RequestBuilder.getAccountIdBuild(98l, 0l, 0l);
 		accountAmountsList = new LinkedList<>();
 		hederaFunc = HederaFunctionality.CryptoTransfer;

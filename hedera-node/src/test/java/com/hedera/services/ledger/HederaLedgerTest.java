@@ -43,6 +43,7 @@ import com.hedera.services.legacy.core.MapKey;
 import com.hedera.services.legacy.core.jproto.JContractIDKey;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.swirlds.common.crypto.CryptoFactory;
 import com.swirlds.fcmap.FCMap;
 import com.swirlds.fcqueue.FCQueue;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,7 +127,7 @@ public class HederaLedgerTest {
 	}
 
 	private void setupWithLiveFcBackedLedger() {
-		backingMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+		backingMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
 		backingAccounts = new FCMapBackingAccounts(backingMap);
 		HederaAccount genesisAccount = new HederaAccount();
 		try {
@@ -150,18 +151,22 @@ public class HederaLedgerTest {
 		setupWithLiveFcBackedLedger();
 		ledger.setKeyComparator(HederaLedger.ACCOUNT_ID_COMPARATOR);
 		commitNewSpawns(50, 100);
-		byte[] firstPreHash = backingMap.getRootHash();
+		CryptoFactory.getInstance().digestTreeSync(backingMap);
+		byte[] firstPreHash = backingMap.getRootHash().getValue();
 		commitDestructions(50, 55);
-		byte[] firstPostHash = backingMap.getRootHash();
+		CryptoFactory.getInstance().digestTreeSync(backingMap);
+		byte[] firstPostHash = backingMap.getRootHash().getValue();
 
 		// and:
 		setupWithLiveFcBackedLedger();
 		ledger.setKeyComparator(HederaLedger.ACCOUNT_ID_COMPARATOR);
 		commitNewSpawns(50, 100);
-		byte[] secondPreHash = backingMap.getRootHash();
+		CryptoFactory.getInstance().digestTreeSync(backingMap);
+		byte[] secondPreHash = backingMap.getRootHash().getValue();
 		ledger.setKeyComparator(HederaLedger.ACCOUNT_ID_COMPARATOR.reversed());
 		commitDestructions(50, 55);
-		byte[] secondPostHash = backingMap.getRootHash();
+		CryptoFactory.getInstance().digestTreeSync(backingMap);
+		byte[] secondPostHash = backingMap.getRootHash().getValue();
 
 		// then:
 		assertTrue(Arrays.equals(firstPreHash, secondPreHash));
@@ -174,12 +179,14 @@ public class HederaLedgerTest {
 		setupWithLiveFcBackedLedger();
 		ledger.setKeyComparator(HederaLedger.ACCOUNT_ID_COMPARATOR);
 		commitNewSpawns(50, 100);
-		byte[] firstHash = backingMap.getRootHash();
+		CryptoFactory.getInstance().digestTreeSync(backingMap);
+		byte[] firstHash = backingMap.getRootHash().getValue();
 
 		// and:
 		setupWithLiveFcBackedLedger();
 		commitNewSpawns(50, 100);
-		byte[] secondHash = backingMap.getRootHash();
+		CryptoFactory.getInstance().digestTreeSync(backingMap);
+		byte[] secondHash = backingMap.getRootHash().getValue();
 
 		// then:
 		assertFalse(Arrays.equals(firstHash, secondHash));

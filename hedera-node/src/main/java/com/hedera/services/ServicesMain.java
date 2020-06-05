@@ -36,7 +36,7 @@ import com.swirlds.common.Platform;
 import com.swirlds.common.PlatformStatus;
 import com.swirlds.common.SwirldMain;
 import com.swirlds.common.SwirldState;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.fcmap.FCMap;
 import com.swirlds.platform.Browser;
 import org.apache.logging.log4j.LogManager;
@@ -68,12 +68,12 @@ public class ServicesMain implements SwirldMain {
 
 	static final String FC_DUMP_LOC_TPL = "data/saved/%s/%d/%s-round%d.fcm";
 
-	public static Function<String, FCDataOutputStream> foutSupplier = dumpLoc -> {
+	public static Function<String, SerializableDataOutputStream> foutSupplier = dumpLoc -> {
 		try {
-			return new FCDataOutputStream(Files.newOutputStream(Path.of(dumpLoc)));
+			return new SerializableDataOutputStream(Files.newOutputStream(Path.of(dumpLoc)));
 		} catch (Exception e) {
 			log.warn("Unable to use suggested dump location {}, falling back to STDOUT!", dumpLoc, e);
-			return new FCDataOutputStream(System.out);
+			return new SerializableDataOutputStream(System.out);
 		}
 	};
 
@@ -332,9 +332,9 @@ public class ServicesMain implements SwirldMain {
 						LoggedIssMeta meta = new LoggedIssMeta(
 								round, self.getId(), other.getId(),
 								sig, hash,
-								state.getAccountMap().getRootHash(),
-								state.getStorageMap().getRootHash(),
-								state.getTopicsMap().getRootHash());
+								state.getAccountMap().getRootHash().getValue(),
+								state.getStorageMap().getRootHash().getValue(),
+								state.getTopicsMap().getRootHash().getValue());
 
 						ctx.issEventInfo().alert(consensusTime);
 						if (ctx.issEventInfo().shouldDumpThisRound()) {

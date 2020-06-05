@@ -25,7 +25,7 @@ import com.hedera.services.context.PrimitiveContext;
 import com.hedera.test.forensics.domain.PojoFs;
 import com.hedera.test.forensics.domain.PojoLedger;
 import com.swirlds.common.AddressBook;
-import com.swirlds.common.io.FCDataInputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.platform.Utilities;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -87,7 +87,7 @@ public class FcmToJsonUtil {
 		System.out.println("FCMap(s)  end  @ " + fcTreeEnds);
 
 		try (InputStream in = Files.newInputStream(Path.of(LOCATION))) {
-			try (FCDataInputStream fin = new FCDataInputStream(in)) {
+			try (SerializableDataInputStream fin = new SerializableDataInputStream(in)) {
 				var version = fin.readLong();
 				System.out.println("Swirlds Version @ " + version);
 				var bytes = Utilities.readByteArray(fin);
@@ -97,7 +97,7 @@ public class FcmToJsonUtil {
 		}
 
 		var accountsIn = new ByteArrayInputStream(signedState, fcTreeStarts.get(3), fcTreeEnds.get(3) + 4);
-		try (FCDataInputStream fin = new FCDataInputStream(accountsIn)) {
+		try (SerializableDataInputStream fin = new SerializableDataInputStream(accountsIn)) {
 			primitives.getAccounts().copyFromExtra(fin);
 		}
 

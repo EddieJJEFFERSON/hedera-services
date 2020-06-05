@@ -40,11 +40,11 @@ import com.hedera.services.legacy.crypto.SignatureStatus;
 import com.hedera.services.legacy.crypto.SignatureStatusCode;
 import com.swirlds.common.crypto.Signature;
 import com.swirlds.common.crypto.VerificationStatus;
-import com.swirlds.crypto.DigitalSignature;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+import com.swirlds.common.crypto.engine.CryptoEngine;
 
 import static com.hedera.services.keys.HederaKeyActivation.otherPartySigsAreActive;
 import static com.hedera.services.keys.HederaKeyActivation.payerSigIsActive;
@@ -383,7 +383,7 @@ public class SigOpsRegressionTest {
 	}
 
 	private SignatureStatus invokeRationalizationScenario() throws Exception {
-		SyncVerifier syncVerifier = DigitalSignature::verifySync;
+		SyncVerifier syncVerifier = new CryptoEngine()::verifySync;
 		SigMetadataLookup sigMetaLookups = defaultLookupsFor(hfs, accounts, null);
 		HederaSigningOrder keyOrder = new HederaSigningOrder(
 				new MockEntityNumbers(),

@@ -32,11 +32,13 @@ import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.swirlds.fcmap.fclist.FCLinkedList;
 import com.swirlds.fcqueue.FCQueue;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -66,7 +68,7 @@ public class HederaAccountPropertyTest {
 		Key origKey = SignedTxnFactory.DEFAULT_PAYER_KT.asKey();
 		String origMemo = "a";
 		AccountID origProxy = AccountID.getDefaultInstance();
-		FCLinkedList<JTransactionRecord> origRecords = new FCLinkedList<>(JTransactionRecord::deserialize);
+		List<JTransactionRecord> origRecords = new ArrayList<>();
 		origRecords.add(jRecordWith(ResponseCodeEnum.MODIFYING_IMMUTABLE_CONTRACT));
 		origRecords.add(jRecordWith(ResponseCodeEnum.INVALID_PAYER_SIGNATURE));
 		// and:

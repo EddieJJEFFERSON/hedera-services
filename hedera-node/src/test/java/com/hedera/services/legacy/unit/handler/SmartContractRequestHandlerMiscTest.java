@@ -193,7 +193,7 @@ public class SmartContractRequestHandlerMiscTest {
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
     //Init FCMap
-    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     // Create accounts
     createAccount(payerAccountId, 1_000_000_000L);

@@ -29,8 +29,8 @@ import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.swirlds.common.AddressBook;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.fcmap.FCMap;
 
 import java.io.IOException;
@@ -83,7 +83,7 @@ public class PrimitiveContext {
 				addressBook,
 				new SequenceNumber(ApplicationConstants.HEDERA_START_SEQUENCE),
 				new ExchangeRateSetWrapper(),
-				new FCMap<>(MapKey::deserialize, HederaAccount::deserialize),
+				new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize),
 				new FCMap<>(StorageKey::deserialize, StorageValue::deserialize),
 				new FCMap<>(MapKey::deserialize, Topic::deserialize));
 	}
@@ -138,7 +138,7 @@ public class PrimitiveContext {
 		this.topics = topics;
 	}
 
-	public void copyTo(FCDataOutputStream outputStream) throws IOException {
+	public void copyTo(SerializableDataOutputStream outputStream) throws IOException {
 		outputStream.writeLong(CURRENT_VERSION);
 		seqNo.copyTo(outputStream);
 		addressBook.copyTo(outputStream);
@@ -155,7 +155,7 @@ public class PrimitiveContext {
 		topics.copyTo(outputStream);
 	}
 
-	public void copyToExtra(FCDataOutputStream outputStream) throws IOException {
+	public void copyToExtra(SerializableDataOutputStream outputStream) throws IOException {
 		outputStream.writeLong(CURRENT_VERSION);
 		seqNo.copyToExtra(outputStream);
 		addressBook.copyToExtra(outputStream);
@@ -164,7 +164,7 @@ public class PrimitiveContext {
 		topics.copyToExtra(outputStream);
 	}
 
-	public void copyFrom(FCDataInputStream inputStream) throws IOException {
+	public void copyFrom(SerializableDataInputStream inputStream) throws IOException {
 		versionAtStateInit = inputStream.readLong();
 		seqNo.copyFrom(inputStream);
 		AddressBook tmp = new AddressBook();
@@ -189,7 +189,7 @@ public class PrimitiveContext {
 		}
 	}
 
-	public void copyFromExtra(FCDataInputStream inputStream) throws IOException {
+	public void copyFromExtra(SerializableDataInputStream inputStream) throws IOException {
 		long version = inputStream.readLong();
 		seqNo.copyFromExtra(inputStream);
 		AddressBook tmp = new AddressBook();

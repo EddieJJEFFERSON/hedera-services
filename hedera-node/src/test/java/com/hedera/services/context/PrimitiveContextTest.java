@@ -23,8 +23,8 @@ package com.hedera.services.context;
 import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
 import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
 import com.swirlds.common.AddressBook;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,8 +50,8 @@ public class PrimitiveContextTest {
 	private SequenceNumber seqNo;
 	private ExchangeRateSetWrapper exchangeRateSets;
 	private PrimitiveContext subject;
-	private FCDataInputStream inputStream;
-	private FCDataOutputStream outputStream;
+	private SerializableDataInputStream inputStream;
+	private SerializableDataOutputStream outputStream;
 
 	@BeforeEach
 	private void setup() {
@@ -61,8 +61,8 @@ public class PrimitiveContextTest {
 		topics = mock(FCMap.class);
 		addressBook = mock(AddressBook.class);
 		exchangeRateSets = mock(ExchangeRateSetWrapper.class);
-		inputStream = mock(FCDataInputStream.class);
-		outputStream = mock(FCDataOutputStream.class);
+		inputStream = mock(SerializableDataInputStream.class);
+		outputStream = mock(SerializableDataOutputStream.class);
 	}
 
 	@Test

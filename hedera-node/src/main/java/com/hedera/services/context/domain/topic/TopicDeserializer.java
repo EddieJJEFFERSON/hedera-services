@@ -22,7 +22,7 @@ package com.hedera.services.context.domain.topic;
 
 import com.hedera.services.context.domain.serdes.DomainSerdes;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializedObjectProvider;
 import org.apache.commons.codec.binary.StringUtils;
 
@@ -37,14 +37,14 @@ public enum TopicDeserializer implements SerializedObjectProvider {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T extends FastCopyable> T deserialize(DataInputStream in) throws IOException {
+	public Topic deserialize(DataInputStream in) throws IOException {
 		Topic topic = new Topic();
-		FCDataInputStream fcIn = (FCDataInputStream)in;
+		SerializableDataInputStream fcIn = (SerializableDataInputStream)in;
 		deserializeInto(fcIn, topic);
-		return (T)topic;
+		return topic;
 	}
 
-	public void deserializeInto(FCDataInputStream in, Topic to) throws IOException {
+	public void deserializeInto(SerializableDataInputStream in, Topic to) throws IOException {
 		var objectId = in.readShort();
 		if (TopicSerializer.OBJECT_ID != objectId) {
 			throw new InvalidClassException(
@@ -58,10 +58,10 @@ public enum TopicDeserializer implements SerializedObjectProvider {
 		}
 	}
 
-	private void deserializeVersion1(FCDataInputStream in, Topic to) throws IOException {
+	private void deserializeVersion1(SerializableDataInputStream in, Topic to) throws IOException {
 		to.setMemo(null);
 		if (in.readBoolean()) {
-			var bytes = in.readBytes();
+			var bytes = in.readByteArray(4_096);
 			if (null != bytes) {
 				to.setMemo(StringUtils.newStringUtf8(bytes));
 			}
@@ -74,6 +74,6 @@ public enum TopicDeserializer implements SerializedObjectProvider {
 		to.setExpirationTimestamp(in.readBoolean() ? serdes.deserializeTimestamp(in) : null);
 		to.setDeleted(in.readBoolean());
 		to.setSequenceNumber(in.readLong());
-		to.setRunningHash(in.readBoolean() ? in.readBytes() : null);
+		to.setRunningHash(in.readBoolean() ? in.readByteArray(4_096) : null);
 	}
 }

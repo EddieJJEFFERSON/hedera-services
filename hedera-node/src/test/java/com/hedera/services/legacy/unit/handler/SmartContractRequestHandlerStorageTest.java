@@ -175,7 +175,7 @@ public class SmartContractRequestHandlerStorageTest {
     feeCollAccountId = RequestBuilder.getAccountIdBuild(feeCollAccount, 0l, 0l);
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
-    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
     storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);

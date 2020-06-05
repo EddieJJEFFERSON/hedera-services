@@ -86,7 +86,7 @@ public class DynamicPropertiesLoadTest {
 		nodeAccount = 3l;
 		payerAccountId = RequestBuilder.getAccountIdBuild(payerAccount, 0l, 0l);
 		nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
-		fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::deserialize);
+		fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
 		storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
 		storageWrapper = new FCStorageWrapper(storageMap);
 		FeeScheduleInterceptor feeScheduleInterceptor = mock(FeeScheduleInterceptor.class);

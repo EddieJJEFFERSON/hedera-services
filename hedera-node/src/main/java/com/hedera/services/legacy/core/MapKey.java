@@ -24,9 +24,13 @@ import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.ContractID;
 import com.hederahashgraph.api.proto.java.TopicID;
+import com.swirlds.common.FCMKey;
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
+import com.swirlds.common.merkle.MerkleLeaf;
+import com.swirlds.common.merkle.utility.AbstractMerkleNode;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -36,9 +40,9 @@ import java.util.Objects;
  * @author Akshay
  * @Date : 9/13/2018
  */
-public class MapKey implements FastCopyable {
+public class MapKey extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 
-	private static final long CURRENT_VERSION = 1;
+	private static final int CURRENT_VERSION = 1;
 	private static final long OBJECT_ID = 15486487;
 	private long shardNum;
 	private long realmNum;
@@ -111,13 +115,18 @@ public class MapKey implements FastCopyable {
 		return new MapKey(acctId.getShardNum(), acctId.getRealmNum(), acctId.getAccountNum());
 	}
 
-	private void serialize(final DataOutputStream outStream) throws IOException {
+	private void legacySerialize(final DataOutputStream outStream) throws IOException {
 		outStream.writeLong(CURRENT_VERSION);
 		outStream.writeLong(OBJECT_ID);
 
 		outStream.writeLong(this.realmNum);
 		outStream.writeLong(this.shardNum);
 		outStream.writeLong(this.accountNum);
+	}
+
+	@Override
+	public boolean isLeaf() {
+		return true;
 	}
 
 	@Override
@@ -149,42 +158,62 @@ public class MapKey implements FastCopyable {
 	}
 
 	@Override
-	public FastCopyable copy() {
+	public MapKey copy() {
 		return new MapKey(shardNum, realmNum, accountNum);
 	}
 
 	@Override
-	public void copyTo(final FCDataOutputStream outStream) throws IOException {
+	public void copyTo(final SerializableDataOutputStream outStream) throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void copyFrom(final FCDataInputStream inStream) throws IOException {
+	public void copyFrom(final SerializableDataInputStream inStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void copyToExtra(final FCDataOutputStream outStream) throws IOException {
+	public void copyToExtra(final SerializableDataOutputStream outStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void copyFromExtra(final FCDataInputStream inStream) throws IOException {
+	public void copyFromExtra(final SerializableDataInputStream inStream) throws IOException {
 		//NoOp method
 	}
 
 	@Override
-	public void diffCopyTo(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+	public void diffCopyTo(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
 		serialize(outStream);
 	}
 
 	@Override
-	public void diffCopyFrom(final FCDataOutputStream outStream, final FCDataInputStream inStream) throws IOException {
+	public void diffCopyFrom(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream) throws IOException {
 		deserialize(inStream, this);
 	}
 
 	@Override
 	public void delete() {
 		//NoOp method
+	}
+
+	@Override
+	public long getClassId() {
+		return OBJECT_ID;
+	}
+
+	@Override
+	public int getVersion() {
+		return CURRENT_VERSION;
+	}
+
+	@Override
+	public void deserialize(SerializableDataInputStream serializableDataInputStream, int i) throws IOException {
+		deserialize(serializableDataInputStream, this);
+	}
+
+	@Override
+	public void serialize(SerializableDataOutputStream serializableDataOutputStream) throws IOException {
+		legacySerialize(serializableDataOutputStream);
 	}
 }

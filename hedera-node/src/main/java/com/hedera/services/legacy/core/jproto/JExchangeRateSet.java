@@ -28,8 +28,8 @@ import java.io.IOException;
 import java.util.Objects;
 
 import com.swirlds.common.FastCopyable;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.hederahashgraph.api.proto.java.ExchangeRateSet;
@@ -168,22 +168,22 @@ public class JExchangeRateSet implements FastCopyable {
   }
 
   @Override
-  public void copyFrom(final FCDataInputStream inStream) throws IOException {
+  public void copyFrom(final SerializableDataInputStream inStream) throws IOException {
 
   }
 
   @Override
-  public void copyFromExtra(final FCDataInputStream inStream) throws IOException {
+  public void copyFromExtra(final SerializableDataInputStream inStream) throws IOException {
 
   }
 
   @Override
-  public void copyTo(final FCDataOutputStream outStream) throws IOException {
+  public void copyTo(final SerializableDataOutputStream outStream) throws IOException {
     serialize(outStream);
   }
 
   @Override
-  public void copyToExtra(final FCDataOutputStream outStream) throws IOException {
+  public void copyToExtra(final SerializableDataOutputStream outStream) throws IOException {
 
   }
 
@@ -193,13 +193,13 @@ public class JExchangeRateSet implements FastCopyable {
   }
 
   @Override
-  public void diffCopyFrom(final FCDataOutputStream outStream, final FCDataInputStream inStream)
+  public void diffCopyFrom(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream)
       throws IOException {
     deserialize(inStream, this);
   }
 
   @Override
-  public void diffCopyTo(final FCDataOutputStream outStream, final FCDataInputStream inStream)
+  public void diffCopyTo(final SerializableDataOutputStream outStream, final SerializableDataInputStream inStream)
       throws IOException {
     serialize(outStream);
   }
@@ -231,7 +231,7 @@ public class JExchangeRateSet implements FastCopyable {
       throws IOException {
     final JExchangeRateSet jExchangeRateSet = new JExchangeRateSet();
 
-    deserialize((FCDataInputStream) inStream, jExchangeRateSet);
+    deserialize((SerializableDataInputStream) inStream, jExchangeRateSet);
     return (T) jExchangeRateSet;
   }
 
@@ -241,7 +241,7 @@ public class JExchangeRateSet implements FastCopyable {
    * those byte for the field.
    */
 
-  private static void deserialize(final FCDataInputStream inStream,
+  private static void deserialize(final SerializableDataInputStream inStream,
       final JExchangeRateSet jExchangeRateSet) throws IOException {
 
     long version = inStream.readLong();
@@ -272,7 +272,7 @@ public class JExchangeRateSet implements FastCopyable {
    *
    * @return serialized byte array of this class
    */
-  private void serialize(final FCDataOutputStream outStream) throws IOException {
+  private void serialize(final SerializableDataOutputStream outStream) throws IOException {
 
     outStream.writeLong(CURRENT_VERSION);
     outStream.writeLong(JObjectType.JExchangeRateSet.longValue());

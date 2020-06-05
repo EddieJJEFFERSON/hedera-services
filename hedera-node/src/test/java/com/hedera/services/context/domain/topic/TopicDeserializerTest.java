@@ -29,7 +29,7 @@ import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
-import com.swirlds.common.io.FCDataInputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
 import org.apache.commons.codec.binary.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,13 +49,13 @@ import static org.mockito.BDDMockito.*;
 
 @RunWith(JUnitPlatform.class)
 class TopicDeserializerTest {
-	FCDataInputStream in;
+	SerializableDataInputStream in;
 	DomainSerdes serdes;
 	TopicDeserializer subject = TOPIC_DESERIALIZER;
 
 	@BeforeEach
 	private void setup() {
-		in = mock(FCDataInputStream.class);
+		in = mock(SerializableDataInputStream.class);
 		serdes = mock(DomainSerdes.class);
 
 		subject.serdes = serdes;
@@ -210,7 +210,7 @@ class TopicDeserializerTest {
 		given(in.readLong())
 				.willReturn(autoRenewDurationSeconds)
 				.willReturn(sequenceNumber);
-		given(in.readBytes())
+		given(in.readByteArray(anyInt()))
 				.willReturn(StringUtils.getBytesUtf8(memo))
 				.willReturn(runningHash);
 	}

@@ -23,7 +23,7 @@ package com.hedera.test.forensics.domain;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
-import com.swirlds.common.io.FCDataInputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.fcmap.FCMap;
 
 import java.io.File;
@@ -39,7 +39,7 @@ public class PojoFs {
 	private List<PojoFile> files;
 
 	public static PojoFs fromDisk(String dumpLoc) throws Exception {
-		try (FCDataInputStream fin = new FCDataInputStream(Files.newInputStream(Path.of(dumpLoc)))) {
+		try (SerializableDataInputStream fin = new SerializableDataInputStream(Files.newInputStream(Path.of(dumpLoc)))) {
 			FCMap<StorageKey, StorageValue> fcm =
 					new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
 			fcm.copyFrom(fin);

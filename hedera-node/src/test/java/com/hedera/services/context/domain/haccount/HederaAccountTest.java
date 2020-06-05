@@ -27,9 +27,8 @@ import com.hedera.services.ledger.accounts.HederaAccountCustomizer;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
-import com.swirlds.fcmap.fclist.FCLinkedList;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.fcqueue.FCQueue;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -137,22 +136,6 @@ public class HederaAccountTest {
 	}
 
 	@Test
-	public void legacyAndCurrentDeserializationsMatch() throws Throwable {
-		// setup:
-		File fLegacy = new File(LEGACY_ACCOUNT_REPR_PATH);
-		File fCurrent = new File(CURRENT_ACCOUNT_REPR_PATH);
-		ByteSource legacySource = Files.asByteSource(fLegacy);
-		ByteSource currentSource = Files.asByteSource(fCurrent);
-
-		// given:
-		HederaAccount legacy = deOutcome(in -> HEDERA_ACCOUNT_DESERIALIZER.deserialize(in), legacySource.read());
-		HederaAccount current = deOutcome(in -> HEDERA_ACCOUNT_DESERIALIZER.deserialize(in), currentSource.read());
-
-		// expect:
-		assertEquals(current, legacy);
-	}
-
-	@Test
 	public void deletesRecords() {
 		// setup:
 		FCQueue records = mock(FCQueue.class);
@@ -173,7 +156,7 @@ public class HederaAccountTest {
 		// setup:
 		FCQueue records = mock(FCQueue.class);
 		DomainSerdes serdes = mock(DomainSerdes.class);
-		FCDataOutputStream out = mock(FCDataOutputStream.class);
+		SerializableDataOutputStream out = mock(SerializableDataOutputStream.class);
 		HEDERA_ACCOUNT_SERIALIZER.serdes = serdes;
 
 		// given:
@@ -204,7 +187,7 @@ public class HederaAccountTest {
 		HederaAccount account = new HederaAccount();
 
 		// when:
-		account.resetRecordsToContain(asFcll(lateExpiry, earlyExpiry));
+		account.resetRecordsToContain(List.of(lateExpiry, earlyExpiry));
 		// and:
 		FCQueue<JTransactionRecord> records = account.getRecords();
 
@@ -224,7 +207,7 @@ public class HederaAccountTest {
 	public void getsRecordIterator() {
 		// given:
 		HederaAccount account = new HederaAccount();
-		account.resetRecordsToContain(asFcll(recordOne(), recordTwo()));
+		account.resetRecordsToContain(List.of(recordOne(), recordTwo()));
 
 		// when:
 		Iterator<JTransactionRecord> iterator = account.recordIterator();
@@ -239,7 +222,7 @@ public class HederaAccountTest {
 	public void getsRecordList() {
 		// given:
 		HederaAccount account = new HederaAccount();
-		account.resetRecordsToContain(asFcll(recordOne(), recordTwo()));
+		account.resetRecordsToContain(List.of(recordOne(), recordTwo()));
 
 		// when:
 		List<JTransactionRecord> records = account.recordList();
@@ -264,7 +247,7 @@ public class HederaAccountTest {
 
 		// given:
 		HederaAccount account = new HederaAccount();
-		account.resetRecordsToContain(asFcll(lateExpiry, earlyExpiry));
+		account.resetRecordsToContain(List.of(lateExpiry, earlyExpiry));
 
 		// when:
 		long ere = account.expiryOfEarliestRecord();
@@ -280,25 +263,15 @@ public class HederaAccountTest {
 
 		// when:
 		byte[] repr	= serOutcome(out -> {
-			FCDataOutputStream fcOut = (FCDataOutputStream)out;
+			SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 			accountIn.copyTo(fcOut);
 			accountIn.copyToExtra(fcOut);
 		});
 		// and:
-		HederaAccount accountOut = deOutcome(in -> HEDERA_ACCOUNT_DESERIALIZER.deserialize(in), repr);
+		HederaAccount accountOut = (HederaAccount)deOutcome(in -> HEDERA_ACCOUNT_DESERIALIZER.deserialize(in), repr);
 
 		// then:
 		assertEquals(accountIn, accountOut);
-	}
-
-	@Test
-	public void deserializesLegacyAccount() throws Throwable {
-		File f = new File(LEGACY_ACCOUNT_REPR_PATH);
-		InputStream legacyAccountIn = Files.asByteSource(f).openBufferedStream();
-		FCDataInputStream in = new FCDataInputStream(legacyAccountIn);
-		HederaAccount loadedAccount = HederaAccount.deserialize(in);
-
-		assertEquals(legacyAccount(), loadedAccount);
 	}
 
 	@Test
@@ -327,16 +300,8 @@ public class HederaAccountTest {
 				.autoRenewPeriod(666L)
 				.customizing(new HederaAccount());
 		account.setBalance(888L);
-		account.resetRecordsToContain(asFcll(recordOne(), recordTwo()));
+		account.resetRecordsToContain(List.of(recordOne(), recordTwo()));
 		return account;
-	}
-
-	public static FCLinkedList<JTransactionRecord> asFcll(JTransactionRecord... records) {
-		FCLinkedList<JTransactionRecord> fcll = new FCLinkedList<>(JTransactionRecord::deserialize);
-		for (JTransactionRecord record : records) {
-			fcll.add(record);
-		}
-		return fcll;
 	}
 
 	private static JKey legacyKey() throws Exception {

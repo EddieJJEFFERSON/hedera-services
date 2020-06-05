@@ -25,10 +25,9 @@ import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeySerializer;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.swirlds.common.io.FCDataInputStream;
-import com.swirlds.common.io.FCDataOutputStream;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.common.list.ListDigestException;
-import com.swirlds.fcmap.fclist.FCLinkedList;
 import com.swirlds.fcqueue.FCQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +49,7 @@ public class DomainSerdes {
 
 	@SuppressWarnings("unchecked")
 	public void serializeId(JAccountID id, DataOutputStream out) throws IOException {
-		FCDataOutputStream fcOut = (FCDataOutputStream)out;
+		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 		id.copyTo(fcOut);
 		id.copyToExtra(fcOut);
 	}
@@ -61,7 +60,7 @@ public class DomainSerdes {
 
 	@SuppressWarnings("unchecked")
 	public void serializeTimestamp(JTimestamp ts, DataOutputStream out) throws IOException {
-		FCDataOutputStream fcOut = (FCDataOutputStream)out;
+		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 		ts.copyTo(fcOut);
 		ts.copyToExtra(fcOut);
 	}
@@ -72,39 +71,15 @@ public class DomainSerdes {
 
 	@SuppressWarnings("unchecked")
 	public void serializeRecords(FCQueue<JTransactionRecord> records, DataOutputStream out) throws IOException {
-		FCDataOutputStream fcOut = (FCDataOutputStream)out;
+		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 		records.copyTo(fcOut);
 		records.copyToExtra(fcOut);
 	}
 
 	@SuppressWarnings("unchecked")
 	public void deserializeIntoRecords(DataInputStream in, FCQueue<JTransactionRecord> to) throws IOException {
-		FCDataInputStream fcIn = (FCDataInputStream)in;
+		SerializableDataInputStream fcIn = (SerializableDataInputStream)in;
 		to.copyFrom(fcIn);
 		to.copyFromExtra(fcIn);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void serializeLegacyRecords(
-			FCLinkedList<JTransactionRecord> records,
-			DataOutputStream out
-	) throws IOException {
-		FCDataOutputStream fcOut = (FCDataOutputStream)out;
-		records.copyTo(fcOut);
-		records.copyToExtra(fcOut);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void deserializeIntoLegacyRecords(
-			DataInputStream in,
-			FCLinkedList<JTransactionRecord> to
-	) throws IOException {
-		FCDataInputStream fcIn = (FCDataInputStream)in;
-		to.copyFrom(fcIn);
-		try {
-			to.copyFromExtra(fcIn);
-		} catch (ListDigestException e) {
-			log.warn("During data migration, an exception occurred copying from the legacy FCLL. This is expected during migration off FCLL and the list should have been read properly before the exception was thrown.", e);
-		}
 	}
 }
