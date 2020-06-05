@@ -924,6 +924,7 @@ workflows:
               ignore:
                 - /.*-PERF/
                 - /.*-REGRESSION/
+                - 0256-M-MigrateToSwirlds070alpha1
 #                - 0241-E-Refactor-CircleCi-build-scripts
       - start-singlejob-testnet:
           requires:
