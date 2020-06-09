@@ -9,9 +9,9 @@ package com.hedera.services.bdd.suites.utils.validation;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,16 +39,20 @@ import static com.hedera.services.bdd.spec.queries.QueryVerbs.*;
 
 import com.hedera.services.bdd.spec.keys.SigControl;
 import com.hedera.services.bdd.spec.transactions.TxnVerbs;
+
 import static com.hedera.services.bdd.spec.transactions.TxnVerbs.*;
 
 import com.hedera.services.bdd.spec.utilops.UtilVerbs;
+
 import static com.hedera.services.bdd.spec.utilops.UtilVerbs.*;
+
 import com.hedera.services.bdd.suites.HapiApiSuite;
 import com.hedera.services.bdd.suites.utils.keypairs.SpecUtils;
 import com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.ContractScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.CryptoScenario;
 
+import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.TRANSFERS_ONLY;
 import static com.hedera.services.bdd.suites.utils.validation.domain.Network.SCENARIO_PAYER_NAME;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYSTEM_KEYS;
 import static com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario.NOVEL_TOPIC_NAME;
@@ -108,6 +112,8 @@ import java.util.function.LongSupplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static com.hedera.services.bdd.spec.HapiApiSpec.customHapiSpec;
@@ -135,6 +141,8 @@ public class ValidationScenarios extends HapiApiSuite {
 			"\"name\":\"toNum\",\"type\":\"uint32\"},{\"internalType\":\"string\",\"name\":\"saying\"," +
 			"\"type\":\"string\"}],\"name\":\"donate\",\"outputs\":[],\"payable\":true," +
 			"\"stateMutability\":\"payable\",\"type\":\"function\"}";
+
+	enum Scenario {CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS, TRANSFERS_ONLY}
 
 	private static Scenarios scenarios;
 	private static ValidationConfig validationConfig;
@@ -167,16 +175,60 @@ public class ValidationScenarios extends HapiApiSuite {
 	@Override
 	protected List<HapiApiSpec> getSpecsInSuite() {
 		return Stream.of(
-					Optional.of(recordPayerBalance(startingBalance::set)),
-					Optional.ofNullable(params.getScenarios().isEmpty() ? null : ensureScenarioPayer()),
-					Optional.ofNullable(params.getScenarios().contains(CRYPTO) ? cryptoScenario() : null),
-					Optional.ofNullable(params.getScenarios().contains(FILE) ? fileScenario() : null),
-					Optional.ofNullable(params.getScenarios().contains(CONTRACT) ? contractScenario() : null),
-					Optional.ofNullable(params.getScenarios().contains(CONSENSUS) ? consensusScenario() : null),
-					Optional.ofNullable(params.getScenarios().contains(SYSTEM_KEYS) ? getSystemKeys() : null),
-					Optional.ofNullable(params.getScenarios().isEmpty() ? null : recordPayerBalance(endingBalance::set)))
+				Optional.of(recordPayerBalance(startingBalance::set)),
+				Optional.ofNullable(params.getScenarios().isEmpty() ? null : ensureScenarioPayer()),
+				Optional.ofNullable(params.getScenarios().contains(CRYPTO) ? cryptoScenario() : null),
+				Optional.ofNullable(params.getScenarios().contains(FILE) ? fileScenario() : null),
+				Optional.ofNullable(params.getScenarios().contains(CONTRACT) ? contractScenario() : null),
+				Optional.ofNullable(params.getScenarios().contains(CONSENSUS) ? consensusScenario() : null),
+				Optional.ofNullable(params.getScenarios().contains(SYSTEM_KEYS) ? getSystemKeys() : null),
+				Optional.ofNullable(params.getScenarios().contains(TRANSFERS_ONLY) ? doJustTransfers() : null),
+				Optional.ofNullable(params.getScenarios().isEmpty() ? null : recordPayerBalance(endingBalance::set)))
 				.flatMap(Optional::stream)
 				.collect(Collectors.toList());
+	}
+
+	private static HapiApiSpec doJustTransfers() {
+		try {
+			ensureScenarios();
+			if (scenarios.getCrypto() == null) {
+				scenarios.setCrypto(new CryptoScenario());
+			}
+			var crypto = scenarios.getCrypto();
+			int numNodes = targetNetwork().getNodes().size();
+			return customHapiSpec("DoJustTransfers")
+					.withProperties(Map.of(
+							"nodes", nodes(),
+							"default.payer", primaryPayer(),
+							"startupAccounts.literal", payerKeystoreLiteral()
+					)).given(
+							keyFromPem(() -> pemForAccount(targetNetwork().getScenarioPayer()))
+									.name(SCENARIO_PAYER_NAME)
+									.linkedTo(() -> String.format("0.0.%d", targetNetwork().getScenarioPayer())),
+							ensureValidatedAccountExistence(
+									SENDER_NAME,
+									numNodes,
+									pemForAccount(senderOrNegativeOne(crypto).getAsLong()),
+									senderOrNegativeOne(crypto),
+									crypto::setSender),
+							ensureValidatedAccountExistence(
+									RECEIVER_NAME,
+									0L,
+									pemForAccount(receiverOrNegativeOne(crypto).getAsLong()),
+									receiverOrNegativeOne(crypto),
+									crypto::setReceiver)
+					).when( ).then(
+							IntStream.range(0, numNodes).mapToObj(i ->
+								cryptoTransfer(tinyBarsFromTo(SENDER_NAME, RECEIVER_NAME, 1L))
+										.payingWith(SCENARIO_PAYER_NAME)
+										.setNode(String.format("0.0.%d", targetNetwork().getNodes().get(i).getAccount()))
+										.via("transferTxn" + i)).toArray(HapiSpecOperation[]::new)
+					);
+		} catch (Exception e) {
+			log.warn("Unable to initialize crypto scenario, skipping it!", e);
+			errorsOccurred.set(true);
+			return null;
+		}
 	}
 
 	private static HapiApiSpec getSystemKeys() {
@@ -188,7 +240,7 @@ public class ValidationScenarios extends HapiApiSuite {
 							"nodes", nodes(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
-					)).given( ).when( ).then(flattened(
+					)).given().when().then(flattened(
 							Arrays.stream(accounts)
 									.mapToObj(num -> getAccountInfo(String.format("0.0.%d", num))
 											.setNodeFrom(ValidationScenarios::nextNode)
@@ -214,11 +266,11 @@ public class ValidationScenarios extends HapiApiSuite {
 							"nodes", nodes(),
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
-					)).given( ).when( ).then(
+					)).given().when().then(
 							withOpContext((spec, opLog) -> {
-									var lookup = getAccountBalance(() -> idLiteral(targetNetwork().getBootstrap()));
-									allRunFor(spec, lookup);
-									learner.accept(lookup.getResponse().getCryptogetAccountBalance().getBalance());
+								var lookup = getAccountBalance(() -> idLiteral(targetNetwork().getBootstrap()));
+								allRunFor(spec, lookup);
+								learner.accept(lookup.getResponse().getCryptogetAccountBalance().getBalance());
 							})
 					);
 		} catch (Exception e) {
@@ -238,7 +290,7 @@ public class ValidationScenarios extends HapiApiSuite {
 							"default.payer", primaryPayer(),
 							"startupAccounts.literal", payerKeystoreLiteral()
 					)).given(
-					).when( ).then(
+					).when().then(
 							ensureValidatedAccountExistence(
 									SCENARIO_PAYER_NAME,
 									minStartingBalance,
@@ -427,7 +479,7 @@ public class ValidationScenarios extends HapiApiSuite {
 									persistentOrNegativeOne(file),
 									num -> file.getPersistent().setNum(num),
 									loc -> file.getPersistent().setContents(loc))
-					).when( ).then(
+					).when().then(
 							novelFileIfDesired()
 					);
 		} catch (Exception e) {
@@ -525,7 +577,8 @@ public class ValidationScenarios extends HapiApiSuite {
 			} else {
 				var contents = (contentsLoc != null)
 						? Files.readAllBytes(Paths.get(pathTo(contentsLoc)))
-						: ValidationScenarios.class.getClassLoader().getResourceAsStream(DEFAULT_CONTENTS_RESOURCE).readAllBytes();
+						: ValidationScenarios.class.getClassLoader().getResourceAsStream(
+						DEFAULT_CONTENTS_RESOURCE).readAllBytes();
 				var filesDir = new File("files/");
 				if (!filesDir.exists()) {
 					filesDir.mkdir();
@@ -560,7 +613,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			}
 			var contract = scenarios.getContract();
 
-			Object[] donationArgs = new Object[] { Integer.valueOf((int)targetNetwork().getBootstrap()), "Hey, Ma!" };
+			Object[] donationArgs = new Object[] { Integer.valueOf((int) targetNetwork().getBootstrap()), "Hey, Ma!" };
 
 			return customHapiSpec("ContractScenario")
 					.withProperties(Map.of(
@@ -686,7 +739,8 @@ public class ValidationScenarios extends HapiApiSuite {
 				var baseName = (bytecodeLoc != null) ? bytecodeLoc : DEFAULT_BYTECODE_RESOURCE;
 				var bytecode = (bytecodeLoc != null)
 						? Files.readAllBytes(Paths.get(pathToContract(bytecodeLoc)))
-						: ValidationScenarios.class.getClassLoader().getResourceAsStream(DEFAULT_BYTECODE_RESOURCE).readAllBytes();
+						: ValidationScenarios.class.getClassLoader().getResourceAsStream(
+						DEFAULT_BYTECODE_RESOURCE).readAllBytes();
 				var contractsDir = new File("contracts/");
 				if (!contractsDir.exists()) {
 					contractsDir.mkdir();
@@ -874,7 +928,7 @@ public class ValidationScenarios extends HapiApiSuite {
 	private static void parse(String[] args) {
 		var KEY_VALUE_PATTERN = Pattern.compile("([\\w\\d]+)=([\\w\\d,]+)");
 
-		for (String arg : args)	{
+		for (String arg : args) {
 			var matcher = KEY_VALUE_PATTERN.matcher(arg);
 			if (!matcher.matches()) {
 				log.warn(String.format("Ignoring command-line argument '%s'", arg));
@@ -884,7 +938,8 @@ public class ValidationScenarios extends HapiApiSuite {
 				} else if ("defaultNodePayment".equals(keyOf(matcher))) {
 					try {
 						params.setDefaultNodePayment(Long.parseLong(valueOf(matcher)));
-					} catch (NumberFormatException ignore) {}
+					} catch (NumberFormatException ignore) {
+					}
 				} else if ("novel".equals(keyOf(matcher))) {
 					params.setNovelContent(valueOf(matcher).toLowerCase().equals("true"));
 				} else if ("revocation".equals(keyOf(matcher))) {
@@ -895,6 +950,7 @@ public class ValidationScenarios extends HapiApiSuite {
 							.collect(Collectors.toSet());
 					List<String> listed = Arrays.stream(valueOf(matcher).split(","))
 							.map(name -> name.equals("syskeys") ? "SYSTEM_KEYS" : name)
+							.map(name -> name.equals("xfers") ? "TRANSFERS_ONLY" : name)
 							.filter(v -> legal.contains(v.toUpperCase()))
 							.collect(Collectors.toList());
 					if (listed.size() == 1) {
@@ -922,8 +978,6 @@ public class ValidationScenarios extends HapiApiSuite {
 	private static String valueOf(Matcher m) {
 		return m.group(2);
 	}
-
-	enum Scenario { CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS }
 
 	private static class ScenarioParams {
 		static long DEFAULT_NODE_PAYMENT_TINYBARS = 25;
@@ -1016,6 +1070,10 @@ public class ValidationScenarios extends HapiApiSuite {
 	private static String nextNode() {
 		var account = nodeAccounts.get(nextAccount++);
 		nextAccount %= nodeAccounts.size();
+		try {
+			Thread.sleep(validationConfig.getSleepMsBeforeNextNode());
+		} catch (InterruptedException ignore) {
+		}
 		return account;
 	}
 
@@ -1041,7 +1099,8 @@ public class ValidationScenarios extends HapiApiSuite {
 			log.error(String.format("Missing bootstrap PEM @ '%s', exiting.", loc));
 		}
 
-		return SpecUtils.asSerializedOcKeystore(f, params.getRawPassphrase(), accountId(targetNetwork().getBootstrap()));
+		return SpecUtils.asSerializedOcKeystore(f, params.getRawPassphrase(),
+				accountId(targetNetwork().getBootstrap()));
 	}
 
 	private static AccountID accountId(long num) {
@@ -1132,13 +1191,13 @@ public class ValidationScenarios extends HapiApiSuite {
 					"0.0.%d balance change was %d tinyBars (%.2f \u0127)",
 					targetNetwork().getBootstrap(),
 					payerChange,
-					(double)payerChange / 100_000_000));
+					(double) payerChange / 100_000_000));
 		} else if (startingBalance.get() >= 0) {
 			log.info(String.format(
 					"0.0.%d balance is now %d tinyBars (%.2f \u0127)",
 					targetNetwork().getBootstrap(),
 					startingBalance.get(),
-					(double)startingBalance.get() / 100_000_000));
+					(double) startingBalance.get() / 100_000_000));
 		}
 	}
 
