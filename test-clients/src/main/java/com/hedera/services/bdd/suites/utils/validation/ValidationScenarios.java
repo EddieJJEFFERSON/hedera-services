@@ -190,11 +190,6 @@ public class ValidationScenarios extends HapiApiSuite {
 
 	private static HapiApiSpec doJustTransfers() {
 		try {
-			ensureScenarios();
-			if (scenarios.getCrypto() == null) {
-				scenarios.setCrypto(new CryptoScenario());
-			}
-			var crypto = scenarios.getCrypto();
 			int numNodes = targetNetwork().getNodes().size();
 			return customHapiSpec("DoJustTransfers")
 					.withProperties(Map.of(
@@ -204,22 +199,11 @@ public class ValidationScenarios extends HapiApiSuite {
 					)).given(
 							keyFromPem(() -> pemForAccount(targetNetwork().getScenarioPayer()))
 									.name(SCENARIO_PAYER_NAME)
-									.linkedTo(() -> String.format("0.0.%d", targetNetwork().getScenarioPayer())),
-							ensureValidatedAccountExistence(
-									SENDER_NAME,
-									numNodes,
-									pemForAccount(senderOrNegativeOne(crypto).getAsLong()),
-									senderOrNegativeOne(crypto),
-									crypto::setSender),
-							ensureValidatedAccountExistence(
-									RECEIVER_NAME,
-									0L,
-									pemForAccount(receiverOrNegativeOne(crypto).getAsLong()),
-									receiverOrNegativeOne(crypto),
-									crypto::setReceiver)
+									.linkedTo(() -> String.format("0.0.%d", targetNetwork().getScenarioPayer()))
 					).when( ).then(
 							IntStream.range(0, numNodes).mapToObj(i ->
-								cryptoTransfer(tinyBarsFromTo(SENDER_NAME, RECEIVER_NAME, 1L))
+								cryptoTransfer(tinyBarsFromTo(GENESIS, FUNDING, 1L))
+										.hasAnyStatusAtAll()
 										.payingWith(SCENARIO_PAYER_NAME)
 										.setNode(String.format("0.0.%d", targetNetwork().getNodes().get(i).getAccount()))
 										.via("transferTxn" + i)).toArray(HapiSpecOperation[]::new)

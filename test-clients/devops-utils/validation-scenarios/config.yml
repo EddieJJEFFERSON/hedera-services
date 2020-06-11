@@ -17,7 +17,7 @@ networks:
         persistent: {contents: MrBleaney.txt, num: 39040}
   mainnet:
     bootstrap: 950
-    ensureScenarioPayerHbars: 25
+    ensureScenarioPayerHbars: 100
     nodes:
     - {account: 3, ipv4Addr: 35.237.200.180}
     - {account: 4, ipv4Addr: 35.186.191.247}
@@ -84,4 +84,28 @@ networks:
       crypto: {receiver: 39038, sender: 39037}
       file:
         persistent: {contents: MrBleaney.txt, num: 39040}
+  staginglg:
+    bootstrap: 950
+    ensureScenarioPayerHbars: 200
+    nodes:
+    - {account: 3, ipv4Addr: 35.237.182.66}
+    - {account: 4, ipv4Addr: 35.245.226.22}
+    - {account: 5, ipv4Addr: 34.68.9.203}
+    - {account: 6, ipv4Addr: 34.83.131.197}
+    - {account: 7, ipv4Addr: 34.94.236.63}
+    - {account: 8, ipv4Addr: 35.203.26.115}
+    - {account: 9, ipv4Addr: 34.77.3.213}
+    - {account: 10, ipv4Addr: 35.197.237.44}
+    - {account: 11, ipv4Addr: 35.246.250.176}
+    - {account: 12, ipv4Addr: 34.90.117.105}
+    - {account: 13, ipv4Addr: 35.200.57.21}
+    - {account: 14, ipv4Addr: 34.92.120.143}
+    - {account: 15, ipv4Addr: 34.87.47.168}
+    scenarioPayer: 44762
+    scenarios:
+      consensus: {persistent: 39286}
+      contract:
+        persistent: {bytecode: 39290, luckyNo: 42, num: 39291, source: Multipurpose.sol}
+      file:
+        persistent: {contents: MrBleaney.txt, num: 39283}
 sleepMsBeforeNextNode: 2000

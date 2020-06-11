@@ -193,7 +193,10 @@ public class HapiGetFileContents extends HapiQueryOp<HapiGetFileContents> {
 		if (expContentFn.isPresent()) {
 			ByteString expected = expContentFn.get().apply(spec);
 			ByteString actual = response.getFileGetContents().getFileContents().getContents();
-			Assert.assertEquals("Wrong file contents!", expected, actual);
+			Assert.assertEquals(
+					"Wrong file contents!",
+					expected.toString(Charset.defaultCharset()),
+					actual.toString(Charset.defaultCharset()));
 		}
 	}
 
