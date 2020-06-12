@@ -28,13 +28,13 @@ import com.hedera.services.bdd.spec.HapiSpecOperation;
 import com.hedera.services.bdd.spec.keys.KeyFactory;
 import com.hedera.services.bdd.spec.transactions.TxnUtils;
 import com.hedera.services.bdd.spec.utilops.CustomSpecAssert;
-import com.hedera.services.bdd.spec.utilops.UtilVerbs;
 
 import static com.hedera.services.bdd.spec.utilops.UtilVerbs.*;
 
 import com.hedera.services.bdd.suites.HapiApiSuite;
 import com.hedera.services.bdd.suites.utils.keypairs.Ed25519KeyStore;
 import com.hedera.services.bdd.suites.utils.keypairs.SpecUtils;
+import com.hedera.services.bdd.suites.utils.sysfiles.serdes.JutilPropsToSvcCfgBytes;
 import com.hederahashgraph.api.proto.java.CurrentAndNextFeeSchedule;
 import com.hederahashgraph.api.proto.java.ExchangeRateSet;
 import com.hederahashgraph.api.proto.java.Key;
@@ -57,14 +57,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -219,7 +217,7 @@ public class SysFilesUpdate extends HapiApiSuite {
 				ServicesConfigurationList.Builder protoConfig = ServicesConfigurationList.newBuilder();
 				jutilConfig.stringPropertyNames()
 						.stream()
-						.sorted(LEGACY_THROTTLES_FIRST_ORDER)
+						.sorted(JutilPropsToSvcCfgBytes.LEGACY_THROTTLES_FIRST_ORDER)
 						.forEach(prop -> protoConfig.addNameValue(Setting.newBuilder()
 								.setName(prop)
 								.setValue(jutilConfig.getProperty(prop))));
@@ -314,7 +312,7 @@ public class SysFilesUpdate extends HapiApiSuite {
 			return proto.getNameValueList()
 					.stream()
 					.map(setting -> String.format("%s=%s", setting.getName(), setting.getValue()))
-					.sorted(LEGACY_THROTTLES_FIRST_ORDER)
+					.sorted(JutilPropsToSvcCfgBytes.LEGACY_THROTTLES_FIRST_ORDER)
 					.collect(Collectors.joining("\n"));
 		}
 	}
@@ -446,23 +444,6 @@ public class SysFilesUpdate extends HapiApiSuite {
 
 		var byteSink = Files.asByteSink(file);
 		byteSink.write(CommonUtils.base64encode(baos.toByteArray()).getBytes());
-	}
-
-	static Set<String> legacyBouncerProps = Set.of("throttlingTps", "simpletransferTps", "getReceiptTps", "queriesTps");
-	static final Comparator<String> LEGACY_THROTTLES_FIRST_ORDER = Comparator.<String>comparingInt(prop -> {
-		if (isLegacyBouncerProp(prop)) {
-			return 0;
-		} else if (prop.startsWith("throttling.hcs")) {
-			return 1;
-		} else {
-			return 2;
-		}
-	}).thenComparing(Comparator.naturalOrder());
-
-	private static boolean isLegacyBouncerProp(String prop) {
-		return (!prop.contains("="))
-				? legacyBouncerProps.contains(prop)
-				: legacyBouncerProps.contains(prop.substring(0, prop.indexOf("=")));
 	}
 
 	private static void dumpAvailPubKeys() throws IOException {

@@ -15,6 +15,10 @@ networks:
       crypto: {receiver: 39038, sender: 39037}
       file:
         persistent: {contents: MrBleaney.txt, num: 39040}
+      sysFiles:
+        evalMode: snapshot
+        numsToFetch: [112, 121, 122]
+      versions: {hapiProtoSemVer: 0.5.1, servicesSemVer: 0.5.0}
   mainnet:
     bootstrap: 950
     ensureScenarioPayerHbars: 100
@@ -106,6 +110,7 @@ networks:
       consensus: {persistent: 39286}
       contract:
         persistent: {bytecode: 39290, luckyNo: 42, num: 39291, source: Multipurpose.sol}
+      crypto: {receiver: 44771, sender: 44770}
       file:
         persistent: {contents: MrBleaney.txt, num: 39283}
 sleepMsBeforeNextNode: 2000

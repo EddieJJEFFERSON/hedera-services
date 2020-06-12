@@ -24,6 +24,8 @@ import com.hedera.services.bdd.spec.HapiApiSpec;
 import com.hedera.services.bdd.spec.queries.QueryVerbs;
 import com.hedera.services.bdd.spec.utilops.UtilVerbs;
 import com.hedera.services.bdd.suites.HapiApiSuite;
+import com.hedera.services.bdd.suites.utils.sysfiles.SysFilesUpdate;
+import com.hedera.services.bdd.suites.utils.sysfiles.serdes.JutilPropsToSvcCfgBytes;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -33,6 +35,7 @@ import java.util.Map;
 
 import static com.hedera.services.bdd.spec.HapiApiSpec.customHapiSpec;
 import static com.hedera.services.bdd.spec.queries.QueryVerbs.getAccountBalance;
+import static com.hedera.services.bdd.spec.queries.QueryVerbs.getFileContents;
 import static com.hedera.services.bdd.spec.transactions.TxnVerbs.cryptoCreate;
 import static com.hedera.services.bdd.spec.transactions.TxnVerbs.cryptoTransfer;
 import static com.hedera.services.bdd.spec.transactions.crypto.HapiCryptoTransfer.tinyBarsFromTo;
@@ -41,6 +44,13 @@ import static com.hedera.services.bdd.spec.utilops.UtilVerbs.withOpContext;
 
 public class OneOffValidation extends HapiApiSuite {
 	private static final Logger log = LogManager.getLogger(OneOffValidation.class);
+
+	private static final String STAGINGLG_NODES = "35.237.182.66:0.0.3,35.245.226.22:0.0.4,34.68.9.203:0.0.5," +
+			"34.83.131.197:0.0.6,34.94.236.63:0.0.7,35.203.26.115:0.0.8,34.77.3.213:0.0.9," +
+			"35.197.237.44:0.0.10,35.246.250.176:0.0.11,34.90.117.105:0.0.12,35.200.57.21:0.0.13," +
+			"34.92.120.143:0.0.14,34.87.47.168:0.0.15";
+	private static final String STAGINGLG_BOOTSTRAP_ACCOUNT = "0.0.950";
+	private static final String STAGINGLG_BOOTSTRAP_ACCOUNT_LOC = "src/main/resource/MainnetStartupAccount.txt";
 
 	private static final String MAINNET_NODES = "35.237.200.180:0.0.3,35.186.191.247:0.0.4," +
 			"35.192.2.25:0.0.5,35.199.161.108:0.0.6,35.203.82.240:0.0.7," +
@@ -73,10 +83,27 @@ public class OneOffValidation extends HapiApiSuite {
 	@Override
 	protected List<HapiApiSpec> getSpecsInSuite() {
 		return List.of(new HapiApiSpec[] {
-				xferWithTls(),
+//				xferWithTls(),
 //				bootstrapBalanceCheck(),
 //				createAnAccount(),
+				checkAppProperties(),
 		});
+	}
+
+	private HapiApiSpec checkAppProperties() {
+		var serde = new JutilPropsToSvcCfgBytes("application.properties");
+		var binLoc = "throwaway.bin";
+		var propertiesLoc = "throwaway-application.properties";
+
+		return customHapiSpec("CheckAppProperties").withProperties(Map.of(
+				"nodes", STAGINGLG_NODES,
+				"default.payer", STAGINGLG_BOOTSTRAP_ACCOUNT,
+				"startupAccounts.path", STAGINGLG_BOOTSTRAP_ACCOUNT_LOC
+		)).given().when().then(
+				getFileContents(APP_PROPERTIES)
+						.saveTo(binLoc)
+						.saveReadableTo(serde::fromRawFile, propertiesLoc)
+		);
 	}
 
 	private HapiApiSpec createAnAccount() {

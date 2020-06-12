@@ -21,6 +21,7 @@ package com.hedera.services.bdd.suites.utils.validation;
  */
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.hedera.services.bdd.spec.HapiApiSpec;
 import com.hedera.services.bdd.spec.HapiPropertySource;
 import com.hedera.services.bdd.spec.HapiSpecOperation;
@@ -36,6 +37,8 @@ import static com.hedera.services.bdd.spec.assertions.TransferListAsserts.includ
 import static com.hedera.services.bdd.spec.keys.SigControl.OFF;
 import static com.hedera.services.bdd.spec.keys.SigControl.ON;
 import static com.hedera.services.bdd.spec.queries.QueryVerbs.*;
+import static com.hedera.services.bdd.suites.utils.sysfiles.serdes.JutilPropsToSvcCfgBytes.LEGACY_THROTTLES_FIRST_ORDER;
+import static com.hedera.services.bdd.suites.utils.sysfiles.serdes.StandardSerdes.SYS_FILE_SERDES;
 
 import com.hedera.services.bdd.spec.keys.SigControl;
 import com.hedera.services.bdd.spec.transactions.TxnVerbs;
@@ -48,12 +51,14 @@ import static com.hedera.services.bdd.spec.utilops.UtilVerbs.*;
 
 import com.hedera.services.bdd.suites.HapiApiSuite;
 import com.hedera.services.bdd.suites.utils.keypairs.SpecUtils;
+import com.hedera.services.bdd.suites.utils.sysfiles.serdes.SysFileSerde;
 import com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.ContractScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.CryptoScenario;
 
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.TRANSFERS_ONLY;
 import static com.hedera.services.bdd.suites.utils.validation.domain.Network.SCENARIO_PAYER_NAME;
+import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYS_FILES;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYSTEM_KEYS;
 import static com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario.NOVEL_TOPIC_NAME;
 import static com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario.PERSISTENT_TOPIC_NAME;
@@ -71,12 +76,16 @@ import com.hedera.services.bdd.suites.utils.validation.domain.Node;
 import com.hedera.services.bdd.suites.utils.validation.domain.PersistentContract;
 import com.hedera.services.bdd.suites.utils.validation.domain.PersistentFile;
 import com.hedera.services.bdd.suites.utils.validation.domain.Scenarios;
+import com.hedera.services.bdd.suites.utils.validation.domain.SysFileScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.ValidationConfig;
+import com.hedera.services.bdd.suites.utils.validation.domain.VersionInfoScenario;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.ContractID;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.KeyList;
+import com.hederahashgraph.api.proto.java.ServicesConfigurationList;
+import com.hederahashgraph.api.proto.java.Setting;
 import com.hederahashgraph.api.proto.java.TopicID;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.LogManager;
@@ -109,11 +118,11 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
 import java.util.function.LongSupplier;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static com.hedera.services.bdd.spec.HapiApiSpec.customHapiSpec;
@@ -124,7 +133,9 @@ import static com.hedera.services.bdd.suites.utils.validation.ValidationScenario
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.CONTRACT;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.CRYPTO;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.FILE;
+import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.VERSIONS;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_SIGNATURE;
+import static java.util.stream.Collectors.toMap;
 
 public class ValidationScenarios extends HapiApiSuite {
 	private static final Logger log = LogManager.getLogger(ValidationScenarios.class);
@@ -142,7 +153,9 @@ public class ValidationScenarios extends HapiApiSuite {
 			"\"type\":\"string\"}],\"name\":\"donate\",\"outputs\":[],\"payable\":true," +
 			"\"stateMutability\":\"payable\",\"type\":\"function\"}";
 
-	enum Scenario {CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS, TRANSFERS_ONLY}
+	enum Scenario {
+		CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS, TRANSFERS_ONLY, VERSIONS, SYS_FILES
+	}
 
 	private static Scenarios scenarios;
 	private static ValidationConfig validationConfig;
@@ -178,11 +191,13 @@ public class ValidationScenarios extends HapiApiSuite {
 				Optional.of(recordPayerBalance(startingBalance::set)),
 				Optional.ofNullable(params.getScenarios().isEmpty() ? null : ensureScenarioPayer()),
 				Optional.ofNullable(params.getScenarios().contains(CRYPTO) ? cryptoScenario() : null),
+				Optional.ofNullable(params.getScenarios().contains(VERSIONS) ? versionsScenario() : null),
 				Optional.ofNullable(params.getScenarios().contains(FILE) ? fileScenario() : null),
 				Optional.ofNullable(params.getScenarios().contains(CONTRACT) ? contractScenario() : null),
 				Optional.ofNullable(params.getScenarios().contains(CONSENSUS) ? consensusScenario() : null),
 				Optional.ofNullable(params.getScenarios().contains(SYSTEM_KEYS) ? getSystemKeys() : null),
 				Optional.ofNullable(params.getScenarios().contains(TRANSFERS_ONLY) ? doJustTransfers() : null),
+				Optional.ofNullable(params.getScenarios().contains(SYS_FILES) ? evalSystemFiles() : null),
 				Optional.ofNullable(params.getScenarios().isEmpty() ? null : recordPayerBalance(endingBalance::set)))
 				.flatMap(Optional::stream)
 				.collect(Collectors.toList());
@@ -200,18 +215,99 @@ public class ValidationScenarios extends HapiApiSuite {
 							keyFromPem(() -> pemForAccount(targetNetwork().getScenarioPayer()))
 									.name(SCENARIO_PAYER_NAME)
 									.linkedTo(() -> String.format("0.0.%d", targetNetwork().getScenarioPayer()))
-					).when( ).then(
+					).when().then(
 							IntStream.range(0, numNodes).mapToObj(i ->
-								cryptoTransfer(tinyBarsFromTo(GENESIS, FUNDING, 1L))
-										.hasAnyStatusAtAll()
-										.payingWith(SCENARIO_PAYER_NAME)
-										.setNode(String.format("0.0.%d", targetNetwork().getNodes().get(i).getAccount()))
-										.via("transferTxn" + i)).toArray(HapiSpecOperation[]::new)
+									cryptoTransfer(tinyBarsFromTo(GENESIS, FUNDING, 1L))
+											.hasAnyStatusAtAll()
+											.payingWith(SCENARIO_PAYER_NAME)
+											.setNode(String.format("0.0.%d",
+													targetNetwork().getNodes().get(i).getAccount()))
+											.via("transferTxn" + i)).toArray(HapiSpecOperation[]::new)
 					);
 		} catch (Exception e) {
 			log.warn("Unable to initialize crypto scenario, skipping it!", e);
 			errorsOccurred.set(true);
 			return null;
+		}
+	}
+
+	private static HapiApiSpec evalSystemFiles() {
+		ensureScenarios();
+		if (scenarios.getSysFiles() == null) {
+			scenarios.setSysFiles(new SysFileScenario());
+		}
+		var sys = scenarios.getSysFiles();
+		final long[] targets = sys.getNumsToFetch().stream().mapToLong(Integer::longValue).toArray();
+
+		try {
+			return customHapiSpec("EvalSystemFiles")
+					.withProperties(Map.of(
+							"nodes", nodes(),
+							"default.payer", primaryPayer(),
+							"startupAccounts.literal", payerKeystoreLiteral()
+					)).given(
+							keyFromPem(() -> pemForAccount(targetNetwork().getScenarioPayer()))
+									.name(SCENARIO_PAYER_NAME)
+									.linkedTo(() -> String.format("0.0.%d", targetNetwork().getScenarioPayer()))
+					).when().then(
+							Arrays.stream(targets)
+									.mapToObj(fileNum -> appropriateQuery(sys, fileNum))
+									.toArray(HapiSpecOperation[]::new)
+					);
+		} catch (Exception e) {
+			log.warn("Unable to initialize system file scenarios, skipping it!", e);
+			errorsOccurred.set(true);
+			return null;
+		}
+	}
+
+	private static HapiSpecOperation appropriateQuery(SysFileScenario sys, long fileNum) {
+		String fid = String.format("0.0.%d", fileNum);
+		SysFileSerde<String> serde = SYS_FILE_SERDES.get(fileNum);
+		String fqn = params.getTargetNetwork() + "-" + serde.preferredFileName();
+		String loc = "files/" + fqn;
+		UnaryOperator<byte[]> preCompare = (fileNum == 121 || fileNum == 122)
+				? ValidationScenarios::asOrdered
+				: bytes -> bytes;
+
+		if (SysFileScenario.COMPARE_EVAL_MODE.equals(sys.getEvalMode())) {
+			String actualLoc = "files/actual-" + fqn;
+			try {
+				byte[] expected = serde.toRawFile(Files.readString(Paths.get(loc)));
+				return getFileContents(fid)
+						.payingWith(SCENARIO_PAYER_NAME)
+						.saveReadableTo(serde::fromRawFile, actualLoc)
+						.hasContents(spec -> expected)
+						.afterBytesTransform(preCompare);
+			} catch (IOException e) {
+				throw new IllegalStateException("Cannot read comparison file @ '" + loc + "'!", e);
+			}
+		} else if (SysFileScenario.SNAPSHOT_EVAL_MODE.equals(sys.getEvalMode())) {
+			return getFileContents(fid)
+					.payingWith(SCENARIO_PAYER_NAME)
+					.saveReadableTo(serde::fromRawFile, loc);
+		} else {
+			throw new IllegalArgumentException("No such sys files eval mode '" + sys.getEvalMode() + "'!");
+		}
+	}
+
+	private static byte[] asOrdered(byte[] svcCfgList) {
+		try {
+			var pre = ServicesConfigurationList.parseFrom(svcCfgList);
+			var post = ServicesConfigurationList.newBuilder();
+			Map<String, String>	lookup = pre.getNameValueList()
+					.stream()
+					.collect(toMap(Setting::getName, Setting::getValue));
+			pre.getNameValueList()
+					.stream()
+					.map(Setting::getName)
+					.sorted(LEGACY_THROTTLES_FIRST_ORDER)
+					.forEach(prop -> post.addNameValue(Setting.newBuilder()
+							.setName(prop)
+							.setValue(lookup.get(prop))));
+			return post.build().toByteArray();
+		} catch (InvalidProtocolBufferException e) {
+			throw new IllegalArgumentException("Not a services configuration list!", e);
 		}
 	}
 
@@ -284,6 +380,42 @@ public class ValidationScenarios extends HapiApiSuite {
 					);
 		} catch (Exception e) {
 			log.warn("Unable to ensure scenario payer, failing!", e);
+			errorsOccurred.set(true);
+			return null;
+		}
+	}
+
+	private static HapiApiSpec versionsScenario() {
+		try {
+			ensureScenarios();
+			if (scenarios.getVersions() == null) {
+				scenarios.setVersions(new VersionInfoScenario());
+			}
+			var versions = scenarios.getVersions();
+			int[] hapiProto = Arrays.stream(versions.getHapiProtoSemVer().split("[.]"))
+					.mapToInt(Integer::parseInt)
+					.toArray();
+			int[] services = Arrays.stream(versions.getServicesSemVer().split("[.]"))
+					.mapToInt(Integer::parseInt)
+					.toArray();
+			return customHapiSpec("VersionsScenario")
+					.withProperties(Map.of(
+							"nodes", nodes(),
+							"default.payer", primaryPayer(),
+							"startupAccounts.literal", payerKeystoreLiteral()
+					)).given(
+							keyFromPem(() -> pemForAccount(targetNetwork().getScenarioPayer()))
+									.name(SCENARIO_PAYER_NAME)
+									.linkedTo(() -> String.format("0.0.%d", targetNetwork().getScenarioPayer()))
+					).when().then(
+							getVersionInfo()
+									.hasProtoSemVer(hapiProto[0], hapiProto[1], hapiProto[2])
+									.hasServicesSemVer(services[0], services[1], services[2])
+									.payingWith(SCENARIO_PAYER_NAME)
+									.setNodeFrom(ValidationScenarios::nextNode)
+					);
+		} catch (Exception e) {
+			log.warn("Unable to initialize versions scenario, skipping it!", e);
 			errorsOccurred.set(true);
 			return null;
 		}
@@ -935,6 +1067,7 @@ public class ValidationScenarios extends HapiApiSuite {
 					List<String> listed = Arrays.stream(valueOf(matcher).split(","))
 							.map(name -> name.equals("syskeys") ? "SYSTEM_KEYS" : name)
 							.map(name -> name.equals("xfers") ? "TRANSFERS_ONLY" : name)
+							.map(name -> name.equals("sysfiles") ? "SYS_FILES" : name)
 							.filter(v -> legal.contains(v.toUpperCase()))
 							.collect(Collectors.toList());
 					if (listed.size() == 1) {
