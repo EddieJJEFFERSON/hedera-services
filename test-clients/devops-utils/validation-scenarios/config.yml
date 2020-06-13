@@ -17,7 +17,7 @@ networks:
         persistent: {contents: MrBleaney.txt, num: 39040}
       sysFiles:
         evalMode: snapshot
-        numsToFetch: [112, 121, 122]
+        numsToFetch: [101, 112, 121, 122]
       versions: {hapiProtoSemVer: 0.5.1, servicesSemVer: 0.5.0}
   mainnet:
     bootstrap: 950

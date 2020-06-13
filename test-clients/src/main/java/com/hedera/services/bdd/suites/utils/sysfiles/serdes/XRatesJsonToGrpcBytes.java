@@ -7,8 +7,11 @@ import com.hedera.services.bdd.suites.utils.sysfiles.ExchangeRatesPojo;
 import com.hederahashgraph.api.proto.java.ExchangeRateSet;
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.io.File;
+import java.io.IOException;
+
 public class XRatesJsonToGrpcBytes implements SysFileSerde<String> {
-	static ObjectMapper mapper = new ObjectMapper();
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	@Override
 	public String fromRawFile(byte[] bytes) {
@@ -24,7 +27,12 @@ public class XRatesJsonToGrpcBytes implements SysFileSerde<String> {
 
 	@Override
 	public byte[] toRawFile(String styledFile) {
-		throw new NotImplementedException("TBD");
+		try {
+			var pojoRates = mapper.readValue(styledFile, ExchangeRatesPojo.class);
+			return pojoRates.toProto().toByteArray();
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Not an exchange rates set!", e);
+		}
 	}
 
 	@Override
