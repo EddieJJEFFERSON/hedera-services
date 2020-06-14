@@ -63,14 +63,14 @@ import com.hederahashgraph.fee.FeeBuilder;
 import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.legacy.core.MapKey;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.core.jproto.JContractIDKey;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.exception.NoFeeScheduleExistsException;
 import com.hedera.services.legacy.exception.StorageKeyNotFoundException;
-import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
+import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
 import com.hedera.services.legacy.unit.PropertyLoaderTest;
 
@@ -234,7 +234,7 @@ public class SmartContractRequestHandlerMiscTest {
             ignore -> true);
     storageWrapper = new FCStorageWrapper(storageMap);
     FeeScheduleInterceptor feeScheduleInterceptor = mock(FeeScheduleInterceptor.class);
-    fsHandler = new FileServiceHandler(storageWrapper, feeScheduleInterceptor, new ExchangeRateSetWrapper());
+    fsHandler = new FileServiceHandler(storageWrapper, feeScheduleInterceptor, new ExchangeRates());
     String key = Hex.encodeHexString(EntityIdUtils.asSolidityAddress(0, 0, payerAccount));
     try {
       payerKeyBytes = MiscUtils.commonsHexToBytes(key);
@@ -414,7 +414,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeMapPut(1, 100));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -455,7 +455,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeMapPut(1, 100));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -464,7 +464,7 @@ public class SmartContractRequestHandlerMiscTest {
     dataToSet = ByteString.copyFrom(SCEncoding.encodeMapPut(2, 200));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -473,7 +473,7 @@ public class SmartContractRequestHandlerMiscTest {
     dataToSet = ByteString.copyFrom(SCEncoding.encodeMapPut(3, 300));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -533,7 +533,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeCreateTrivialCreate());
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -562,7 +562,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeCreateTrivialCreate());
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -600,7 +600,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeCreateTrivialCreate());
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -647,7 +647,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeGetValue());
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -680,7 +680,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeGetValue());
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -921,7 +921,7 @@ public class SmartContractRequestHandlerMiscTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeCreateTrivialCreate());
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();

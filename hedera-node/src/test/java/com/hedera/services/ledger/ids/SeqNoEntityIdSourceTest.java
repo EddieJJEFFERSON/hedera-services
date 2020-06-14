@@ -22,7 +22,7 @@ package com.hedera.services.ledger.ids;
 
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.FileID;
-import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -45,7 +45,7 @@ class SeqNoEntityIdSourceTest {
 
 	@Test
 	public void returnsExpectedAccountId() {
-		given(seqNo.getNextSequenceNum()).willReturn(555L);
+		given(seqNo.getAndIncrement()).willReturn(555L);
 
 		// when:
 		AccountID newId = subject.newAccountId(sponsor);
@@ -56,7 +56,7 @@ class SeqNoEntityIdSourceTest {
 
 	@Test
 	public void returnsExpectedFileId() {
-		given(seqNo.getNextSequenceNum()).willReturn(555L);
+		given(seqNo.getAndIncrement()).willReturn(555L);
 
 		// when:
 		FileID newId = subject.newFileId(sponsor);

@@ -120,7 +120,7 @@ public class AccountBalanceExport {
   public String exportAccountsBalanceCSVFormat(ServicesState servicesState, Instant consensusTimestamp) throws InvalidTotalAccountBalanceException {
     // get the export path from Properties
     log.debug("exportAccountsBalanceCSVFormat called. {}", consensusTimestamp);
-    FCMap<MapKey, HederaAccount> accountMap = servicesState.getAccountMap();
+    FCMap<MapKey, HederaAccount> accountMap = servicesState.accounts();
     String nodeAccountID = readableId(servicesState.getNodeAccountId());
 
     if (!accountBalanceExportDir.endsWith(File.separator)) {

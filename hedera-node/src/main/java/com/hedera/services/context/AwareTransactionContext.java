@@ -62,7 +62,7 @@ public class AwareTransactionContext implements TransactionContext {
 		}
 	}
 
-	private final HederaNodeContext ctx;
+	private final ServicesContext ctx;
 
 	private final Consumer<TransactionRecord.Builder> noopRecordConfig = ignore -> {};
 	private final Consumer<TransactionReceipt.Builder> noopReceiptConfig = ignore -> {};
@@ -78,7 +78,7 @@ public class AwareTransactionContext implements TransactionContext {
 	private Consumer<TransactionRecord.Builder> recordConfig = noopRecordConfig;
 	private Consumer<TransactionReceipt.Builder> receiptConfig = noopReceiptConfig;
 
-	public AwareTransactionContext(HederaNodeContext ctx) {
+	public AwareTransactionContext(ServicesContext ctx) {
 		this.ctx = ctx;
 	}
 

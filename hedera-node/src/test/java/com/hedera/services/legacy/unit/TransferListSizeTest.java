@@ -40,7 +40,7 @@ import com.hederahashgraph.builder.TransactionSigner;
 import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.legacy.core.MapKey;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.hedera.services.legacy.proto.utils.CommonUtils;
@@ -84,8 +84,8 @@ public class TransferListSizeTest {
   protected SequenceNumber sequenceNum = new SequenceNumber(
       ApplicationConstants.HEDERA_START_SEQUENCE);
   private final long nodeAccount = 3L;
-  private final long payerAccount = sequenceNum.getNextSequenceNum();
-  private final long feeCollAccount = sequenceNum.getNextSequenceNum();
+  private final long payerAccount = sequenceNum.getAndIncrement();
+  private final long feeCollAccount = sequenceNum.getAndIncrement();
   AccountID payerAccountId;
   protected AccountID nodeAccountId;
   AccountID feeCollAccountId;
@@ -226,7 +226,7 @@ public class TransferListSizeTest {
   }
 
   public AccountID nextAccountId() {
-    long accountNum = sequenceNum.getNextSequenceNum();
+    long accountNum = sequenceNum.getAndIncrement();
     return AccountID.newBuilder().setRealmNum(0).setAccountNum(accountNum).build();
   }
 

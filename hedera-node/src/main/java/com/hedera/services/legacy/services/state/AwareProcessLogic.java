@@ -22,7 +22,7 @@ package com.hedera.services.legacy.services.state;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import com.hedera.services.context.HederaNodeContext;
+import com.hedera.services.context.ServicesContext;
 
 import static com.hedera.services.context.domain.trackers.IssEventStatus.ONGOING_ISS;
 import static com.hedera.services.keys.HederaKeyActivation.payerSigIsActive;
@@ -78,9 +78,9 @@ public class AwareProcessLogic implements ProcessLogic {
 			MODIFYING_IMMUTABLE_CONTRACT,
 			INVALID_CONTRACT_ID);
 
-	private final HederaNodeContext ctx;
+	private final ServicesContext ctx;
 
-	public AwareProcessLogic(HederaNodeContext ctx) {
+	public AwareProcessLogic(ServicesContext ctx) {
 		this.ctx = ctx;
 	}
 
@@ -318,7 +318,7 @@ public class AwareProcessLogic implements ProcessLogic {
 
 	private void updateMidnightRatesIfAppropriateAt(Instant dataDrivenNow) {
 		if (shouldUpdateMidnightRatesAt(dataDrivenNow)) {
-			ctx.midnightRates().update(ctx.exchange().activeRates());
+			ctx.midnightRates().replaceWith(ctx.exchange().activeRates());
 		}
 	}
 	private boolean shouldUpdateMidnightRatesAt(Instant dataDrivenNow) {

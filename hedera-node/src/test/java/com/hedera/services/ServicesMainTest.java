@@ -21,7 +21,7 @@ package com.hedera.services;
  */
 
 import com.hedera.services.context.CurrentPlatformStatus;
-import com.hedera.services.context.HederaNodeContext;
+import com.hedera.services.context.ServicesContext;
 import com.hedera.services.context.domain.trackers.IssEventInfo;
 import com.hedera.services.context.domain.trackers.IssEventStatus;
 import com.hedera.services.context.properties.Profile;
@@ -95,7 +95,7 @@ public class ServicesMainTest {
 	FeeCalculator fees;
 	ServicesMain subject;
 	ServicesState localSignedState;
-	HederaNodeContext ctx;
+	ServicesContext ctx;
 	PropertySource properties;
 	LedgerValidator ledgerValidator;
 	AccountsExporter accountsExporter;
@@ -135,7 +135,7 @@ public class ServicesMainTest {
 		addressBook = mock(AddressBook.class);
 		systemFilesManager = mock(SystemFilesManager.class);
 		systemAccountsCreator = mock(SystemAccountsCreator.class);
-		ctx = mock(HederaNodeContext.class);
+		ctx = mock(ServicesContext.class);
 
 		given(ctx.fees()).willReturn(fees);
 		given(ctx.grpc()).willReturn(grpc);
@@ -558,9 +558,9 @@ public class ServicesMainTest {
 		given(topics.getRootHash()).willReturn(new Hash(topicRootHash));
 		// and:
 		localSignedState = mock(ServicesState.class);
-		given(localSignedState.getAccountMap()).willReturn(accounts);
-		given(localSignedState.getStorageMap()).willReturn(storage);
-		given(localSignedState.getTopicsMap()).willReturn(topics);
+		given(localSignedState.accounts()).willReturn(accounts);
+		given(localSignedState.storage()).willReturn(storage);
+		given(localSignedState.topics()).willReturn(topics);
 		// and:
 		subject.init(null, new NodeId(false, NODE_ID));
 
@@ -627,9 +627,9 @@ public class ServicesMainTest {
 		given(storage.getRootHash()).willReturn(new Hash(storageRootHash));
 		given(topics.getRootHash()).willReturn(new Hash(topicRootHash));
 		// and:
-		given(localSignedState.getAccountMap()).willReturn(accounts);
-		given(localSignedState.getStorageMap()).willReturn(storage);
-		given(localSignedState.getTopicsMap()).willReturn(topics);
+		given(localSignedState.accounts()).willReturn(accounts);
+		given(localSignedState.storage()).willReturn(storage);
+		given(localSignedState.topics()).willReturn(topics);
 		// and:
 		given(supplier.apply(
 				String.format(ServicesMain.FC_DUMP_LOC_TPL,

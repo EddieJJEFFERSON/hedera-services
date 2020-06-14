@@ -58,7 +58,7 @@ import com.hedera.services.legacy.core.MapKey;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
+import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.legacy.proto.utils.CommonUtils;
 
 import java.security.KeyPair;
@@ -161,7 +161,7 @@ class PreCheckValidationTest {
   @BeforeAll
   void initializeState() throws Exception {
     FeeScheduleInterceptor feeScheduleInterceptor = mock(FeeScheduleInterceptor.class);
-    fileServiceHandler = new FileServiceHandler(storageWrapper, feeScheduleInterceptor, new ExchangeRateSetWrapper());
+    fileServiceHandler = new FileServiceHandler(storageWrapper, feeScheduleInterceptor, new ExchangeRates());
 
     precheckVerifier = mock(PrecheckVerifier.class);
     transactionHandler = new TransactionHandler(recordCache, accountFCMap,

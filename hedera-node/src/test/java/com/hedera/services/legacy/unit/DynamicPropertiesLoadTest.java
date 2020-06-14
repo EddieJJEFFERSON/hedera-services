@@ -63,7 +63,7 @@ import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.exception.InvalidFileWACLException;
 import com.hedera.services.legacy.exception.SerializationException;
-import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
+import com.hedera.services.state.submerkle.ExchangeRates;
 
 import net.i2p.crypto.eddsa.EdDSAPublicKey;
 import net.i2p.crypto.eddsa.KeyPairGenerator;
@@ -93,7 +93,7 @@ public class DynamicPropertiesLoadTest {
 		fileServiceHandler = new FileServiceHandler(
 				storageWrapper,
 				feeScheduleInterceptor,
-				new ExchangeRateSetWrapper());
+				new ExchangeRates());
 	}
 		
 	@Test

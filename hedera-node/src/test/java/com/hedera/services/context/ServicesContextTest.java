@@ -20,9 +20,12 @@ package com.hedera.services.context;
  * ‍
  */
 
+import com.hedera.services.ServicesState;
 import com.hedera.services.config.AccountNumbers;
 import com.hedera.services.config.EntityNumbers;
 import com.hedera.services.config.FileNumbers;
+import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.domain.trackers.ConsensusStatusCounts;
 import com.hedera.services.context.domain.trackers.IssEventInfo;
 import com.hedera.services.context.primitives.StateView;
@@ -48,10 +51,15 @@ import com.hedera.services.grpc.controllers.FileController;
 import com.hedera.services.grpc.controllers.NetworkController;
 import com.hedera.services.ledger.HederaLedger;
 import com.hedera.services.ledger.ids.SeqNoEntityIdSource;
+import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.legacy.core.StorageKey;
+import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.queries.answering.ServiceAnswerFlow;
 import com.hedera.services.queries.consensus.HcsAnswers;
 import com.hedera.services.queries.validation.QueryFeeCheck;
 import com.hedera.services.state.initialization.HfsSystemFilesManager;
+import com.hedera.services.state.submerkle.ExchangeRates;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.throttling.BucketThrottling;
 import com.hedera.services.throttling.TransactionThrottling;
 import com.hedera.services.txns.TransitionLogicLookup;
@@ -103,6 +111,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
+
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -115,16 +125,35 @@ import static org.mockito.BDDMockito.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(JUnitPlatform.class)
-public class HederaNodeContextTest {
+public class ServicesContextTest {
 	private final NodeId id = new NodeId(false, 1L);
 
+	Instant consensusTimeOfLastHandledTxn = Instant.now();
 	Platform platform;
+	SequenceNumber seqNo;
+	ExchangeRates midnightRates;
+	NetworkContext networkCtx;
+	ServicesState state;
 	Cryptography crypto;
 	PropertySource properties;
 	PropertySources propertySources;
+	FCMap<MapKey, Topic> topics;
+	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<StorageKey, StorageValue> storage;
 
 	@BeforeEach
 	void setup() {
+		topics = mock(FCMap.class);
+		storage = mock(FCMap.class);
+		accounts = mock(FCMap.class);
+		seqNo = mock(SequenceNumber.class);
+		midnightRates = mock(ExchangeRates.class);
+		networkCtx = new NetworkContext(consensusTimeOfLastHandledTxn, seqNo, midnightRates);
+		state = mock(ServicesState.class);
+		given(state.networkCtx()).willReturn(networkCtx);
+		given(state.accounts()).willReturn(accounts);
+		given(state.storage()).willReturn(storage);
+		given(state.topics()).willReturn(topics);
 		crypto = mock(Cryptography.class);
 		platform = mock(Platform.class);
 		given(platform.getCryptography()).willReturn(crypto);
@@ -134,12 +163,38 @@ public class HederaNodeContextTest {
 	}
 
 	@Test
+	public void delegatesPrimitivesToState() {
+		// setup:
+		InOrder inOrder = inOrder(state);
+
+		// given:
+		var subject = new ServicesContext(id, platform, state, propertySources);
+
+		// when:
+		subject.addressBook();
+		var actualSeqNo = subject.seqNo();
+		var actualMidnightRates = subject.midnightRates();
+		var actualLastHandleTime = subject.consensusTimeOfLastHandledTxn();
+		subject.topics();
+		subject.storage();
+		subject.accounts();
+
+		// then:
+		inOrder.verify(state).addressBook();
+		assertEquals(seqNo, actualSeqNo);
+		assertEquals(midnightRates, actualMidnightRates);
+		assertEquals(consensusTimeOfLastHandledTxn, actualLastHandleTime);
+		inOrder.verify(state).topics();
+		inOrder.verify(state).storage();
+		inOrder.verify(state).accounts();
+	}
+
+	@Test
 	public void hasExpectedFundingAccount() {
 		given(properties.getStringProperty("ledger.funding.account")).willReturn("0.0.98");
 
 		// when:
-		HederaNodeContext ctx = new HederaNodeContext(
-				id, platform, propertySources, mock(PrimitiveContext.class));
+		ServicesContext ctx = new ServicesContext(id, platform, state, propertySources);
 
 		// then:
 		assertEquals(AccountID.newBuilder().setAccountNum(98L).build(), ctx.fundingAccount());
@@ -148,7 +203,7 @@ public class HederaNodeContextTest {
 	@Test
 	public void returnsMissingValueWithoutFundingAccountProp() {
 		// when:
-		HederaNodeContext ctx = new HederaNodeContext(id, platform, propertySources, mock(PrimitiveContext.class));
+		ServicesContext ctx = new ServicesContext(id, platform, state, propertySources);
 
 		// then:
 		assertNull(ctx.fundingAccount());
@@ -162,9 +217,10 @@ public class HederaNodeContextTest {
 
 		given(address.getMemo()).willReturn("0.0.3");
 		given(book.getAddress(1L)).willReturn(address);
+		given(state.addressBook()).willReturn(book);
 
 		// when:
-		HederaNodeContext ctx = new HederaNodeContext(id, platform, propertySources, new PrimitiveContext(book));
+		ServicesContext ctx = new ServicesContext(id, platform, state, propertySources);
 
 		// then:
 		assertEquals(ctx.address(), address);
@@ -175,12 +231,12 @@ public class HederaNodeContextTest {
 	public void canOverrideLastHandledConsensusTime() {
 		// given:
 		Instant dataDrivenNow = Instant.now();
-		HederaNodeContext ctx =
-				new HederaNodeContext(
+		ServicesContext ctx =
+				new ServicesContext(
 						id,
 						platform,
-						propertySources,
-						new PrimitiveContext(mock(AddressBook.class)));
+						state,
+						propertySources);
 
 		// when:
 		ctx.updateConsensusTimeOfLastHandledTxn(dataDrivenNow);
@@ -196,7 +252,7 @@ public class HederaNodeContextTest {
 		given(platform.createConsole(true)).willReturn(console);
 
 		// when:
-		HederaNodeContext ctx = new HederaNodeContext(id, platform, propertySources, mock(PrimitiveContext.class));
+		ServicesContext ctx = new ServicesContext(id, platform, state, propertySources);
 
 		// then:
 		assertEquals(console, ctx.console());
@@ -210,11 +266,12 @@ public class HederaNodeContextTest {
 		AddressBook book = mock(AddressBook.class);
 		given(address.getMemo()).willReturn("0.0.3");
 		given(book.getAddress(1L)).willReturn(address);
+		given(state.addressBook()).willReturn(book);
 		given(properties.getStringProperty("hedera.recordStream.logDir")).willReturn("src/main/resources");
 		GlobalFlag.getInstance().setPlatformStatus(PlatformStatus.DISCONNECTED);
 
 		// given:
-		HederaNodeContext ctx = new HederaNodeContext(id, platform, propertySources, new PrimitiveContext(book));
+		ServicesContext ctx = new ServicesContext(id, platform, state, propertySources);
 
 		// expect:
 		assertEquals(SleepingPause.INSTANCE, ctx.pause());

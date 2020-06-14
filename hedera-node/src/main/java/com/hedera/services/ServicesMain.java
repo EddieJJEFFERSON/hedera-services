@@ -20,7 +20,7 @@ package com.hedera.services;
  * ‍
  */
 
-import com.hedera.services.context.HederaNodeContext;
+import com.hedera.services.context.ServicesContext;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.properties.Profile;
@@ -59,7 +59,7 @@ import static com.swirlds.common.PlatformStatus.*;
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
 /**
- * Drives the major state transitions for a Hedera Node via its {@link HederaNodeContext}.
+ * Drives the major state transitions for a Hedera Node via its {@link ServicesContext}.
  *
  * @author Michael Tinker
  */
@@ -93,7 +93,7 @@ public class ServicesMain implements SwirldMain {
 
 	SystemExits systemExits = new JvmSystemExits();
 	Supplier<Charset> defaultCharset = Charset::defaultCharset;
-	HederaNodeContext ctx;
+	ServicesContext ctx;
 
 	/**
 	 * Convenience launcher for dev env.
@@ -332,16 +332,16 @@ public class ServicesMain implements SwirldMain {
 						LoggedIssMeta meta = new LoggedIssMeta(
 								round, self.getId(), other.getId(),
 								sig, hash,
-								state.getAccountMap().getRootHash().getValue(),
-								state.getStorageMap().getRootHash().getValue(),
-								state.getTopicsMap().getRootHash().getValue());
+								state.accounts().getRootHash().getValue(),
+								state.storage().getRootHash().getValue(),
+								state.topics().getRootHash().getValue());
 
 						ctx.issEventInfo().alert(consensusTime);
 						if (ctx.issEventInfo().shouldDumpThisRound()) {
 							log.error(ISS_ERROR_MSG_FN.apply(meta));
 							dumpFcms(
-									self.getId(), round, state.getAccountMap(),
-									state.getStorageMap(), state.getTopicsMap()
+									self.getId(), round, state.accounts(),
+									state.storage(), state.topics()
 							);
 						}
 					} catch (Exception e) {

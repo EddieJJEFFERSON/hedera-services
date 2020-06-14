@@ -105,7 +105,7 @@ public class AccountBalanceExportTest {
 
   ServicesState getMockState() throws Exception {
     ServicesState state = mock(ServicesState.class);
-    when(state.getAccountMap()).thenReturn(getAccountMapForTest());
+    when(state.accounts()).thenReturn(getAccountMapForTest());
     when(state.getNodeAccountId()).thenReturn(IdUtils.asAccount(nodeAccountIDString));
     return state;
   }
@@ -214,7 +214,7 @@ public class AccountBalanceExportTest {
 
   ServicesState getMockStateWithInvalidTotalBalance() throws Exception {
     ServicesState state = mock(ServicesState.class);
-    when(state.getAccountMap()).thenReturn(getAccountMapWithInvalidTotalBalanceForTest());
+    when(state.accounts()).thenReturn(getAccountMapWithInvalidTotalBalanceForTest());
     when(state.getNodeAccountId()).thenReturn(IdUtils.asAccount(nodeAccountIDString));
     return state;
   }

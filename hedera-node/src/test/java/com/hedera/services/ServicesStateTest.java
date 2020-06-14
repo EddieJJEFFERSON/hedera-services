@@ -21,10 +21,12 @@ package com.hedera.services;
  */
 
 import com.google.protobuf.ByteString;
-import com.hedera.services.context.HederaNodeContext;
-import com.hedera.services.context.PrimitiveContext;
+import com.hedera.services.context.NetworkContext;
+import com.hedera.services.context.ServicesContext;
 import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.properties.PropertySources;
+import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.hedera.services.sigs.order.HederaSigningOrder;
 import com.hedera.services.sigs.order.SigningOrderResult;
 import com.hedera.services.txns.ProcessLogic;
@@ -40,8 +42,8 @@ import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.crypto.SignatureStatus;
-import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
-import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
+import com.hedera.services.state.submerkle.ExchangeRates;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import com.swirlds.common.Address;
 import com.swirlds.common.AddressBook;
 import com.swirlds.common.NodeId;
@@ -55,15 +57,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 
+import static com.swirlds.platform.Utilities.readInstant;
 import static java.util.Collections.EMPTY_LIST;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.*;
@@ -77,12 +83,19 @@ class ServicesStateTest {
 	AddressBook book;
 	AddressBook bookCopy;
 	Platform platform;
-	PrimitiveContext primitives;
 	ProcessLogic logic;
 	PropertySources propertySources;
-	HederaNodeContext ctx;
+	ServicesContext ctx;
+	FCMap<MapKey, Topic> topics;
 	FCMap<MapKey, HederaAccount> accounts;
 	FCMap<StorageKey, StorageValue> storage;
+	FCMap<MapKey, Topic> topicsCopy;
+	FCMap<MapKey, HederaAccount> accountsCopy;
+	FCMap<StorageKey, StorageValue> storageCopy;
+	ExchangeRates midnightRates;
+	SequenceNumber seqNo;
+	NetworkContext networkCtx;
+	NetworkContext networkCtxCopy;
 	NodeId self = new NodeId(false, 1);
 	SerializableDataInputStream in;
 	SerializableDataOutputStream out;
@@ -106,12 +119,28 @@ class ServicesStateTest {
 		given(book.getAddress(1)).willReturn(address);
 
 		logic = mock(ProcessLogic.class);
-		ctx = mock(HederaNodeContext.class);
+		ctx = mock(ServicesContext.class);
 		given(ctx.id()).willReturn(self);
 		given(ctx.logic()).willReturn(logic);
 
+		topics = mock(FCMap.class);
 		storage = mock(FCMap.class);
 		accounts = mock(FCMap.class);
+		topicsCopy = mock(FCMap.class);
+		storageCopy = mock(FCMap.class);
+		accountsCopy = mock(FCMap.class);
+		given(topics.copy()).willReturn(topicsCopy);
+		given(storage.copy()).willReturn(storageCopy);
+		given(accounts.copy()).willReturn(accountsCopy);
+
+		seqNo = mock(SequenceNumber.class);
+		midnightRates = mock(ExchangeRates.class);
+		networkCtx = mock(NetworkContext.class);
+		networkCtxCopy = mock(NetworkContext.class);
+		given(networkCtx.copy()).willReturn(networkCtxCopy);
+		given(networkCtx.midnightRates()).willReturn(midnightRates);
+		given(networkCtx.seqNo()).willReturn(seqNo);
+
 		propertySources = mock(PropertySources.class);
 
 		platform = mock(Platform.class);
@@ -119,11 +148,6 @@ class ServicesStateTest {
 
 		given(ctx.platform()).willReturn(platform);
 		given(ctx.propertySources()).willReturn(propertySources);
-
-		primitives = mock(PrimitiveContext.class);
-		given(primitives.getStorage()).willReturn(storage);
-		given(primitives.getAccounts()).willReturn(accounts);
-		given(primitives.getAddressBook()).willReturn(book);
 
 		systemExits = mock(SystemExits.class);
 
@@ -134,7 +158,7 @@ class ServicesStateTest {
 	public void getsNodeAccount() {
 		// setup:
 		subject.nodeId = self;
-		subject.primitives = primitives;
+		subject.setChild(ServicesState.ADDRESS_BOOK_CHILD_INDEX, book);
 
 		// when:
 		AccountID actual = subject.getNodeAccountId();
@@ -146,7 +170,6 @@ class ServicesStateTest {
 	@Test
 	public void failsFastOnReinitializationAttempt() {
 		// setup:
-		subject.primitives = primitives;
 		subject.systemExits = systemExits;
 
 		// given:
@@ -161,73 +184,19 @@ class ServicesStateTest {
 
 	@Test
 	public void initsAsExpected() {
-		// setup:
-		subject.primitives = primitives;
-
 		// when:
 		subject.init(platform, book);
 
 		// then:
-		HederaNodeContext actualCtx = CONTEXTS.lookup(self.getId());
+		ServicesContext actualCtx = CONTEXTS.lookup(self.getId());
 		// and:
-		assertFalse(primitives == subject.primitives);
-		assertEquals(book, subject.primitives.getAddressBook());
+		assertNotNull(subject.topics());
+		assertNotNull(subject.storage());
+		assertNotNull(subject.accounts());
+		assertEquals(book, subject.addressBook());
 		assertEquals(self, actualCtx.id());
 		assertEquals(platform, actualCtx.platform());
-	}
-
-	@Test
-	public void copyFromRestoresCtxFromSavedState() throws Exception {
-		// setup:
-		subject.ctx = ctx;
-		subject.nodeId = self;
-		subject.primitives = primitives;
-
-		// when:
-		subject.copyFrom(in);
-
-		// then:
-		verify(primitives).copyFrom(in);
-		// and:
-		HederaNodeContext actualCtx = CONTEXTS.lookup(self.getId());
-		assertEquals(platform, actualCtx.platform());
-		assertEquals(propertySources, actualCtx.propertySources());
-	}
-
-	@Test
-	public void copyFromExtraDelegates() throws Exception {
-		// setup:
-		subject.ctx = ctx;
-		subject.nodeId = self;
-		subject.primitives = primitives;
-
-		// when:
-		subject.copyFromExtra(in);
-
-		// then:
-		verify(primitives).copyFromExtra(in);
-	}
-
-	@Test
-	public void copyToExtraDelegates() throws Exception {
-		// setup:
-		subject.primitives = primitives;
-
-		// when:
-		subject.copyToExtra(out);
-
-		// then:
-		verify(primitives).copyToExtra(out);
-	}
-
-	@Test
-	public void gettersDelegate() {
-		// setup:
-		subject.primitives = primitives;
-
-		// expect:
-		assertEquals(accounts, subject.getAccountMap());
-		assertEquals(storage, subject.getStorageMap());
+		assertEquals(ApplicationConstants.HEDERA_START_SEQUENCE, subject.networkCtx().seqNo().current());
 	}
 
 	@Test
@@ -239,24 +208,35 @@ class ServicesStateTest {
 	@Test
 	public void fastCopyCopiesPrimitives() {
 		// setup:
-		primitives = new PrimitiveContext(
-				0,
-				Instant.now(),
-				book,
-				mock(SequenceNumber.class),
-				mock(ExchangeRateSetWrapper.class),
-				accounts,
-				storage,
-				mock(FCMap.class));
-		subject.primitives = primitives;
+		subject.setChild(ServicesState.TOPICS_CHILD_INDEX, topics);
+		subject.setChild(ServicesState.STORAGE_CHILD_INDEX, storage);
+		subject.setChild(ServicesState.ACCOUNTS_CHILD_INDEX, accounts);
+		subject.setChild(ServicesState.ADDRESS_BOOK_CHILD_INDEX, book);
+		subject.setChild(ServicesState.NETWORK_CTX_CHILD_INDEX, networkCtx);
 		subject.nodeId = self;
 
 		// when:
 		ServicesState copy = (ServicesState)subject.copy();
 
 		// then:
-		assertEquals(self, copy.nodeId);
-		assertFalse(primitives == copy.primitives);
+		assertEquals(ServicesState.ID_WITH_INACTIVE_CONTEXT, copy.nodeId);
+		assertEquals(bookCopy, copy.addressBook());
+		assertEquals(networkCtxCopy, copy.networkCtx());
+		assertEquals(topicsCopy, copy.topics());
+		assertEquals(storageCopy, copy.storage());
+		assertEquals(accountsCopy, copy.accounts());
+	}
+
+	@Test
+	public void immutableIffNoActiveContext() {
+		// expect:
+		assertTrue(subject.isImmutable());
+
+		// and given:
+		subject.nodeId = self;
+
+		// expect:
+		assertFalse(subject.isImmutable());
 	}
 
 	@Test
@@ -266,21 +246,17 @@ class ServicesStateTest {
 	}
 
 	@Test
-	public void copyToDelegates() throws Exception {
-		// setup:
-		subject.primitives = primitives;
-
-		// when:
-		subject.copyTo(out);
-
-		// then:
-		verify(primitives).copyTo(out);
+	public void sanityChecks() {
+		assertEquals(ServicesState.MERKLE_VERSION, subject.getVersion());
+		assertEquals(ServicesState.RUNTIME_CONSTRUCTABLE_ID, subject.getClassId());
+		assertThrows(UnsupportedOperationException.class, () -> subject.copyTo(null));
+		assertThrows(UnsupportedOperationException.class, () -> subject.copyToExtra(null));
 	}
 
 	@Test
 	public void deletesCascadeToStorage() {
 		// setup:
-		subject.primitives = primitives;
+		subject.setChild(ServicesState.STORAGE_CHILD_INDEX, storage);
 
 		// when:
 		subject.delete();
@@ -290,9 +266,68 @@ class ServicesStateTest {
 	}
 
 	@Test
+	public void copiesFromExtraCorrectly() throws IOException {
+		// setup:
+		SerializableDataInputStream in = mock(SerializableDataInputStream.class);
+		InOrder inOrder = inOrder(in, topics, storage, accounts, bookCopy);
+		ServicesState.legacyTmpBookSupplier = () -> bookCopy;
+		// and:
+		subject.setChild(ServicesState.TOPICS_CHILD_INDEX, topics);
+		subject.setChild(ServicesState.STORAGE_CHILD_INDEX, storage);
+		subject.setChild(ServicesState.ACCOUNTS_CHILD_INDEX, accounts);
+
+		// when:
+		subject.copyFromExtra(in);
+
+		// then:
+		inOrder.verify(in).readLong();
+		inOrder.verify(bookCopy).copyFromExtra(in);
+		inOrder.verify(accounts).copyFromExtra(in);
+		inOrder.verify(storage).copyFromExtra(in);
+		inOrder.verify(topics).copyFromExtra(in);
+	}
+
+	@Test
+	public void copiesFromCorrectly() throws IOException {
+		// setup:
+		SerializableDataInputStream in = mock(SerializableDataInputStream.class);
+		InOrder inOrder = inOrder(in, topics, storage, accounts, bookCopy, networkCtx, seqNo, midnightRates);
+		ServicesState.legacyTmpBookSupplier = () -> bookCopy;
+		// and:
+		subject.ctx = ctx;
+		subject.nodeId = self;
+		subject.setChild(ServicesState.TOPICS_CHILD_INDEX, topics);
+		subject.setChild(ServicesState.STORAGE_CHILD_INDEX, storage);
+		subject.setChild(ServicesState.ACCOUNTS_CHILD_INDEX, accounts);
+		subject.setChild(ServicesState.ADDRESS_BOOK_CHILD_INDEX, book);
+		subject.setChild(ServicesState.NETWORK_CTX_CHILD_INDEX, networkCtx);
+		// and:
+		var lastHandleTime = Instant.now();
+
+		given(in.readInstant()).willReturn(lastHandleTime);
+		given(in.readBoolean()).willReturn(true);
+
+		// when:
+		subject.copyFrom(in);
+
+		// then:
+		inOrder.verify(in).readLong();
+		inOrder.verify(seqNo).deserialize(in);
+		inOrder.verify(bookCopy).copyFrom(in);
+		inOrder.verify(accounts).copyFrom(in);
+		inOrder.verify(storage).copyFrom(in);
+		inOrder.verify(in).readBoolean();
+		inOrder.verify(midnightRates).deserialize(in);
+		inOrder.verify(in).readBoolean();
+		inOrder.verify(in).readInstant();
+		inOrder.verify(networkCtx).setConsensusTimeOfLastHandledTxn(lastHandleTime);
+		inOrder.verify(topics).copyFrom(in);
+	}
+
+	@Test
 	public void implementsBookCopy() {
 		// setup:
-		subject.primitives = primitives;
+		subject.setChild(ServicesState.ADDRESS_BOOK_CHILD_INDEX, book);
 
 		// when:
 		AddressBook actualCopy = subject.getAddressBookCopy();

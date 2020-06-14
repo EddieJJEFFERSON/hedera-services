@@ -97,7 +97,7 @@ public class AwareTransactionContextTest {
 	private Address address;
 	private AddressBook book;
 	private HbarCentExchange exchange;
-	private HederaNodeContext ctx;
+	private ServicesContext ctx;
 	private PlatformTxnAccessor accessor;
 	private AwareTransactionContext subject;
 	private Transaction signedTxn;
@@ -133,7 +133,7 @@ public class AwareTransactionContextTest {
 		FCMap<MapKey, HederaAccount> accounts = mock(FCMap.class);
 		given(accounts.get(MapKey.getMapKey(payer))).willReturn(payerAccount);
 
-		ctx = mock(HederaNodeContext.class);
+		ctx = mock(ServicesContext.class);
 		given(ctx.exchange()).willReturn(exchange);
 		given(ctx.ledger()).willReturn(ledger);
 		given(ctx.accounts()).willReturn(accounts);

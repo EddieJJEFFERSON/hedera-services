@@ -22,6 +22,7 @@ package com.hedera.services.context;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hedera.services.ServicesMain;
+import com.hedera.services.ServicesState;
 import com.hedera.services.config.AccountNumbers;
 import com.hedera.services.config.EntityNumbers;
 import com.hedera.services.config.FileNumbers;
@@ -195,8 +196,8 @@ import com.hedera.services.legacy.service.FreezeServiceImpl;
 import com.hedera.services.legacy.service.GlobalFlag;
 import com.hedera.services.legacy.service.SmartContractServiceImpl;
 import com.hedera.services.legacy.services.context.DefaultCurrentPlatformStatus;
-import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
-import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
+import com.hedera.services.state.submerkle.ExchangeRates;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.context.properties.PropertySources;
 import com.hedera.services.state.migration.DefaultStateMigrations;
 import com.hedera.services.legacy.services.context.properties.DefaultPropertySanitizer;
@@ -262,13 +263,13 @@ import static java.util.stream.Collectors.toMap;
  *
  * @author Michael Tinker
  */
-public class HederaNodeContext {
+public class ServicesContext {
 	private static final CustomProperties IGNORED_API_PERMISSION_PROPS = null;
 
 	/* Injected dependencies. */
 	private final NodeId id;
 	private final Platform platform;
-	private final PrimitiveContext primitives;
+	private ServicesState state;
 	private final PropertySources propertySources;
 
 	/* Context-sensitive singletons. */
@@ -366,15 +367,15 @@ public class HederaNodeContext {
 		systemAccountsCreator = new DefaultSystemAccountsCreator();
 	}
 
-	public HederaNodeContext(
+	public ServicesContext(
 			NodeId id,
 			Platform platform,
-			PropertySources propertySources,
-			PrimitiveContext primitives
+			ServicesState state,
+			PropertySources propertySources
 	) {
 		this.id = id;
 		this.platform = platform;
-		this.primitives = primitives;
+		this.state = state;
 		this.propertySources = propertySources;
 	}
 
@@ -1020,7 +1021,7 @@ public class HederaNodeContext {
 					rates -> {
 						GlobalFlag.getInstance().setExchangeRateSet(rates);
 						if (!midnightRates().isInitialized()) {
-							midnightRates().update(rates);
+							midnightRates().replaceWith(rates);
 						}
 					},
 					config -> {
@@ -1232,39 +1233,35 @@ public class HederaNodeContext {
 		return propertySources;
 	}
 
-	public long versionAtStateInit() {
-		return primitives.versionAtStateInit;
-	}
-
 	public Instant consensusTimeOfLastHandledTxn() {
-		return primitives.consensusTimeOfLastHandledTxn;
+		return state.networkCtx().consensusTimeOfLastHandledTxn();
 	}
 
 	public void updateConsensusTimeOfLastHandledTxn(Instant dataDrivenNow) {
-		primitives.consensusTimeOfLastHandledTxn = dataDrivenNow;
+		state.networkCtx().setConsensusTimeOfLastHandledTxn(dataDrivenNow);
 	}
 
 	public AddressBook addressBook() {
-		return primitives.addressBook;
+		return state.addressBook();
 	}
 
 	public SequenceNumber seqNo() {
-		return primitives.seqNo;
+		return state.networkCtx().seqNo();
 	}
 
-	public ExchangeRateSetWrapper midnightRates() {
-		return primitives.midnightRateSet;
+	public ExchangeRates midnightRates() {
+		return state.networkCtx().midnightRates();
 	}
 
 	public FCMap<MapKey, HederaAccount> accounts() {
-		return primitives.accounts;
+		return state.accounts();
 	}
 
 	public FCMap<MapKey, Topic> topics() {
-		return primitives.topics;
+		return state.topics();
 	}
 
 	public FCMap<StorageKey, StorageValue> storage() {
-		return primitives.storage;
+		return state.storage();
 	}
 }

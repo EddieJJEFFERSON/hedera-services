@@ -59,12 +59,12 @@ import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.legacy.core.MapKey;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
-import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
+import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
 import com.hedera.services.legacy.config.PropertiesLoader;
 import java.io.IOException;
@@ -209,7 +209,7 @@ public class SmartContractRequestHandlerPayableTest {
     fsHandler = new FileServiceHandler(
             storageWrapper,
             feeScheduleInterceptor,
-            new ExchangeRateSetWrapper());
+            new ExchangeRates());
     String key = Hex.encodeHexString(EntityIdUtils.asSolidityAddress(0, 0, payerAccount));
     try {
       payerKeyBytes = MiscUtils.commonsHexToBytes(key);
@@ -287,7 +287,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(DEPOSIT_AMOUNT));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, DEPOSIT_AMOUNT);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -327,7 +327,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(DEPOSIT_AMOUNT + 1));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, DEPOSIT_AMOUNT);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -358,7 +358,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(-1));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, -1L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -388,7 +388,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(EXCESSIVE_AMOUNT));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, EXCESSIVE_AMOUNT);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -417,7 +417,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(DEPOSIT_AMOUNT));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, DEPOSIT_AMOUNT);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -426,7 +426,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToGet = ByteString.copyFrom(SCEncoding.encodeGetBalance());
     ContractCallLocalQuery cCLQuery = getCallLocalQuery(newContractId, dataToGet, 250000L)
         .getContractCallLocal();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ContractCallLocalResponse response = smartHandler.contractCallLocal(cCLQuery, System.currentTimeMillis());
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getFunctionResult().getContractCallResult());
@@ -455,7 +455,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(DEPOSIT_AMOUNT));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, DEPOSIT_AMOUNT);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -475,7 +475,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSend = ByteString.copyFrom(SCEncoding.encodeSendFunds(receiverSolidityAddr, transferAmount));
     body = getCallTransactionBody(newContractId, dataToSend, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -512,7 +512,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(DEPOSIT_AMOUNT));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, DEPOSIT_AMOUNT);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -526,7 +526,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSend = ByteString.copyFrom(SCEncoding.encodeSendFunds(INVALID_SOLIDITY_ADDRESS, transferAmount));
     body = getCallTransactionBody(newContractId, dataToSend, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -562,7 +562,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeDeposit(EXCESSIVE_AMOUNT));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, EXCESSIVE_AMOUNT);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -582,7 +582,7 @@ public class SmartContractRequestHandlerPayableTest {
     ByteString dataToSend = ByteString.copyFrom(SCEncoding.encodeSendFunds(receiverSolidityAddr, transferAmount));
     body = getCallTransactionBody(newContractId, dataToSend, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -623,7 +623,7 @@ public class SmartContractRequestHandlerPayableTest {
     // Call the contract to get the balance
     ByteString dataToGet = ByteString.copyFrom(SCEncoding.encodeGetBalanceOf(receiverSolidityAddr));
     ContractCallLocalQuery cCLQuery = getCallLocalQuery(newContractId, dataToGet, 250000L).getContractCallLocal();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ContractCallLocalResponse response = smartHandler.contractCallLocal(cCLQuery, System.currentTimeMillis());
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getFunctionResult().getContractCallResult());
@@ -652,7 +652,7 @@ public class SmartContractRequestHandlerPayableTest {
     // Note that this returns zero for an invalid account address.
     ByteString dataToGet = ByteString.copyFrom(SCEncoding.encodeGetBalanceOf(INVALID_SOLIDITY_ADDRESS));
     ContractCallLocalQuery cCLQuery = getCallLocalQuery(newContractId, dataToGet, 250000L).getContractCallLocal();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ContractCallLocalResponse response = smartHandler.contractCallLocal(cCLQuery, System.currentTimeMillis());
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getFunctionResult().getContractCallResult());

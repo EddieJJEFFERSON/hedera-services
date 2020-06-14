@@ -64,12 +64,12 @@ import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.legacy.core.MapKey;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.services.context.primitives.SequenceNumber;
+import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.exception.StorageKeyNotFoundException;
-import com.hedera.services.legacy.services.context.primitives.ExchangeRateSetWrapper;
+import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
 import com.hedera.services.legacy.config.PropertiesLoader;
@@ -209,7 +209,7 @@ public class SmartContractRequestHandlerStorageTest {
             ignore -> true);
     storageWrapper = new FCStorageWrapper(storageMap);
     FeeScheduleInterceptor feeScheduleInterceptor = mock(FeeScheduleInterceptor.class);
-    fsHandler = new FileServiceHandler(storageWrapper, feeScheduleInterceptor, new ExchangeRateSetWrapper());
+    fsHandler = new FileServiceHandler(storageWrapper, feeScheduleInterceptor, new ExchangeRates());
     String key = Hex.encodeHexString(EntityIdUtils.asSolidityAddress(0, 0, payerAccount));
     try {
       payerKeyBytes = MiscUtils.commonsHexToBytes(key);
@@ -462,7 +462,7 @@ public class SmartContractRequestHandlerStorageTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeSet(SIMPLE_STORAGE_VALUE));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -494,7 +494,7 @@ public class SmartContractRequestHandlerStorageTest {
         RequestBuilder.getContractIdBuild(secondContractSequenceNumber, 0L, 0L), dataToSet,
         250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -522,7 +522,7 @@ public class SmartContractRequestHandlerStorageTest {
     // Fail: wrong ID, should be newContractId
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 100L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -550,7 +550,7 @@ public class SmartContractRequestHandlerStorageTest {
     ByteString dataToSet = ByteString.EMPTY;
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -579,7 +579,7 @@ public class SmartContractRequestHandlerStorageTest {
     // Fail: not enough gas to call
     body = getCallTransactionBody(newContractId, dataToSet, 20L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -615,7 +615,7 @@ public class SmartContractRequestHandlerStorageTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeSet(SIMPLE_STORAGE_VALUE));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -624,7 +624,7 @@ public class SmartContractRequestHandlerStorageTest {
     ByteString dataToGet = ByteString.copyFrom(SCEncoding.encodeGetValue());
     ContractCallLocalQuery cCLQuery = getCallLocalQuery(newContractId, dataToGet, 250000L)
         .getContractCallLocal();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ContractCallLocalResponse response = smartHandler.contractCallLocal(cCLQuery, System.currentTimeMillis());
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getFunctionResult().getContractCallResult());
@@ -790,7 +790,7 @@ public class SmartContractRequestHandlerStorageTest {
 
     var callBytes = ByteString.copyFrom(encodeVia(GROW_CHILD_ABI, 0, 1, 17));
     body = getCallTransactionBody(childStorageId, callBytes, 250000L, 0L);
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     System.out.println("");
     System.out.println("-----");
     ledger.begin();
@@ -814,7 +814,7 @@ public class SmartContractRequestHandlerStorageTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeSet(SIMPLE_STORAGE_VALUE));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
@@ -825,7 +825,7 @@ public class SmartContractRequestHandlerStorageTest {
     ByteString dataToGet = ByteString.copyFrom(SCEncoding.encodeGetValue());
     ContractCallLocalQuery cCLQuery = getCallLocalQuery(newContractId, dataToGet, 250000L)
         .getContractCallLocal();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ContractCallLocalResponse response = smartHandler.contractCallLocal(cCLQuery, System.currentTimeMillis());
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getFunctionResult().getContractCallResult());
@@ -857,7 +857,7 @@ public class SmartContractRequestHandlerStorageTest {
     ByteString dataToSet = ByteString.copyFrom(SCEncoding.encodeSet(SIMPLE_STORAGE_VALUE));
     body = getCallTransactionBody(newContractId, dataToSet, 250000L, 0L);
     consensusTime = new Date().toInstant();
-    seqNumber.getNextSequenceNum();
+    seqNumber.getAndIncrement();
     ledger.begin();
     record = smartHandler.contractCall(body, consensusTime, seqNumber);
     ledger.commit();
