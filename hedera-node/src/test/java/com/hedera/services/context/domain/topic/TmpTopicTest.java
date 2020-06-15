@@ -60,9 +60,14 @@ class TmpTopicTest {
 
 		// when:
 		subject.copyFrom(in);
+		subject.copyFromExtra(in);
 
 		// then:
 		assertEquals(subject.size(), 3);
+		for (int i = 0; i < 3; i++) {
+			var id = idFrom(0);
+			assertTrue(subject.containsKey(id));
+		}
 	}
 
 	/*
@@ -101,10 +106,8 @@ class TmpTopicTest {
 		return topic;
 	}
 
-	/*
-	private MapKey keyFrom(long s) {
+	private EntityId idFrom(long s) {
 		long t = s + 1;
-		return new MapKey(t, 2 * t, 3 * t);
+		return new EntityId(t, 2 * t, 3 * t);
 	}
-	 */
 }
