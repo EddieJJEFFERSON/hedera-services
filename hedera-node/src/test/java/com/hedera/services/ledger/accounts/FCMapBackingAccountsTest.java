@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.test.factories.accounts.MapValueFactory;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,15 +33,14 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.*;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.test.utils.IdUtils.asAccount;
 
 @RunWith(JUnitPlatform.class)
 class FCMapBackingAccountsTest {
 	private final AccountID a = asAccount("1.2.3");
 	private final AccountID b = asAccount("3.2.1");
-	private final MapKey aKey = getMapKey(a);
-	private final MapKey bKey = getMapKey(b);
+	private final EntityId aKey = EntityId.fromPojoAccount(a);
+	private final EntityId bKey = EntityId.fromPojoAccount(b);
 	private final HederaAccount aValue = MapValueFactory.newAccount().balance(123L).get();
 	private final HederaAccount bValue = MapValueFactory.newAccount().balance(122L).get();
 

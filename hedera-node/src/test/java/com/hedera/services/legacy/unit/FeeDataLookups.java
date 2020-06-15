@@ -28,7 +28,7 @@ import com.hederahashgraph.api.proto.java.*;
 import com.hederahashgraph.exception.InvalidTxBodyException;
 import com.hederahashgraph.fee.ConsensusServiceFeeBuilder;
 import com.hederahashgraph.fee.SigValueObj;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.exception.InvalidFileIDException;
@@ -153,8 +153,8 @@ public class FeeDataLookups {
 	}
 
 	static public FeeData getConsensusUpdateTopicTransactionFeeMatrices(
-			TransactionBody txBody, SigValueObj sigValObj, FCMap<MapKey, Topic> topicFCMap) throws Exception {
-		Topic topic = topicFCMap.get(MapKey.getMapKey(txBody.getConsensusUpdateTopic().getTopicID()));
+			TransactionBody txBody, SigValueObj sigValObj, FCMap<EntityId, Topic> topicFCMap) throws Exception {
+		Topic topic = topicFCMap.get(EntityId.fromPojoTopic(txBody.getConsensusUpdateTopic().getTopicID()));
 		long rbsIncrease = ConsensusServiceFeeBuilder.getUpdateTopicRbsIncrease(
 				txBody.getTransactionID().getTransactionValidStart(),
 				JKey.mapJKey(topic.getAdminKey()), JKey.mapJKey(topic.getSubmitKey()),
@@ -166,8 +166,8 @@ public class FeeDataLookups {
 	public static FeeData computeUsageMetrics(
 			TransactionBody txBody,
 			FileServiceHandler fileHandler,
-			FCMap<MapKey, HederaAccount> accountFCMap,
-			FCMap<MapKey, Topic> topicFCMap, SigValueObj sigValObj
+			FCMap<EntityId, HederaAccount> accountFCMap,
+			FCMap<EntityId, Topic> topicFCMap, SigValueObj sigValObj
 	) {
 		FeeData feeMatrices = FeeData.getDefaultInstance();
 		try {
@@ -178,9 +178,9 @@ public class FeeDataLookups {
 			} else if (txBody.hasCryptoDelete()) {
 				feeMatrices = getCryptoDeleteTransactionFeeMatrices(txBody, sigValObj);
 			} else if (txBody.hasCryptoUpdateAccount()) {
-				MapKey accountIDMapKey = MapKey.getMapKey(txBody.getTransactionID().getAccountID());
-				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(accountIDMapKey, accountFCMap);
-				HederaAccount account = accountFCMap.get(accountIDMapKey);
+				EntityId accountIDEntityId = EntityId.fromPojoAccount(txBody.getTransactionID().getAccountID());
+				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(accountIDEntityId, accountFCMap);
+				HederaAccount account = accountFCMap.get(accountIDEntityId);
 				Key existingKey = JKey.mapJKey(account.getAccountKeys());
 				feeMatrices = getCryptoUpdateTransactionFeeMatrices(txBody, expirationTimeStamp, sigValObj, existingKey);
 			} else if (txBody.hasContractCreateInstance()) {
@@ -189,7 +189,7 @@ public class FeeDataLookups {
 				feeMatrices = getSmartContractCallTransactionFeeMatrices(txBody, sigValObj);
 			} else if (txBody.hasContractUpdateInstance()) {
 				ContractID contractID = txBody.getContractUpdateInstance().getContractID();
-				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(MapKey.getMapKey(contractID), accountFCMap);
+				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(EntityId.fromPojoContract(contractID), accountFCMap);
 				feeMatrices = getSmartContractUpdateTransactionFeeMatrices(txBody, expirationTimeStamp, sigValObj);
 			} else if (txBody.hasFileCreate()) {
 				feeMatrices = getFileCreateTransactionFeeMatrices(txBody, sigValObj);

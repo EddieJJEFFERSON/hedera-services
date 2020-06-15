@@ -37,7 +37,7 @@ import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.Transaction;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.swirlds.fcmap.FCMap;
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +52,6 @@ import static com.hederahashgraph.api.proto.java.HederaFunctionality.ConsensusGe
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_TOPIC_ID;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.OK;
 import static com.hederahashgraph.api.proto.java.ResponseType.COST_ANSWER;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 
 public class GetTopicInfoAnswer implements AnswerService {
 	private static final Logger log = LogManager.getLogger(GetTopicInfoAnswer.class);
@@ -65,14 +64,14 @@ public class GetTopicInfoAnswer implements AnswerService {
 
 	@Override
 	public ResponseCodeEnum checkValidity(Query query, StateView view) {
-		FCMap<MapKey, Topic> topics = view.topics();
+		FCMap<EntityId, Topic> topics = view.topics();
 		ConsensusGetTopicInfoQuery op = query.getConsensusGetTopicInfo();
 		return validityOf(op, topics);
 	}
 
 	private ResponseCodeEnum validityOf(
 			ConsensusGetTopicInfoQuery op,
-			FCMap<MapKey, Topic> topics
+			FCMap<EntityId, Topic> topics
 	) {
 		if (op.hasTopicID()) {
 			return optionValidator.queryableTopicStatus(op.getTopicID(), topics);
@@ -122,7 +121,7 @@ public class GetTopicInfoAnswer implements AnswerService {
 	private static ConsensusTopicInfo.Builder infoBuilder(ConsensusGetTopicInfoQuery op, StateView view) {
 
 		TopicID id = op.getTopicID();
-		Topic topic = view.topics().get(getMapKey(id));
+		Topic topic = view.topics().get(EntityId.fromPojoTopic(id));
 		ConsensusTopicInfo.Builder info = ConsensusTopicInfo.newBuilder();
 		if (topic.hasMemo()) {
 			info.setMemo(topic.getMemo());

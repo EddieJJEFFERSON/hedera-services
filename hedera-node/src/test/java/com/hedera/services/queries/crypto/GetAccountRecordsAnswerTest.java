@@ -33,7 +33,7 @@ import com.hederahashgraph.api.proto.java.Response;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.api.proto.java.Transaction;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +48,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.*;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.test.utils.IdUtils.*;
 import static com.hedera.test.utils.TxnUtils.*;
 import static com.hedera.test.factories.scenarios.TxnHandlingScenario.COMPLEX_KEY_ACCOUNT_KT;
@@ -59,7 +58,7 @@ import static com.hedera.services.context.domain.serdes.DomainSerdesTest.recordT
 class GetAccountRecordsAnswerTest {
 	long fee = 1_234L;
 	StateView view;
-	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<EntityId, HederaAccount> accounts;
 	Transaction paymentTxn;
 	String node = "0.0.3";
 	String payer = "0.0.12345";
@@ -85,7 +84,7 @@ class GetAccountRecordsAnswerTest {
 		payerAccount.getRecords().offer(recordTwo());
 
 		accounts = mock(FCMap.class);
-		given(accounts.get(getMapKey(asAccount(target)))).willReturn(payerAccount);
+		given(accounts.get(EntityId.fromPojoAccount(asAccount(target)))).willReturn(payerAccount);
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);
 
 		optionValidator = mock(OptionValidator.class);

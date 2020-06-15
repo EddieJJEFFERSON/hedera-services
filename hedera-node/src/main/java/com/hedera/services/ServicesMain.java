@@ -26,7 +26,7 @@ import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.properties.Profile;
 import com.hedera.services.utils.JvmSystemExits;
 import com.hedera.services.utils.SystemExits;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.exception.InvalidTotalAccountBalanceException;
@@ -355,9 +355,9 @@ public class ServicesMain implements SwirldMain {
 	public static void dumpFcms(
 			long nodeId,
 			long round,
-			FCMap<MapKey, HederaAccount> accounts,
+			FCMap<EntityId, HederaAccount> accounts,
 			FCMap<StorageKey, StorageValue> storage,
-			FCMap<MapKey, Topic> topics
+			FCMap<EntityId, Topic> topics
 	) throws IOException {
 		var accountsFout = foutSupplier.apply(
 				String.format(FC_DUMP_LOC_TPL,

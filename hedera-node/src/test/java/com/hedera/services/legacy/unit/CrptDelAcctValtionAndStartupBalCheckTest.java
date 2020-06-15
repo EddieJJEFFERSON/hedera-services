@@ -49,7 +49,7 @@ import com.hederahashgraph.api.proto.java.KeyList;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.SignatureList;
 import com.hederahashgraph.builder.RequestBuilder;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JKey;
 
@@ -71,7 +71,7 @@ public class CrptDelAcctValtionAndStartupBalCheckTest {
 	private AccountID account3ID;
 	FCStorageWrapper storageWrapper;
 	TransactionHandler transactionHandler = null;
-	FCMap<MapKey, HederaAccount> fcMap = null;
+	FCMap<EntityId, HederaAccount> fcMap = null;
 	private long LARGE_BALANCE = 1000000000000000l;
 	AccountID feeAccount;
 	List<AccountAmount> accountAmountsList;
@@ -85,7 +85,7 @@ public class CrptDelAcctValtionAndStartupBalCheckTest {
 		nodeAccount = 3l;
 		payerAccountId = RequestBuilder.getAccountIdBuild(payerAccount, 0l, 0l);
 		nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
-		fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+		fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
 		feeAccount = RequestBuilder.getAccountIdBuild(98l, 0l, 0l);
 		accountAmountsList = new LinkedList<>();
 		hederaFunc = HederaFunctionality.CryptoTransfer;
@@ -138,8 +138,8 @@ public class CrptDelAcctValtionAndStartupBalCheckTest {
 
 
 	private void createAccount(AccountID payerAccount, long balance, Key key) throws Exception {
-		MapKey mk = new MapKey();
-		mk.setAccountNum(payerAccount.getAccountNum());
+		EntityId mk = new EntityId();
+		mk.setIdNum(payerAccount.getAccountNum());
 		mk.setRealmNum(0);
 		HederaAccount mv = new HederaAccount();
 		mv.setBalance(balance);

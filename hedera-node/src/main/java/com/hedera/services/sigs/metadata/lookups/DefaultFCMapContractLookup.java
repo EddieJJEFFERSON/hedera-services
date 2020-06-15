@@ -22,7 +22,7 @@ package com.hedera.services.sigs.metadata.lookups;
 
 import com.hedera.services.sigs.metadata.ContractSigningMetadata;
 import com.hederahashgraph.api.proto.java.ContractID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JContractIDKey;
 import com.hedera.services.legacy.exception.AdminKeyNotExistException;
@@ -38,9 +38,9 @@ import com.swirlds.fcmap.FCMap;
  * @author Michael Tinker
  */
 public class DefaultFCMapContractLookup implements ContractSigMetaLookup {
-	private final FCMap<MapKey, HederaAccount> accounts;
+	private final FCMap<EntityId, HederaAccount> accounts;
 
-	public DefaultFCMapContractLookup(FCMap<MapKey, HederaAccount> accounts) {
+	public DefaultFCMapContractLookup(FCMap<EntityId, HederaAccount> accounts) {
 		this.accounts = accounts;
 	}
 
@@ -56,7 +56,7 @@ public class DefaultFCMapContractLookup implements ContractSigMetaLookup {
 	 */
 	@Override
 	public ContractSigningMetadata lookup(ContractID id) throws Exception {
-		HederaAccount contract = accounts.get(MapKey.getMapKey(id));
+		HederaAccount contract = accounts.get(EntityId.fromPojoContract(id));
 		if (contract == null || contract.isDeleted() || !contract.isSmartContract()) {
 			throw new InvalidContractIDException("Invalid contract!", id);
 		} else if (contract.getAccountKeys() == null) {

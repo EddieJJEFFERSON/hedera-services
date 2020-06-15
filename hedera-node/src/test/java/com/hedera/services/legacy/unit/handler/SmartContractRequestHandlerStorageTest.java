@@ -62,7 +62,7 @@ import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.StorageKey;
@@ -133,11 +133,11 @@ public class SmartContractRequestHandlerStorageTest {
   private static final long secondContractSequenceNumber = 668L;
   SmartContractRequestHandler smartHandler;
   FileServiceHandler fsHandler;
-  FCMap<MapKey, HederaAccount> fcMap = null;
+  FCMap<EntityId, HederaAccount> fcMap = null;
   private FCMap<StorageKey, StorageValue> storageMap;
   ServicesRepositoryRoot repository;
 
-  MapKey payerMapKey; // fcMap key for payer account
+  EntityId payerEntityId; // fcMap key for payer account
   byte[] payerKeyBytes = null; // Repository key for payer account
   AccountID payerAccountId;
   AccountID nodeAccountId;
@@ -175,7 +175,7 @@ public class SmartContractRequestHandlerStorageTest {
     feeCollAccountId = RequestBuilder.getAccountIdBuild(feeCollAccount, 0l, 0l);
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
-    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
@@ -216,16 +216,16 @@ public class SmartContractRequestHandlerStorageTest {
     } catch (DecoderException e) {
       Assert.fail("Failure building solidity key for payer account");
     }
-    payerMapKey = new MapKey();
-    payerMapKey.setAccountNum(payerAccount);
-    payerMapKey.setRealmNum(0);
-    payerMapKey.setShardNum(0);
+    payerEntityId = new EntityId();
+    payerEntityId.setIdNum(payerAccount);
+    payerEntityId.setRealmNum(0);
+    payerEntityId.setShardNum(0);
   }
 
   private void createAccount(AccountID payerAccount, long balance)
       throws NegativeAccountBalanceException {
-    MapKey mk = new MapKey();
-    mk.setAccountNum(payerAccount.getAccountNum());
+    EntityId mk = new EntityId();
+    mk.setIdNum(payerAccount.getAccountNum());
     mk.setRealmNum(0);
     HederaAccount mv = new HederaAccount();
     mv.setBalance(balance);
@@ -304,8 +304,8 @@ public class SmartContractRequestHandlerStorageTest {
   }
 
   private void checkContractArtifactsExist(ContractID contractId) {
-    MapKey mk = new MapKey();
-    mk.setAccountNum(contractId.getContractNum());
+    EntityId mk = new EntityId();
+    mk.setIdNum(contractId.getContractNum());
     mk.setRealmNum(contractId.getRealmNum());
     mk.setShardNum(contractId.getShardNum());
     HederaAccount mv = fcMap.get(mk);
@@ -338,7 +338,7 @@ public class SmartContractRequestHandlerStorageTest {
     TransactionBody body = getCreateTransactionBody(0L, 250000L, adminPubKey);
 
     System.out.println("Fetched balance BEFORE is " + repository.getBalance(payerKeyBytes));
-    System.out.println("Map value BEFORE is " + fcMap.get(payerMapKey).getBalance());
+    System.out.println("Map value BEFORE is " + fcMap.get(payerEntityId).getBalance());
 
     Instant consensusTime = new Date().toInstant();
     SequenceNumber seqNumber = new SequenceNumber(contractSequenceNumber);
@@ -347,7 +347,7 @@ public class SmartContractRequestHandlerStorageTest {
     ledger.commit();
 
     System.out.println("Fetched balance AFTER is " + repository.getBalance(payerKeyBytes));
-    System.out.println("Map value AFTER is " + fcMap.get(payerMapKey).getBalance());
+    System.out.println("Map value AFTER is " + fcMap.get(payerEntityId).getBalance());
 
     Assert.assertNotNull(record);
     Assert.assertNotNull(record.getTransactionID());

@@ -27,12 +27,11 @@ import com.hederahashgraph.api.proto.java.FeeData;
 import com.hederahashgraph.api.proto.java.Query;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.fee.CryptoFeeBuilder;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.core.jproto.JKey.mapJKey;
 import static java.util.Collections.EMPTY_LIST;
 
@@ -59,7 +58,7 @@ public class GetAccountInfoResourceUsage implements QueryResourceUsageEstimator 
 	public FeeData usageGivenType(Query query, StateView view, ResponseType type) {
 		try {
 			CryptoGetInfoQuery infoQuery = query.getCryptoGetInfo();
-			MapKey key = getMapKey(infoQuery.getAccountID());
+			EntityId key = EntityId.fromPojoAccount(infoQuery.getAccountID());
 			HederaAccount account = view.accounts().get(key);
 
 			return usageEstimator.getAccountInfoQueryFeeMatrices(

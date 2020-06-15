@@ -55,7 +55,7 @@ import com.hederahashgraph.fee.FeeBuilder;
 import com.hederahashgraph.fee.SmartContractFeeBuilder;
 import com.hederahashgraph.service.proto.java.SmartContractServiceGrpc;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.hedera.services.legacy.exception.PlatformTransactionCreationException;
@@ -640,7 +640,7 @@ public class SmartContractServiceImpl
     List<TransactionRecord> txRecord = null;
     try {
       txRecord = JTransactionRecord.convert(
-          txHandler.getAllTransactionRecordFCM(MapKey.getMapKey(query.getContractID())));
+          txHandler.getAllTransactionRecordFCM(EntityId.fromPojoContract(query.getContractID())));
     } catch (ConcurrentModificationException ex) {
       TransactionValidationUtils.constructGetAccountRecordsErrorResponse(responseObserver,
           ResponseCodeEnum.RECORD_NOT_FOUND,0);

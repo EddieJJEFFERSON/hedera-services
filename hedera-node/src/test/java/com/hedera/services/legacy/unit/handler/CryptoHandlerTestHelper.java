@@ -34,7 +34,7 @@ import com.hederahashgraph.api.proto.java.TransferList;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.exception.InvalidAccountIDException;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.exception.InsufficientBalanceException;
 import com.hedera.services.legacy.exception.InvalidTransactionException;
@@ -50,24 +50,23 @@ import com.swirlds.fcmap.FCMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.unit.handler.AccountOperations.deletingAccountFrom;
 import static com.hedera.services.legacy.unit.handler.AccountOperations.recordOf;
 import static java.util.stream.Collectors.joining;
 
 public class CryptoHandlerTestHelper extends CryptoHandler {
 	private static final Logger log = LogManager.getLogger(CryptoHandlerTestHelper.class);
-	private FCMap<MapKey, HederaAccount> map;
+	private FCMap<EntityId, HederaAccount> map;
 	private GlobalFlag globalFlag;
 	private HederaNodeStats stats;
 
-	public CryptoHandlerTestHelper(FCMap<MapKey, HederaAccount> map, HederaNodeStats stats) {
+	public CryptoHandlerTestHelper(FCMap<EntityId, HederaAccount> map, HederaNodeStats stats) {
 		this.map = map;
 		this.globalFlag = GlobalFlag.getInstance();
 		this.stats = stats;
 	}
 
-	public CryptoHandlerTestHelper(FCMap<MapKey, HederaAccount> map){
+	public CryptoHandlerTestHelper(FCMap<EntityId, HederaAccount> map){
 		this(map, null);
 	}
 
@@ -148,12 +147,12 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 					isAccountSetForDeletion = true;
 					break;
 				}
-				MapKey mapKey = getMapKey(acctId);
-				HederaAccount mapValue = map.get(mapKey);
+				EntityId entityId = EntityId.fromPojoAccount(acctId);
+				HederaAccount mapValue = map.get(entityId);
 				if (mapValue == null) {
 					if (log.isDebugEnabled()) {
 						log.debug("@@ Null values detected: actAmt=" + actAmt + "; mapValue=" + mapValue + "; "
-								+ " mapKey :: " + mapKey.toString() + "cryptoTransferTx=" + cryptoTransferTx);
+								+ " mapKey :: " + entityId.toString() + "cryptoTransferTx=" + cryptoTransferTx);
 					}
 					throw new InvalidTransactionException(ApplicationConstants.ACCOUNT_NOT_FOUND);
 				}
@@ -180,8 +179,8 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 			} else {
 				for (AccountAmount actAmt : accountAmounts) {
 					acctId = actAmt.getAccountID();
-					MapKey mapKey = getMapKey(acctId);
-					HederaAccount mapValue = new HederaAccount(map.get(mapKey));
+					EntityId entityId = EntityId.fromPojoAccount(acctId);
+					HederaAccount mapValue = new HederaAccount(map.get(entityId));
 					if (log.isDebugEnabled()) {
 						log.debug(
 								"Map Value of Account ID :: " + acctId.getAccountNum() + "  is :: " + mapValue);
@@ -189,7 +188,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 								+ actAmt.getAmount());
 					}
 					mapValue.setBalance(Math.addExact(mapValue.getBalance(), actAmt.getAmount()));
-					map.replace(mapKey, mapValue);
+					map.replace(entityId, mapValue);
 					completedTransfers.addAccountAmounts(actAmt);
 				}
 				receipt = RequestBuilder.getTransactionReceipt(
@@ -273,7 +272,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 
 
 	public TransactionRecord cryptoDelete(TransactionBody txn, Instant consensusTime) {
-		FCMap<MapKey, HederaAccount> ledger = map;
+		FCMap<EntityId, HederaAccount> ledger = map;
 
 		return recordOf(deletingAccountFrom(ledger).via(txn).at(consensusTime));
 	}
@@ -281,9 +280,9 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 
 	public boolean validateAccountID(AccountID accountID) {
 		boolean isValid = false;
-		MapKey mapKey = getMapKey(accountID);
-		if (map.containsKey(mapKey)) {
-			HederaAccount mapValue = map.get(mapKey);
+		EntityId entityId = EntityId.fromPojoAccount(accountID);
+		if (map.containsKey(entityId)) {
+			HederaAccount mapValue = map.get(entityId);
 			if (mapValue != null) {
 				//not contract ID
 				isValid = !mapValue.isSmartContract();
@@ -296,7 +295,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 	 * The method checks whether an account is set for deletion or not
 	 */
 	public boolean isAccountSetForDelete(AccountID accountID) {
-		MapKey accountKey = getMapKey(accountID);
+		EntityId accountKey = EntityId.fromPojoAccount(accountID);
 		if (map.containsKey(accountKey)) {
 			HederaAccount accountValue = map.get(accountKey);
 			return accountValue.isDeleted();
@@ -312,7 +311,7 @@ class AccountOperations {
 		return txn.get();
 	}
 
-	public static AccountOperations.DeleteSpec.Txn deletingAccountFrom(FCMap<MapKey, HederaAccount> ledger) {
+	public static AccountOperations.DeleteSpec.Txn deletingAccountFrom(FCMap<EntityId, HederaAccount> ledger) {
 		return txn -> consensusTime -> new AccountOperations.DeletionRecord(consensusTime, txn, ledger);
 	}
 
@@ -323,11 +322,11 @@ class AccountOperations {
 
 		Instant consensusTime;
 		TransactionBody txn;
-		FCMap<MapKey, HederaAccount> ledger;
+		FCMap<EntityId, HederaAccount> ledger;
 		AccountID target, payer, transfer;
 
 		public DeletionRecord(Instant consensusTime, TransactionBody txn,
-				FCMap<MapKey, HederaAccount> ledger) {
+				FCMap<EntityId, HederaAccount> ledger) {
 			this.consensusTime = consensusTime;
 			this.txn = txn;
 			this.ledger = ledger;
@@ -389,8 +388,8 @@ class AccountOperations {
 		}
 	}
 
-	static void markDeleted(AccountID target, FCMap<MapKey, HederaAccount> ledger) {
-		MapKey key = getMapKey(target);
+	static void markDeleted(AccountID target, FCMap<EntityId, HederaAccount> ledger) {
+		EntityId key = EntityId.fromPojoAccount(target);
 		HederaAccount account = new HederaAccount(ledger.get(key));
 		account.setDeleted(true);
 		ledger.replace(key, account);
@@ -398,7 +397,7 @@ class AccountOperations {
 
 	static void doTransfers(
 			TransferList transferList,
-			FCMap<MapKey, HederaAccount> ledger)
+			FCMap<EntityId, HederaAccount> ledger)
 			throws InvalidAccountIDException, NegativeAccountBalanceException {
 		assertValidAccounts(transferList, ledger);
 		for (AccountAmount transfer : transferList.getAccountAmountsList()) {
@@ -408,7 +407,7 @@ class AccountOperations {
 
 	static void assertValidAccounts(
 			TransferList transferList,
-			FCMap<MapKey, HederaAccount> ledger) throws InvalidAccountIDException {
+			FCMap<EntityId, HederaAccount> ledger) throws InvalidAccountIDException {
 		for (AccountAmount transfer : transferList.getAccountAmountsList()) {
 			if (!isValid(transfer.getAccountID(), ledger)) {
 				throw new InvalidAccountIDException(
@@ -418,17 +417,17 @@ class AccountOperations {
 		}
 	}
 
-	static boolean isValid(AccountID account, FCMap<MapKey, HederaAccount> ledger) {
+	static boolean isValid(AccountID account, FCMap<EntityId, HederaAccount> ledger) {
 		return Optional
-				.ofNullable(ledger.get(getMapKey(account)))
+				.ofNullable(ledger.get(EntityId.fromPojoAccount(account)))
 				.map(a -> !a.getAccountKeys().hasContractID())
 				.orElse(false);
 	}
 
 	static void doTransfer(
-			AccountAmount transfer, FCMap<MapKey, HederaAccount> ledger)
+			AccountAmount transfer, FCMap<EntityId, HederaAccount> ledger)
 			throws NegativeAccountBalanceException {
-		MapKey key = getMapKey(transfer.getAccountID());
+		EntityId key = EntityId.fromPojoAccount(transfer.getAccountID());
 		HederaAccount account = new HederaAccount(ledger.get(key));
 		long adjustedBalance = Math.addExact(account.getBalance(), transfer.getAmount());
 		account.setBalance(adjustedBalance);
@@ -467,8 +466,8 @@ class AccountOperations {
 						.build());
 	}
 
-	static long balanceOf(AccountID account, FCMap<MapKey, HederaAccount> ledger) {
-		MapKey key = getMapKey(account);
+	static long balanceOf(AccountID account, FCMap<EntityId, HederaAccount> ledger) {
+		EntityId key = EntityId.fromPojoAccount(account);
 		return ledger.get(key).getBalance();
 	}
 

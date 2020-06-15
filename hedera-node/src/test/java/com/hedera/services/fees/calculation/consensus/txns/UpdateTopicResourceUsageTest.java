@@ -25,7 +25,7 @@ import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.test.utils.*;
 import com.hederahashgraph.api.proto.java.*;
 import com.hederahashgraph.exception.InvalidTxBodyException;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
@@ -110,7 +110,7 @@ class UpdateTopicResourceUsageTest extends TopicResourceUsageTestBase {
                 newAutoRenewAccountId, newAutoRenewPeriod, JTimestamp.convert(newExpirationTimestamp));
 
         // when:
-        given(topics.get(MapKey.getMapKey(topicId))).willReturn(topic);
+        given(topics.get(EntityId.fromPojoTopic(topicId))).willReturn(topic);
         FeeData feeData = subject.usageGiven(txBody, sigValueObj, view);
 
         // expect:

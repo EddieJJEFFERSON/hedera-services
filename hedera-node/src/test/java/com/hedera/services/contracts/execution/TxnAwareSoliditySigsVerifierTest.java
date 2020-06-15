@@ -28,7 +28,7 @@ import com.hedera.services.utils.PlatformTxnAccessor;
 import com.hedera.test.factories.scenarios.TxnHandlingScenario;
 import com.hedera.test.utils.IdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.Assertions;
@@ -57,7 +57,7 @@ class TxnAwareSoliditySigsVerifierTest {
 
 	TransactionContext txnCtx;
 	SyncActivationCheck areActive;
-	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<EntityId, HederaAccount> accounts;
 
 	TxnAwareSoliditySigsVerifier subject;
 
@@ -81,10 +81,10 @@ class TxnAwareSoliditySigsVerifierTest {
 		given(txnCtx.activePayer()).willReturn(payer);
 
 		accounts = mock(FCMap.class);
-		given(accounts.get(MapKey.getMapKey(payer))).willReturn(sigReqAccount);
-		given(accounts.get(MapKey.getMapKey(sigRequired))).willReturn(sigReqAccount);
-		given(accounts.get(MapKey.getMapKey(noSigRequired))).willReturn(noSigReqAccount);
-		given(accounts.get(MapKey.getMapKey(smartContract))).willReturn(contract);
+		given(accounts.get(EntityId.fromPojoAccount(payer))).willReturn(sigReqAccount);
+		given(accounts.get(EntityId.fromPojoAccount(sigRequired))).willReturn(sigReqAccount);
+		given(accounts.get(EntityId.fromPojoAccount(noSigRequired))).willReturn(noSigReqAccount);
+		given(accounts.get(EntityId.fromPojoAccount(smartContract))).willReturn(contract);
 
 		areActive = mock(SyncActivationCheck.class);
 

@@ -35,7 +35,7 @@ import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.fcmap.FCMap;
@@ -72,8 +72,10 @@ class TopicCreateTransitionLogicTest {
 	private PlatformTxnAccessor accessor;
 	private OptionValidator validator;
 	private TopicCreateTransitionLogic subject;
-	private FCMap<MapKey, HederaAccount> accounts = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
-	private FCMap<MapKey, Topic> topics = new FCMap<>(MapKey::deserialize, Topic::deserialize);
+	private FCMap<EntityId, HederaAccount> accounts =
+			new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+	private FCMap<EntityId, Topic> topics =
+			new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 	private EntityIdSource entityIdSource;
 	final private AccountID payer = AccountID.newBuilder().setAccountNum(2_345L).build();
 
@@ -140,7 +142,7 @@ class TopicCreateTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(MapKey.getMapKey(NEW_TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoAccount(NEW_TOPIC_ID));
 		assertNotNull(topic);
 		assertEquals(VALID_MEMO, topic.getMemo());
 		assertArrayEquals(JKey.mapKey(key).serialize(), topic.getAdminKey().serialize());

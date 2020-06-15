@@ -29,7 +29,7 @@ import com.hedera.services.txns.validation.OptionValidator;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransactionBody;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
@@ -53,13 +53,13 @@ public class TopicCreateTransitionLogic implements TransitionLogic {
 	private final Function<TransactionBody, ResponseCodeEnum> PRE_SIGNATURE_VALIDATION_SYNTAX_CHECK =
 			this::validatePreSignatureValidation;
 
-	private final FCMap<MapKey, HederaAccount> accounts;
-	private final FCMap<MapKey, Topic> topics;
+	private final FCMap<EntityId, HederaAccount> accounts;
+	private final FCMap<EntityId, Topic> topics;
 	private final EntityIdSource entityIdSource;
 	private final OptionValidator validator;
 	private final TransactionContext transactionContext;
 
-	public TopicCreateTransitionLogic(FCMap<MapKey, HederaAccount> accounts, FCMap<MapKey, Topic> topics,
+	public TopicCreateTransitionLogic(FCMap<EntityId, HederaAccount> accounts, FCMap<EntityId, Topic> topics,
 									  EntityIdSource entityIdSource, OptionValidator validator,
 									  TransactionContext transactionContext) {
 		this.accounts = accounts;
@@ -100,7 +100,7 @@ public class TopicCreateTransitionLogic implements TransitionLogic {
 					.setTopicNum(newEntityId.getAccountNum())
 					.build();
 
-			topics.put(MapKey.getMapKey(newTopicId), topic);
+			topics.put(EntityId.fromPojoTopic(newTopicId), topic);
 			transactionContext.setCreated(newTopicId);
 			transactionContext.setStatus(SUCCESS);
 		} catch (DecoderException e) {

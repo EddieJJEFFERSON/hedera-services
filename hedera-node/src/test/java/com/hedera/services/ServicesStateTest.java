@@ -36,7 +36,7 @@ import com.hedera.test.utils.IdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.SignatureMap;
 import com.hederahashgraph.api.proto.java.SignaturePair;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
@@ -59,7 +59,6 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 
-import static com.swirlds.platform.Utilities.readInstant;
 import static java.util.Collections.EMPTY_LIST;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -86,11 +85,11 @@ class ServicesStateTest {
 	ProcessLogic logic;
 	PropertySources propertySources;
 	ServicesContext ctx;
-	FCMap<MapKey, Topic> topics;
-	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<EntityId, Topic> topics;
+	FCMap<EntityId, HederaAccount> accounts;
 	FCMap<StorageKey, StorageValue> storage;
-	FCMap<MapKey, Topic> topicsCopy;
-	FCMap<MapKey, HederaAccount> accountsCopy;
+	FCMap<EntityId, Topic> topicsCopy;
+	FCMap<EntityId, HederaAccount> accountsCopy;
 	FCMap<StorageKey, StorageValue> storageCopy;
 	ExchangeRates midnightRates;
 	SequenceNumber seqNo;

@@ -32,7 +32,7 @@ import com.hedera.test.factories.scenarios.TxnHandlingScenario;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.TransactionBody;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.crypto.SignatureStatus;
@@ -112,8 +112,8 @@ public class HederaSigningOrderTest {
 	private HederaFs hfs;
 	private TransactionBody txn;
 	private HederaSigningOrder subject;
-	private FCMap<MapKey, HederaAccount> accounts;
-	private FCMap<MapKey, Topic> topics;
+	private FCMap<EntityId, HederaAccount> accounts;
+	private FCMap<EntityId, Topic> topics;
 	private SigStatusOrderResultFactory summaryFactory = new SigStatusOrderResultFactory(IN_HANDLE_TXN_DYNAMIC_CTX);
 	private SigningOrderResultFactory<SignatureStatus> mockSummaryFactory;
 

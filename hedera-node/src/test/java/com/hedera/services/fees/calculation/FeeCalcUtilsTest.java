@@ -29,7 +29,7 @@ import com.hedera.test.utils.IdUtils;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.Timestamp;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JFileInfo;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.fcmap.FCMap;
@@ -45,13 +45,13 @@ import static com.hedera.services.legacy.logic.ApplicationConstants.*;
 
 @RunWith(JUnitPlatform.class)
 class FeeCalcUtilsTest {
-	private final MapKey key = new MapKey(0, 0, 1234);
+	private final EntityId key = new EntityId(0, 0, 1234);
 
 	@Test
 	public void returnsAccountExpiryIfAvail() {
 		// setup:
 		HederaAccount account = mock(HederaAccount.class);
-		FCMap<MapKey, HederaAccount> accounts = mock(FCMap.class);
+		FCMap<EntityId, HederaAccount> accounts = mock(FCMap.class);
 		Timestamp expected = Timestamp.newBuilder().setSeconds(Long.MAX_VALUE).build();
 
 		given(account.getExpirationTime()).willReturn(Long.MAX_VALUE);

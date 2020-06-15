@@ -44,7 +44,7 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.Transaction;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hederahashgraph.builder.TransactionSigner;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
@@ -75,7 +75,7 @@ class QueryValidationTest {
 
   long payerAccountInitialBalance = 100000;
   private RecordCache recordCache;
-  private FCMap<MapKey, HederaAccount> map = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+  private FCMap<EntityId, HederaAccount> map = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
   private FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize,
       StorageValue::deserialize);
   ;

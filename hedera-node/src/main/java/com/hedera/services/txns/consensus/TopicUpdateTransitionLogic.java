@@ -28,7 +28,7 @@ import com.hedera.services.txns.validation.OptionValidator;
 import com.hederahashgraph.api.proto.java.ConsensusUpdateTopicTransactionBody;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TransactionBody;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
@@ -47,12 +47,12 @@ public class TopicUpdateTransitionLogic implements TransitionLogic {
 	private final Function<TransactionBody, ResponseCodeEnum> PRE_SIGNATURE_VALIDATION_SYNTAX_CHECK =
 			this::validatePreSignatureValidation;
 
-	private final FCMap<MapKey, HederaAccount> accounts;
-	private final FCMap<MapKey, Topic> topics;
+	private final FCMap<EntityId, HederaAccount> accounts;
+	private final FCMap<EntityId, Topic> topics;
 	private final OptionValidator validator;
 	private final TransactionContext transactionContext;
 
-	public TopicUpdateTransitionLogic(FCMap<MapKey, HederaAccount> accounts, FCMap<MapKey, Topic> topics,
+	public TopicUpdateTransitionLogic(FCMap<EntityId, HederaAccount> accounts, FCMap<EntityId, Topic> topics,
 									  OptionValidator validator, TransactionContext transactionContext) {
 		this.accounts = accounts;
 		this.topics = topics;
@@ -73,7 +73,7 @@ public class TopicUpdateTransitionLogic implements TransitionLogic {
 			return;
 		}
 
-		var topicMapKey = MapKey.getMapKey(topicId);
+		var topicMapKey = EntityId.fromPojoTopic(topicId);
 		var updatedTopic = new Topic(topics.get(topicMapKey));
 
 		if (!updatedTopic.hasAdminKey() &&

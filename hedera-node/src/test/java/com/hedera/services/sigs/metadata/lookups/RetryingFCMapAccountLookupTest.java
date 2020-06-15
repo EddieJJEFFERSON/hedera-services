@@ -28,7 +28,7 @@ import com.hedera.test.factories.keys.KeyTree;
 import com.hedera.test.utils.IdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.exception.InvalidAccountIDException;
@@ -52,12 +52,12 @@ import static com.hedera.test.factories.accounts.MapValueFactory.*;
 public class RetryingFCMapAccountLookupTest {
 	private PropertySource properties;
 	private HederaNodeStats stats;
-	private FCMap<MapKey, HederaAccount> accounts;
+	private FCMap<EntityId, HederaAccount> accounts;
 	private RetryingFCMapAccountLookup subject;
 	private Pause pause;
 	private final Pause defaultPause = SleepingPause.INSTANCE;
 	private final AccountID account = IdUtils.asAccount("0.0.1337");
-	private final MapKey accountKey = MapKey.getMapKey(account);
+	private final EntityId accountKey = EntityId.fromPojoAccount(account);
 	private final HederaAccount accountValue = newAccount().receiverSigRequired(true).accountKeys(accountKeys).get();
 	private static JKey accountKeys;
 	private static final int RETRY_WAIT_MS = 10;
@@ -71,7 +71,7 @@ public class RetryingFCMapAccountLookupTest {
 	private void setup() {
 		stats = mock(HederaNodeStats.class);
 		pause = mock(Pause.class);
-		accounts = (FCMap<MapKey, HederaAccount>)mock(FCMap.class);
+		accounts = (FCMap<EntityId, HederaAccount>)mock(FCMap.class);
 		properties = mock(PropertySource.class);
 		given(properties.getIntProperty("validation.preConsensus.accountKey.maxLookupRetries"))
 				.willReturn(2);

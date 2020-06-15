@@ -33,7 +33,7 @@ import com.hederahashgraph.api.proto.java.FileGetInfoResponse;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TopicID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
@@ -55,7 +55,7 @@ public interface TxnHandlingScenario {
 
 	KeyFactory overlapFactory = new KeyFactory(OverlappingKeyGenerator.withDefaultOverlaps());
 
-	default FCMap<MapKey, HederaAccount> accounts() throws Exception {
+	default FCMap<EntityId, HederaAccount> accounts() throws Exception {
 		return newAccounts()
 				.withAccount(DEFAULT_NODE_ID,
 						newAccount()
@@ -140,8 +140,8 @@ public interface TxnHandlingScenario {
 		return storage;
 	}
 
-	default FCMap<MapKey, Topic> topics() {
-		var topics = (FCMap<MapKey, Topic>) mock(FCMap.class);
+	default FCMap<EntityId, Topic> topics() {
+		var topics = (FCMap<EntityId, Topic>) mock(FCMap.class);
 		given(topics.get(EXISTING_TOPIC)).willReturn(new Topic());
 		return topics;
 	}

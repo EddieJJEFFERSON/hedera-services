@@ -33,7 +33,7 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.fee.CryptoFeeBuilder;
 import com.hederahashgraph.fee.SigValueObj;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,12 +48,12 @@ import static com.hedera.test.utils.IdUtils.*;
 @RunWith(JUnitPlatform.class)
 class CryptoUpdateResourceUsageTest {
 	Key currKey = Key.newBuilder().setEd25519(ByteString.copyFrom("NONSENSE".getBytes())).build();
-	MapKey accountKey = new MapKey(0, 0, 1234);
+	EntityId accountKey = new EntityId(0, 0, 1234);
 	AccountID target = asAccount("0.0.1234");
 	Timestamp expiry = Timestamp.newBuilder().setSeconds(Long.MAX_VALUE).build();
 	StateView view;
 	HederaAccount account;
-	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<EntityId, HederaAccount> accounts;
 
 	private SigValueObj sigUsage;
 	private CryptoFeeBuilder usageEstimator;

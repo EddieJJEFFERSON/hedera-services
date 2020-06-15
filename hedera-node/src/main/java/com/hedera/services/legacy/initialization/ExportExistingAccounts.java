@@ -20,7 +20,7 @@ package com.hedera.services.legacy.initialization;
  * ‍
  */
 
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 
@@ -39,17 +39,17 @@ public class ExportExistingAccounts {
   private static final Logger log = LogManager.getLogger(ExportExistingAccounts.class);
   
   @SuppressWarnings("unchecked")
-  private static JSONArray getAccountsasJson(FCMap<MapKey, HederaAccount> accountMap) {
+  private static JSONArray getAccountsasJson(FCMap<EntityId, HederaAccount> accountMap) {
 
     JSONArray accountObjArr = new JSONArray();
     JSONObject cryptoAccount = null;
     HederaAccount mapValue = null;
     JAccountID proxyAccountID = null;
-    for (MapKey currKey : accountMap.keySet()) {
+    for (EntityId currKey : accountMap.keySet()) {
       try {
         cryptoAccount = new JSONObject();
         log.info("retrieving account info from path :: Solidity Address in getAccountDetails "
-            + currKey.getAccountNum());
+            + currKey.getIdNum());
         mapValue = accountMap.get(currKey);
         cryptoAccount.put("initialBalance", mapValue.getBalance());
         proxyAccountID = mapValue.getProxyAccount();
@@ -68,7 +68,7 @@ public class ExportExistingAccounts {
         cryptoAccount.put("autoRenewPeriod", mapValue.getAutoRenewPeriod());
         cryptoAccount.put("shardID", currKey.getShardNum());
         cryptoAccount.put("realmID", currKey.getRealmNum());
-        cryptoAccount.put("accountNum", currKey.getAccountNum());
+        cryptoAccount.put("accountNum", currKey.getIdNum());
         String key = Hex.encodeHexString(SerializationUtils.serialize(mapValue.getAccountKeys()));
         cryptoAccount.put("key", key);
       } catch (Exception e) {
@@ -83,7 +83,7 @@ public class ExportExistingAccounts {
    * This method is invoked during start up and executed based upon the configuration settings. It
    * exports all the existing accounts in the JSON format and write it in a file
    */
-  public static void exportAccounts(String exportAccountPath, FCMap<MapKey, HederaAccount> accountMap)
+  public static void exportAccounts(String exportAccountPath, FCMap<EntityId, HederaAccount> accountMap)
       throws IOException {
     JSONArray accountList = getAccountsasJson(accountMap);
     try (FileWriter file = new FileWriter(exportAccountPath)) {

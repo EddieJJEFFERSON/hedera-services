@@ -30,7 +30,7 @@ import com.hederahashgraph.api.proto.java.TransactionGetRecordQuery;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,6 @@ import java.util.Optional;
 
 import static com.hedera.test.utils.TxnUtils.withAdjustments;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.ACCOUNT_REPEATED_IN_ACCOUNT_AMOUNTS;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -76,7 +75,7 @@ class AnswerFunctionsTest {
 	private long fee = 1_234L;
 	private StateView view;
 	private RecordCache recordCache;
-	private FCMap<MapKey, HederaAccount> accounts;
+	private FCMap<EntityId, HederaAccount> accounts;
 
 	private AnswerFunctions subject;
 
@@ -87,7 +86,7 @@ class AnswerFunctionsTest {
 		payerAccount.getRecords().offer(targetRecord);
 
 		accounts = mock(FCMap.class);
-		given(accounts.get(getMapKey(asAccount(target)))).willReturn(payerAccount);
+		given(accounts.get(EntityId.fromPojoAccount(asAccount(target)))).willReturn(payerAccount);
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);
 
 		recordCache = mock(RecordCache.class);

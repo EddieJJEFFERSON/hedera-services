@@ -31,7 +31,7 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.fee.SigValueObj;
 import com.hederahashgraph.fee.SmartContractFeeBuilder;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,12 +41,12 @@ import static org.mockito.BDDMockito.*;
 
 @RunWith(JUnitPlatform.class)
 class ContractUpdateResourceUsageTest {
-	MapKey accountKey = new MapKey(0, 0, 1234);
+	EntityId accountKey = new EntityId(0, 0, 1234);
 	ContractID target = asContract("0.0.1234");
 	Timestamp expiry = Timestamp.newBuilder().setSeconds(Long.MAX_VALUE).build();
 	StateView view;
 	HederaAccount account;
-	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<EntityId, HederaAccount> accounts;
 
 	private SigValueObj sigUsage;
 	private SmartContractFeeBuilder usageEstimator;

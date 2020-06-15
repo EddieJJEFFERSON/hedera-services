@@ -23,6 +23,7 @@ package com.hedera.services.fees.calculation.consensus.txns;
 import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.fees.calculation.TxnResourceUsageEstimator;
+import com.hedera.services.state.merkle.EntityId;
 import com.hederahashgraph.api.proto.java.FeeData;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
@@ -35,7 +36,6 @@ import org.apache.logging.log4j.Logger;
 import static com.hedera.services.fees.calculation.FeeCalcUtils.ZERO_EXPIRY;
 import static com.hederahashgraph.fee.ConsensusServiceFeeBuilder.getConsensusUpdateTopicFee;
 import static com.hederahashgraph.fee.ConsensusServiceFeeBuilder.getUpdateTopicRbsIncrease;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 
 public class UpdateTopicResourceUsage implements TxnResourceUsageEstimator {
     private static final Logger log = LogManager.getLogger(UpdateTopicResourceUsage.class);
@@ -48,7 +48,7 @@ public class UpdateTopicResourceUsage implements TxnResourceUsageEstimator {
     @Override
     public FeeData usageGiven(TransactionBody txn, SigValueObj sigUsage, StateView view) throws InvalidTxBodyException {
         try {
-            Topic topic = view.topics().get(getMapKey(txn.getConsensusUpdateTopic().getTopicID()));
+            Topic topic = view.topics().get(EntityId.fromPojoTopic(txn.getConsensusUpdateTopic().getTopicID()));
             long rbsIncrease = getUpdateTopicRbsIncrease(
                     txn.getTransactionID().getTransactionValidStart(),
                     JKey.mapJKey(topic.getAdminKey()),

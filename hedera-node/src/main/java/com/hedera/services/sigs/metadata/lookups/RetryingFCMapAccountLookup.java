@@ -25,7 +25,7 @@ import com.hedera.services.sigs.metadata.AccountSigningMetadata;
 import com.hedera.services.utils.Pause;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.exception.InvalidAccountIDException;
 import com.swirlds.fcmap.FCMap;
@@ -58,7 +58,7 @@ public class RetryingFCMapAccountLookup extends DefaultFCMapAccountLookup {
 	final private HederaNodeStats stats;
 
 	public RetryingFCMapAccountLookup(
-			FCMap<MapKey, HederaAccount> accounts,
+			FCMap<EntityId, HederaAccount> accounts,
 			int maxRetries,
 			int retryWaitIncrementMs,
 			Pause pause,
@@ -76,7 +76,7 @@ public class RetryingFCMapAccountLookup extends DefaultFCMapAccountLookup {
 			Pause pause,
 			PropertySource properties,
 			HederaNodeStats stats,
-			FCMap<MapKey, HederaAccount> accounts
+			FCMap<EntityId, HederaAccount> accounts
 	) {
 		super(accounts);
 		this.stats = stats;

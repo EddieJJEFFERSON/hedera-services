@@ -42,7 +42,7 @@ import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hederahashgraph.api.proto.java.TransferList;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.common.Address;
 import com.swirlds.common.AddressBook;
@@ -130,8 +130,8 @@ public class AwareTransactionContextTest {
 		payerKey = mock(JKey.class);
 		HederaAccount payerAccount = mock(HederaAccount.class);
 		given(payerAccount.getAccountKeys()).willReturn(payerKey);
-		FCMap<MapKey, HederaAccount> accounts = mock(FCMap.class);
-		given(accounts.get(MapKey.getMapKey(payer))).willReturn(payerAccount);
+		FCMap<EntityId, HederaAccount> accounts = mock(FCMap.class);
+		given(accounts.get(EntityId.fromPojoAccount(payer))).willReturn(payerAccount);
 
 		ctx = mock(ServicesContext.class);
 		given(ctx.exchange()).willReturn(exchange);

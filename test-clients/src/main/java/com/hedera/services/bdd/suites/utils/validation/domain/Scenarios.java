@@ -23,17 +23,26 @@ package com.hedera.services.bdd.suites.utils.validation.domain;
 public class Scenarios {
 	FileScenario file;
 	CryptoScenario crypto;
-	SysFileScenario sysFiles;
+	SysFilesUpScenario sysFilesUp;
+	SysFilesDownScenario sysFilesDown;
 	ContractScenario contract;
 	ConsensusScenario consensus;
 	VersionInfoScenario versions;
 
-	public SysFileScenario getSysFiles() {
-		return sysFiles;
+	public SysFilesUpScenario getSysFilesUp() {
+		return sysFilesUp;
 	}
 
-	public void setSysFiles(SysFileScenario sysFiles) {
-		this.sysFiles = sysFiles;
+	public void setSysFilesUp(SysFilesUpScenario sysFilesUp) {
+		this.sysFilesUp = sysFilesUp;
+	}
+
+	public SysFilesDownScenario getSysFilesDown() {
+		return sysFilesDown;
+	}
+
+	public void setSysFilesDown(SysFilesDownScenario sysFilesDown) {
+		this.sysFilesDown = sysFilesDown;
 	}
 
 	public CryptoScenario getCrypto() {

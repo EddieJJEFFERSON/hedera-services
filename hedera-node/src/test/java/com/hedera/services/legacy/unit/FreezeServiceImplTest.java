@@ -30,7 +30,7 @@ import com.hedera.services.legacy.config.PropertiesLoader;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
 import com.hedera.services.legacy.handler.TransactionHandler;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.legacy.service.FreezeServiceImpl;
@@ -90,8 +90,8 @@ public class FreezeServiceImplTest {
     SettingsCommon.transactionMaxBytes = 1_234_567;
   }
 
-  FCMap<MapKey, HederaAccount> accountFCMap = null;
-  FCMap<MapKey, Topic> topicFCMap = null;
+  FCMap<EntityId, HederaAccount> accountFCMap = null;
+  FCMap<EntityId, Topic> topicFCMap = null;
   Transaction tx;
   Transaction signTransaction;
   Platform platform;
@@ -114,9 +114,9 @@ public class FreezeServiceImplTest {
             .thenReturn(true);
 
     //Init FCMap; Add account 58
-    accountFCMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
-    MapKey mk = new MapKey();
-    mk.setAccountNum(payerAccount);
+    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+    EntityId mk = new EntityId();
+    mk.setIdNum(payerAccount);
     mk.setRealmNum(0);
 
     HederaAccount mv = new HederaAccount();

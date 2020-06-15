@@ -20,7 +20,7 @@ package com.hedera.test.factories.accounts;
  * ‍
  */
 
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.swirlds.fcmap.FCMap;
 
@@ -48,17 +48,17 @@ public class MockFCMapFactory {
 	}
 
 	public MockFCMapFactory withAccount(String id, HederaAccount meta) {
-		MapKey account = MapKey.getMapKey(asAccount(id));
+		EntityId account = EntityId.fromPojoAccount(asAccount(id));
 		given(mock.get(account)).willReturn(meta);
 		return this;
 	}
 	public MockFCMapFactory withContract(String id, HederaAccount meta) {
-		MapKey contract = MapKey.getMapKey(asContract(id));
+		EntityId contract = EntityId.fromPojoContract(asContract(id));
 		given(mock.get(contract)).willReturn(meta);
 		return this;
 	}
 
-	public FCMap<MapKey, HederaAccount> get() {
-		return (FCMap<MapKey, HederaAccount>)mock;
+	public FCMap<EntityId, HederaAccount> get() {
+		return (FCMap<EntityId, HederaAccount>)mock;
 	}
 }

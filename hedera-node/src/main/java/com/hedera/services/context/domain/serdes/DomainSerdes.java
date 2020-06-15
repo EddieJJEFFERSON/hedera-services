@@ -39,45 +39,45 @@ import java.io.IOException;
 public class DomainSerdes {
 	private static final Logger log = LogManager.getLogger(DomainSerdes.class);
 
-	public JKey deserializeKey(DataInputStream in) throws IOException {
+	public static JKey deserializeKey(DataInputStream in) throws IOException {
 		return JKeySerializer.deserialize(in);
 	}
 
-	public void serializeKey(JKey key, DataOutputStream out) throws IOException {
+	public static void serializeKey(JKey key, DataOutputStream out) throws IOException {
 		out.write(key.serialize());
 	}
 
 	@SuppressWarnings("unchecked")
-	public void serializeId(JAccountID id, DataOutputStream out) throws IOException {
+	public static void serializeId(JAccountID id, DataOutputStream out) throws IOException {
 		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 		id.copyTo(fcOut);
 		id.copyToExtra(fcOut);
 	}
 
-	public JTimestamp deserializeTimestamp(DataInputStream in) throws IOException {
+	public static JTimestamp deserializeTimestamp(DataInputStream in) throws IOException {
 		return JTimestamp.deserialize(in);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void serializeTimestamp(JTimestamp ts, DataOutputStream out) throws IOException {
+	public static void serializeTimestamp(JTimestamp ts, DataOutputStream out) throws IOException {
 		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 		ts.copyTo(fcOut);
 		ts.copyToExtra(fcOut);
 	}
 
-	public JAccountID deserializeId(DataInputStream in) throws IOException {
+	public static JAccountID deserializeId(DataInputStream in) throws IOException {
 		return JAccountID.deserialize(in);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void serializeRecords(FCQueue<JTransactionRecord> records, DataOutputStream out) throws IOException {
+	public static void serializeRecords(FCQueue<JTransactionRecord> records, DataOutputStream out) throws IOException {
 		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 		records.copyTo(fcOut);
 		records.copyToExtra(fcOut);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void deserializeIntoRecords(DataInputStream in, FCQueue<JTransactionRecord> to) throws IOException {
+	public static void deserializeIntoRecords(DataInputStream in, FCQueue<JTransactionRecord> to) throws IOException {
 		SerializableDataInputStream fcIn = (SerializableDataInputStream)in;
 		to.copyFrom(fcIn);
 		to.copyFromExtra(fcIn);

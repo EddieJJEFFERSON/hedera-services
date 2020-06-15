@@ -209,7 +209,7 @@ import com.hedera.services.legacy.services.state.initialization.DefaultSystemAcc
 import com.hedera.services.state.migration.StateMigrations;
 import com.hedera.services.utils.SleepingPause;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
@@ -347,8 +347,8 @@ public class ServicesContext {
 	private ValidatingCallbackInterceptor apiPermissionsReloading;
 	private ValidatingCallbackInterceptor applicationPropertiesReloading;
 	private Supplier<ServicesRepositoryRoot> newPureRepo;
-	private AtomicReference<FCMap<MapKey, Topic>> queryableTopics;
-	private AtomicReference<FCMap<MapKey, HederaAccount>> queryableAccounts;
+	private AtomicReference<FCMap<EntityId, Topic>> queryableTopics;
+	private AtomicReference<FCMap<EntityId, HederaAccount>> queryableAccounts;
 	private AtomicReference<FCMap<StorageKey, StorageValue>> queryableStorage;
 
 	/* Context-free infrastructure. */
@@ -1154,14 +1154,14 @@ public class ServicesContext {
 		return queryableStorage;
 	}
 
-	public AtomicReference<FCMap<MapKey, HederaAccount>> queryableAccounts() {
+	public AtomicReference<FCMap<EntityId, HederaAccount>> queryableAccounts() {
 		if (queryableAccounts == null) {
 			queryableAccounts = new AtomicReference<>(accounts());
 		}
 		return queryableAccounts;
 	}
 
-	public AtomicReference<FCMap<MapKey, Topic>> queryableTopics() {
+	public AtomicReference<FCMap<EntityId, Topic>> queryableTopics() {
 		if (queryableTopics == null) {
 			queryableTopics = new AtomicReference<>(topics());
 		}
@@ -1253,11 +1253,11 @@ public class ServicesContext {
 		return state.networkCtx().midnightRates();
 	}
 
-	public FCMap<MapKey, HederaAccount> accounts() {
+	public FCMap<EntityId, HederaAccount> accounts() {
 		return state.accounts();
 	}
 
-	public FCMap<MapKey, Topic> topics() {
+	public FCMap<EntityId, Topic> topics() {
 		return state.topics();
 	}
 

@@ -39,7 +39,7 @@ import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.TransferList;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JContractIDKey;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
@@ -85,7 +85,7 @@ public class HederaLedgerTest {
 	final AccountID genesis = AccountID.newBuilder().setAccountNum(2).build();
 
 	FCMapBackingAccounts backingAccounts;
-	FCMap<MapKey, HederaAccount> backingMap;
+	FCMap<EntityId, HederaAccount> backingMap;
 
 	HederaLedger subject;
 	EntityIdSource ids;
@@ -127,7 +127,7 @@ public class HederaLedgerTest {
 	}
 
 	private void setupWithLiveFcBackedLedger() {
-		backingMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+		backingMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
 		backingAccounts = new FCMapBackingAccounts(backingMap);
 		HederaAccount genesisAccount = new HederaAccount();
 		try {

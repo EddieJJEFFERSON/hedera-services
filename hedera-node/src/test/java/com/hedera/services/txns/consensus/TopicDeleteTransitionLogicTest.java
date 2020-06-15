@@ -29,7 +29,7 @@ import com.hederahashgraph.api.proto.java.ConsensusDeleteTopicTransactionBody;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,7 @@ class TopicDeleteTransitionLogicTest {
 	private TransactionBody transactionBody;
 	private TransactionContext transactionContext;
 	private PlatformTxnAccessor accessor;
-	private FCMap<MapKey, Topic> topics = new FCMap<>(MapKey::deserialize, Topic::deserialize);
+	private FCMap<EntityId, Topic> topics = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 	private OptionValidator validator;
 	private TopicDeleteTransitionLogic subject;
 	final private AccountID payer = AccountID.newBuilder().setAccountNum(1_234L).build();
@@ -95,7 +95,7 @@ class TopicDeleteTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(MapKey.getMapKey(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
 		assertNotNull(topic);
 		assertTrue(topic.isDeleted());
 		verify(transactionContext).setStatus(SUCCESS);
@@ -110,7 +110,7 @@ class TopicDeleteTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(MapKey.getMapKey(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
 		assertNotNull(topic);
 		assertFalse(topic.isDeleted());
 		verify(transactionContext).setStatus(UNAUTHORIZED);
@@ -148,13 +148,13 @@ class TopicDeleteTransitionLogicTest {
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
 		var topicWithAdminKey = new Topic();
 		topicWithAdminKey.setAdminKey(MISC_ACCOUNT_KT.asJKey());
-		topics.put(MapKey.getMapKey(asTopic(TOPIC_ID)), topicWithAdminKey);
+		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), topicWithAdminKey);
 	}
 
 	private void givenTransactionContextNoAdminKey() {
 		givenTransaction(getBasicValidTransactionBodyBuilder());
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
-		topics.put(MapKey.getMapKey(asTopic(TOPIC_ID)), new Topic());
+		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), new Topic());
 	}
 
 	private void givenTransactionContextInvalidTopic() {

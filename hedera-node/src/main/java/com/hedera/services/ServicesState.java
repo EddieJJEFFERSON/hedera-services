@@ -27,7 +27,7 @@ import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.properties.StandardizedPropertySources;
 import com.hedera.services.legacy.config.PropertiesLoader;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.state.submerkle.ExchangeRates;
@@ -127,9 +127,9 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 					new SequenceNumber(HEDERA_START_SEQUENCE),
 					new ExchangeRates());
 			setChild(NETWORK_CTX_CHILD_INDEX, networkCtx);
-			setChild(TOPICS_CHILD_INDEX, new FCMap<>(MapKey::deserialize, Topic::deserialize));
+			setChild(TOPICS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), new Topic.Provider()));
 			setChild(STORAGE_CHILD_INDEX, new FCMap<>(StorageKey::deserialize, StorageValue::deserialize));
-			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize));
+			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize));
 		}
 
 		log.info("Initializing context of Services node {} with platform and address book...", nodeId);
@@ -248,7 +248,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 		return accountParsedFromString(memo);
 	}
 
-	public FCMap<MapKey, HederaAccount> accounts() {
+	public FCMap<EntityId, HederaAccount> accounts() {
 		return getChild(ACCOUNTS_CHILD_INDEX);
 	}
 
@@ -256,7 +256,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 		return getChild(STORAGE_CHILD_INDEX);
 	}
 
-	public FCMap<MapKey, Topic> topics() {
+	public FCMap<EntityId, Topic> topics() {
 		return getChild(TOPICS_CHILD_INDEX);
 	}
 

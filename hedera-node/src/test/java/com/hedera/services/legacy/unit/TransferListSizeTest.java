@@ -38,7 +38,7 @@ import com.hederahashgraph.api.proto.java.TransferList;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hederahashgraph.builder.TransactionSigner;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.jproto.JKey;
@@ -89,7 +89,7 @@ public class TransferListSizeTest {
   AccountID payerAccountId;
   protected AccountID nodeAccountId;
   AccountID feeCollAccountId;
-  protected FCMap<MapKey, HederaAccount> fcMap = null;
+  protected FCMap<EntityId, HederaAccount> fcMap = null;
   public long TX_DURATION_SEC = 2 * 60; // 2 minutes for tx dedup
   protected SignatureList signatures = SignatureList.newBuilder()
       .getDefaultInstanceForType();
@@ -122,7 +122,7 @@ public class TransferListSizeTest {
     nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
     feeCollAccountId = RequestBuilder.getAccountIdBuild(feeCollAccount, 0l, 0l);
 
-    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
     createAccount(feeCollAccountId, 10_000L);
@@ -237,8 +237,8 @@ public class TransferListSizeTest {
    * @return retrieved balance
    */
   public long getBalance(AccountID aid) {
-    MapKey mk = new MapKey();
-    mk.setAccountNum(aid.getAccountNum());
+    EntityId mk = new EntityId();
+    mk.setIdNum(aid.getAccountNum());
     mk.setRealmNum(aid.getRealmNum());
     mk.setShardNum(aid.getShardNum());
     HederaAccount mv = new HederaAccount();
@@ -301,8 +301,8 @@ public class TransferListSizeTest {
   }
 
   protected void createAccount(AccountID payerAccount, long balance) throws Exception {
-    MapKey mk = new MapKey();
-    mk.setAccountNum(payerAccount.getAccountNum());
+    EntityId mk = new EntityId();
+    mk.setIdNum(payerAccount.getAccountNum());
     mk.setRealmNum(0);
     HederaAccount mv = new HederaAccount();
     mv.setBalance(balance);

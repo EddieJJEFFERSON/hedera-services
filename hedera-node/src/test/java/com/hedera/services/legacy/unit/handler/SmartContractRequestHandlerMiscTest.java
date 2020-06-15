@@ -61,7 +61,7 @@ import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hederahashgraph.fee.FeeBuilder;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.StorageKey;
@@ -139,13 +139,13 @@ public class SmartContractRequestHandlerMiscTest {
   private static final long secondContractSequenceNumber = 668L;
   SmartContractRequestHandler smartHandler;
   FileServiceHandler fsHandler;
-  FCMap<MapKey, HederaAccount> fcMap = null;
+  FCMap<EntityId, HederaAccount> fcMap = null;
   private FCMap<StorageKey, StorageValue> storageMap;
   ServicesRepositoryRoot repository;
   LedgerAccountsSource ledgerSource;
   HederaLedger ledger;
 
-  MapKey payerMapKey; // fcMap key for payer account
+  EntityId payerEntityId; // fcMap key for payer account
   byte[] payerKeyBytes = null; // Repository key for payer account
   AccountID payerAccountId;
   AccountID nodeAccountId;
@@ -193,7 +193,7 @@ public class SmartContractRequestHandlerMiscTest {
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
     //Init FCMap
-    fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     // Create accounts
     createAccount(payerAccountId, 1_000_000_000L);
@@ -202,7 +202,7 @@ public class SmartContractRequestHandlerMiscTest {
 
     //Init SolidityAddress Map
     SolidityAddress solAddress = new SolidityAddress("abcdefghijklmnop");
-    MapKey solMapKey = new MapKey(0l, 0l, 5l);
+    EntityId solEntityId = new EntityId(0l, 0l, 5l);
     //Init Repository
     repository = getLocalRepositoryInstance();
 
@@ -241,10 +241,10 @@ public class SmartContractRequestHandlerMiscTest {
     } catch (DecoderException e) {
       Assert.fail("Failure building solidity key for payer account");
     }
-    payerMapKey = new MapKey();
-    payerMapKey.setAccountNum(payerAccount);
-    payerMapKey.setRealmNum(0);
-    payerMapKey.setShardNum(0);
+    payerEntityId = new EntityId();
+    payerEntityId.setIdNum(payerAccount);
+    payerEntityId.setRealmNum(0);
+    payerEntityId.setShardNum(0);
     PropertyLoaderTest.populatePropertiesWithConfigFilesPath(
         "../../../configuration/dev/application.properties",
         "../../../configuration/dev/api-permission.properties");
@@ -252,8 +252,8 @@ public class SmartContractRequestHandlerMiscTest {
 
   private void createAccount(AccountID payerAccount, long balance)
       throws NegativeAccountBalanceException {
-    MapKey mk = new MapKey();
-    mk.setAccountNum(payerAccount.getAccountNum());
+    EntityId mk = new EntityId();
+    mk.setIdNum(payerAccount.getAccountNum());
     mk.setRealmNum(0);
     HederaAccount mv = new HederaAccount();
     mv.setBalance(balance);
@@ -333,8 +333,8 @@ public class SmartContractRequestHandlerMiscTest {
   }
 
   private void checkContractArtifactsExist(ContractID contractId) {
-    MapKey mk = new MapKey();
-    mk.setAccountNum(contractId.getContractNum());
+    EntityId mk = new EntityId();
+    mk.setIdNum(contractId.getContractNum());
     mk.setRealmNum(contractId.getRealmNum());
     mk.setShardNum(contractId.getShardNum());
     HederaAccount mv = fcMap.get(mk);
@@ -1075,8 +1075,8 @@ public class SmartContractRequestHandlerMiscTest {
   }
 
   private long getBalance(AccountID accountId) {
-    MapKey mk = new MapKey();
-    mk.setAccountNum(accountId.getAccountNum());
+    EntityId mk = new EntityId();
+    mk.setIdNum(accountId.getAccountNum());
     mk.setRealmNum(0);
     mk.setShardNum(0);
 

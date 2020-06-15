@@ -23,20 +23,20 @@ package com.hedera.services.sigs.metadata.lookups;
 import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.sigs.metadata.TopicSigningMetadata;
 import com.hederahashgraph.api.proto.java.TopicID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.exception.InvalidTopicIDException;
 import com.swirlds.fcmap.FCMap;
 
 public class DefaultFCMapTopicLookup implements TopicSigMetaLookup {
-	private final FCMap<MapKey, Topic> topics;
+	private final FCMap<EntityId, Topic> topics;
 
-	public DefaultFCMapTopicLookup(FCMap<MapKey, Topic> topics) {
+	public DefaultFCMapTopicLookup(FCMap<EntityId, Topic> topics) {
 		this.topics = topics;
 	}
 
 	@Override
 	public TopicSigningMetadata lookup(TopicID id) throws Exception {
-		Topic topic = topics.get(MapKey.getMapKey(id));
+		Topic topic = topics.get(EntityId.fromPojoTopic(id));
 		if ((topic == null) || topic.isDeleted()) {
 			throw new InvalidTopicIDException("Invalid topic!", id);
 		}

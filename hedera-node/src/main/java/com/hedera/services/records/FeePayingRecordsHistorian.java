@@ -36,7 +36,7 @@ import com.hederahashgraph.api.proto.java.AccountAmount;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.swirlds.fcmap.FCMap;
@@ -52,7 +52,6 @@ import java.util.function.Predicate;
 
 import static com.hedera.services.fees.charging.ItemizableFeeCharging.THRESHOLD_RECORD_FEE;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.SUCCESS;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.core.jproto.JTransactionRecord.convert;
 import static java.lang.Math.min;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -75,7 +74,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	private final PropertySource properties;
 	private final TransactionContext txnCtx;
 	private final ItemizableFeeCharging feeCharging;
-	private final FCMap<MapKey, HederaAccount> accounts;
+	private final FCMap<EntityId, HederaAccount> accounts;
 	private final Predicate<TransactionContext> isScopedRecordQueryable;
 	private final BlockingQueue<EarliestRecordExpiry> expirations;
 
@@ -85,7 +84,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 			PropertySource properties,
 			TransactionContext txnCtx,
 			ItemizableFeeCharging feeCharging,
-			FCMap<MapKey, HederaAccount> accounts,
+			FCMap<EntityId, HederaAccount> accounts,
 			Predicate<TransactionContext> isScopedRecordQueryable,
 			BlockingQueue<EarliestRecordExpiry> expirations
 	) {
@@ -168,7 +167,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 
 	@Override
 	public void reviewExistingRecords(long consensusTimeOfLastHandledTxn) {
-		for (Map.Entry<MapKey, HederaAccount> entry : accounts.entrySet()) {
+		for (Map.Entry<EntityId, HederaAccount> entry : accounts.entrySet()) {
 			if (entry.getValue().expiryOfEarliestRecord() > -1L) {
 				EarliestRecordExpiry ere = asEre(entry);
 				expirations.offer(ere);
@@ -177,8 +176,8 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 		}
 	}
 
-	private EarliestRecordExpiry asEre(Map.Entry<MapKey, HederaAccount> entry) {
-		MapKey key = entry.getKey();
+	private EarliestRecordExpiry asEre(Map.Entry<EntityId, HederaAccount> entry) {
+		EntityId key = entry.getKey();
 		HederaAccount account = entry.getValue();
 
 		EarliestRecordExpiry ere = new EarliestRecordExpiry(
@@ -186,7 +185,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 				AccountID.newBuilder()
 						.setShardNum(key.getShardNum())
 						.setRealmNum(key.getRealmNum())
-						.setAccountNum(key.getAccountNum())
+						.setAccountNum(key.getIdNum())
 						.build());
 		return ere;
 	}
@@ -247,7 +246,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	}
 
 	private boolean isCallableContract(AccountID id) {
-		return Optional.ofNullable(accounts.get(getMapKey(id)))
+		return Optional.ofNullable(accounts.get(EntityId.fromPojoAccount(id)))
 				.map(v -> v.isSmartContract() && !v.isDeleted())
 				.orElse(false);
 	}

@@ -22,6 +22,7 @@ package com.hedera.services.queries.crypto;
 
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.context.primitives.StateView;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.queries.AnswerService;
 import com.hedera.services.txns.validation.OptionValidator;
 import com.hedera.services.utils.SignedTxnAccessor;
@@ -45,7 +46,6 @@ import static com.hedera.services.utils.MiscUtils.asKeyUnchecked;
 import static com.hederahashgraph.api.proto.java.HederaFunctionality.CryptoGetInfo;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.OK;
 import static com.hederahashgraph.api.proto.java.ResponseType.COST_ANSWER;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 
 public class GetAccountInfoAnswer implements AnswerService {
 	private final OptionValidator optionValidator;
@@ -74,7 +74,7 @@ public class GetAccountInfoAnswer implements AnswerService {
 				response.setHeader(costAnswerHeader(OK, cost));
 			} else {
 				AccountID id = op.getAccountID();
-				HederaAccount account = view.accounts().get(getMapKey(id));
+				HederaAccount account = view.accounts().get(EntityId.fromPojoAccount(id));
 				String solidityAddress = asSolidityAddressHex(id);
 				CryptoGetInfoResponse.AccountInfo.Builder info = CryptoGetInfoResponse.AccountInfo.newBuilder()
 						.setKey(asKeyUnchecked(account.getAccountKeys()))

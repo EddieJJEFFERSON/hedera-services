@@ -23,7 +23,7 @@ package com.hedera.services.queries.validation;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hederahashgraph.api.proto.java.AccountAmount;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -52,12 +52,12 @@ class QueryFeeCheckTest {
 	AccountID aBroke = asAccount("0.0.13257");
 	long aLittle = 2L, aLot = Long.MAX_VALUE - 1L;
 	HederaAccount broke, rich;
-	MapKey missingKey = MapKey.getMapKey(aMissing);
-	MapKey richKey = MapKey.getMapKey(aRich);
-	MapKey brokeKey = MapKey.getMapKey(aBroke);
-	MapKey nodeKey = MapKey.getMapKey(aNode);
+	EntityId missingKey = EntityId.fromPojoAccount(aMissing);
+	EntityId richKey = EntityId.fromPojoAccount(aRich);
+	EntityId brokeKey = EntityId.fromPojoAccount(aBroke);
+	EntityId nodeKey = EntityId.fromPojoAccount(aNode);
 
-	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<EntityId, HederaAccount> accounts;
 
 	QueryFeeCheck subject;
 

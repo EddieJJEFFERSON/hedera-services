@@ -22,7 +22,7 @@ package com.hedera.services.sigs.metadata.lookups;
 
 import com.hedera.services.sigs.metadata.AccountSigningMetadata;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.exception.InvalidAccountIDException;
 import com.swirlds.fcmap.FCMap;
@@ -33,9 +33,9 @@ import com.swirlds.fcmap.FCMap;
  * @author Michael Tinker
  */
 public class DefaultFCMapAccountLookup implements AccountSigMetaLookup {
-	private final FCMap<MapKey, HederaAccount> accounts;
+	private final FCMap<EntityId, HederaAccount> accounts;
 
-	public DefaultFCMapAccountLookup(FCMap<MapKey, HederaAccount> accounts) {
+	public DefaultFCMapAccountLookup(FCMap<EntityId, HederaAccount> accounts) {
 		this.accounts = accounts;
 	}
 
@@ -49,7 +49,7 @@ public class DefaultFCMapAccountLookup implements AccountSigMetaLookup {
 	 */
 	@Override
 	public AccountSigningMetadata lookup(AccountID id) throws Exception {
-		HederaAccount account = accounts.get(MapKey.getMapKey(id));
+		HederaAccount account = accounts.get(EntityId.fromPojoAccount(id));
 		if (account == null) {
 			throw new InvalidAccountIDException("Invalid account!", id);
 		}

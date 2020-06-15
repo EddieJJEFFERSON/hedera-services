@@ -24,7 +24,7 @@ import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.context.primitives.StateView;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Timestamp;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,7 +49,7 @@ public class FeeCalcUtils {
 		throw new IllegalStateException("Utility class");
 	}
 
-	public static Timestamp lookupAccountExpiry(MapKey key, FCMap<MapKey, HederaAccount> accounts) {
+	public static Timestamp lookupAccountExpiry(EntityId key, FCMap<EntityId, HederaAccount> accounts) {
 		try {
 			HederaAccount account = accounts.get(key);
 			long expiration = account.getExpirationTime();

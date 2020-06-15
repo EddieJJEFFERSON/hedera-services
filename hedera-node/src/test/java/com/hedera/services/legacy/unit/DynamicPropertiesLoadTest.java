@@ -56,7 +56,7 @@ import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
@@ -75,7 +75,7 @@ public class DynamicPropertiesLoadTest {
 	private AccountID payerAccountId;
 	FCStorageWrapper storageWrapper;
 	TransactionHandler transactionHandler = null;
-	FCMap<MapKey, HederaAccount> fcMap = null;
+	FCMap<EntityId, HederaAccount> fcMap = null;
 	private FCMap<StorageKey, StorageValue> storageMap;
 	private FileServiceHandler fileServiceHandler;
 	FileCreateTransactionBody fileCreateTransactionBody;
@@ -86,7 +86,7 @@ public class DynamicPropertiesLoadTest {
 		nodeAccount = 3l;
 		payerAccountId = RequestBuilder.getAccountIdBuild(payerAccount, 0l, 0l);
 		nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
-		fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+		fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
 		storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
 		storageWrapper = new FCStorageWrapper(storageMap);
 		FeeScheduleInterceptor feeScheduleInterceptor = mock(FeeScheduleInterceptor.class);

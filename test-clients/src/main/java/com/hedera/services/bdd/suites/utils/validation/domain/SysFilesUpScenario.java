@@ -23,26 +23,14 @@ package com.hedera.services.bdd.suites.utils.validation.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SysFileScenario {
-	public static final String COMPARE_EVAL_MODE = "compare";
-	public static final String SNAPSHOT_EVAL_MODE = "snapshot";
+public class SysFilesUpScenario {
+	List<UpdateAction> updates = new ArrayList<>();
 
-	String evalMode = SNAPSHOT_EVAL_MODE;
-	List<Integer> numsToFetch = new ArrayList<>();
-
-	public List<Integer> getNumsToFetch() {
-		return numsToFetch;
+	public List<UpdateAction> getUpdates() {
+		return updates;
 	}
 
-	public void setNumsToFetch(List<Integer> numsToFetch) {
-		this.numsToFetch = numsToFetch;
-	}
-
-	public String getEvalMode() {
-		return evalMode;
-	}
-
-	public void setEvalMode(String evalMode) {
-		this.evalMode = evalMode;
+	public void setUpdates(List<UpdateAction> updates) {
+		this.updates = updates;
 	}
 }

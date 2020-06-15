@@ -28,7 +28,7 @@ import com.hederahashgraph.api.proto.java.CryptoGetAccountRecordsQuery;
 import com.hederahashgraph.api.proto.java.Query;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JTransactionID;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import org.apache.logging.log4j.LogManager;
@@ -37,7 +37,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Optional;
 
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.core.jproto.JTransactionRecord.convert;
 
 public class AnswerFunctions {
@@ -45,7 +44,7 @@ public class AnswerFunctions {
 
 	public List<TransactionRecord> accountRecords(StateView view, Query query) {
 		CryptoGetAccountRecordsQuery op = query.getCryptoGetAccountRecords();
-		MapKey key = getMapKey(op.getAccountID());
+		EntityId key = EntityId.fromPojoAccount(op.getAccountID());
 		HederaAccount account = view.accounts().get(key);
 		return convert(account.recordList());
 	}
@@ -57,7 +56,7 @@ public class AnswerFunctions {
 		} else {
 			try {
 				AccountID id = txnId.getAccountID();
-				HederaAccount account = view.accounts().get(getMapKey(id));
+				HederaAccount account = view.accounts().get(EntityId.fromPojoAccount(id));
 				JTransactionID searchableId = JTransactionID.convert(txnId);
 				return account.recordList()
 						.stream()

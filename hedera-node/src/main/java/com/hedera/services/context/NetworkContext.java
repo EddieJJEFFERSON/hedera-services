@@ -2,8 +2,6 @@ package com.hedera.services.context;
 
 import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.state.submerkle.SequenceNumber;
-import com.hederahashgraph.api.proto.java.ExchangeRate;
-import com.swirlds.common.FastCopyable;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.common.merkle.MerkleLeaf;

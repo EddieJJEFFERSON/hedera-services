@@ -31,7 +31,7 @@ import com.hederahashgraph.api.proto.java.ConsensusSubmitMessageTransactionBody;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,7 @@ class SubmitMessageTransitionLogicTest {
 	private PlatformTxnAccessor accessor;
 	private OptionValidator validator;
 	private SubmitMessageTransitionLogic subject;
-	private FCMap<MapKey, Topic> topics = new FCMap<>(MapKey::deserialize, Topic::deserialize);;
+	private FCMap<EntityId, Topic> topics = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 	final private AccountID payer = AccountID.newBuilder().setAccountNum(1_234L).build();
 
 	@BeforeEach
@@ -97,7 +97,7 @@ class SubmitMessageTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(MapKey.getMapKey(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
 		assertNotNull(topic);
 		assertEquals(1L, topic.getSequenceNumber()); // Starts at 0.
 
@@ -136,7 +136,7 @@ class SubmitMessageTransitionLogicTest {
 	}
 
 	private void assertUnchangedTopics() {
-		var topic = topics.get(MapKey.getMapKey(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
 		assertEquals(0L, topic.getSequenceNumber());
 		assertArrayEquals(new byte[48], topic.getRunningHash());
 	}
@@ -159,14 +159,14 @@ class SubmitMessageTransitionLogicTest {
 	private void givenValidTransactionContext() {
 		givenTransaction(getBasicValidTransactionBodyBuilder());
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
-		topics.put(MapKey.getMapKey(asTopic(TOPIC_ID)), new Topic());
+		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), new Topic());
 	}
 
 	private void givenTransactionContextNoMessage() {
 		givenTransaction(ConsensusSubmitMessageTransactionBody.newBuilder()
 				.setTopicID(asTopic(TOPIC_ID)).setTopicID(asTopic(TOPIC_ID)));
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
-		topics.put(MapKey.getMapKey(asTopic(TOPIC_ID)), new Topic());
+		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), new Topic());
 	}
 
 	private void givenTransactionContextInvalidTopic() {

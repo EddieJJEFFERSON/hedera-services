@@ -38,7 +38,7 @@ import com.hedera.test.mocks.StorageSourceFactory;
 import com.hedera.test.mocks.TestProperties;
 import com.hedera.test.utils.IdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
@@ -64,7 +64,8 @@ public class RepoNewCacheTest {
 
   @Ignore
   public void test() {
-    FCMap<MapKey, HederaAccount> accountMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+    FCMap<EntityId, HederaAccount> accountMap =
+            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize,
         StorageValue::deserialize);
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
@@ -165,7 +166,8 @@ public class RepoNewCacheTest {
 
   @Test
   public void rollbackTest() {
-    FCMap<MapKey, HederaAccount> accountMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+    FCMap<EntityId, HederaAccount> accountMap =
+            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
 

@@ -36,7 +36,7 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
@@ -78,8 +78,9 @@ class TopicUpdateTransitionLogicTest {
 	private TransactionContext transactionContext;
 	private PlatformTxnAccessor accessor;
 	private OptionValidator validator;
-	private FCMap<MapKey, HederaAccount> accounts = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);;
-	private FCMap<MapKey, Topic> topics = new FCMap<>(MapKey::deserialize, Topic::deserialize);;
+	private FCMap<EntityId, HederaAccount> accounts =
+			new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+	private FCMap<EntityId, Topic> topics = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 	private TopicUpdateTransitionLogic subject;
 	final private AccountID payer = AccountID.newBuilder().setAccountNum(1_234L).build();
 
@@ -142,7 +143,7 @@ class TopicUpdateTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		assertNotNull(topic);
 		verify(transactionContext).setStatus(SUCCESS);
 		assertEquals(VALID_MEMO, topic.getMemo());
@@ -163,7 +164,7 @@ class TopicUpdateTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		assertNotNull(topic);
 		verify(transactionContext).setStatus(SUCCESS);
 		assertEquals(EXISTING_MEMO, topic.getMemo());
@@ -180,7 +181,7 @@ class TopicUpdateTransitionLogicTest {
 		givenExistingTopicWithAdminKey();
 		givenTransactionWithInvalidMemo();
 
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		var originalValues = new Topic(topic);
 
 		// when:
@@ -197,7 +198,7 @@ class TopicUpdateTransitionLogicTest {
 		givenExistingTopicWithAdminKey();
 		givenTransactionWithInvalidAdminKey();
 
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		var originalValues = new Topic(topic);
 
 		// when:
@@ -214,7 +215,7 @@ class TopicUpdateTransitionLogicTest {
 		givenExistingTopicWithAdminKey();
 		givenTransactionWithInvalidSubmitKey();
 
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		var originalValues = new Topic(topic);
 
 		// when:
@@ -231,7 +232,7 @@ class TopicUpdateTransitionLogicTest {
 		givenExistingTopicWithAdminKey();
 		givenTransactionWithInvalidAutoRenewPeriod();
 
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		var originalValues = new Topic(topic);
 
 		// when:
@@ -248,7 +249,7 @@ class TopicUpdateTransitionLogicTest {
 		givenExistingTopicWithAdminKey();
 		givenTransactionWithInvalidExpirationTime();
 
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		var originalValues = new Topic(topic);
 
 		// when:
@@ -265,7 +266,7 @@ class TopicUpdateTransitionLogicTest {
 		givenExistingTopicWithAdminKey();
 		givenTransactionWithReducedExpirationTime();
 
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		var originalValues = new Topic(topic);
 
 		// when:
@@ -282,7 +283,7 @@ class TopicUpdateTransitionLogicTest {
 		givenExistingTopicWithoutAdminKey();
 		givenTransactionWithMemo();
 
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		var originalValues = new Topic(topic);
 
 		// when:
@@ -341,13 +342,13 @@ class TopicUpdateTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		verify(transactionContext).setStatus(SUCCESS);
 		assertFalse(topic.hasAutoRenewAccountId());
 	}
 
 	private void assertTopicNotUpdated(Topic originalTopic, Topic originalTopicClone) {
-		var updatedTopic = topics.get(MapKey.getMapKey(TOPIC_ID));
+		var updatedTopic = topics.get(EntityId.fromPojoTopic(TOPIC_ID));
 		assertSame(originalTopic, updatedTopic); // No change
 		assertEquals(originalTopicClone, updatedTopic); // No change in values
 	}
@@ -355,28 +356,28 @@ class TopicUpdateTransitionLogicTest {
 	private void givenExistingTopicWithAdminKey() throws Throwable {
 		var existingTopic = new Topic(EXISTING_MEMO, JKey.mapKey(existingKey), null, EXISTING_AUTORENEW_PERIOD_SECONDS, null,
 				EXISTING_EXPIRATION_TIME);
-		topics.put(MapKey.getMapKey(TOPIC_ID), existingTopic);
+		topics.put(EntityId.fromPojoTopic(TOPIC_ID), existingTopic);
 		given(validator.queryableTopicStatus(TOPIC_ID, topics)).willReturn(OK);
 	}
 
 	private void givenExistingTopicWithBothKeys() throws Throwable {
 		var existingTopic = new Topic(EXISTING_MEMO, JKey.mapKey(existingKey), JKey.mapKey(existingKey),
 				EXISTING_AUTORENEW_PERIOD_SECONDS, null, EXISTING_EXPIRATION_TIME);
-		topics.put(MapKey.getMapKey(TOPIC_ID), existingTopic);
+		topics.put(EntityId.fromPojoTopic(TOPIC_ID), existingTopic);
 		given(validator.queryableTopicStatus(TOPIC_ID, topics)).willReturn(OK);
 	}
 
 	private void givenExistingTopicWithoutAdminKey() throws Throwable {
 		var existingTopic = new Topic(EXISTING_MEMO, null, null, EXISTING_AUTORENEW_PERIOD_SECONDS, null,
 				EXISTING_EXPIRATION_TIME);
-		topics.put(MapKey.getMapKey(TOPIC_ID), existingTopic);
+		topics.put(EntityId.fromPojoTopic(TOPIC_ID), existingTopic);
 		given(validator.queryableTopicStatus(TOPIC_ID, topics)).willReturn(OK);
 	}
 
 	private void givenExistingTopicWithAutoRenewAccount() throws Throwable {
 		var existingTopic = new Topic(EXISTING_MEMO, JKey.mapKey(existingKey), null, EXISTING_AUTORENEW_PERIOD_SECONDS,
 				JAccountID.convert(MISC_ACCOUNT), EXISTING_EXPIRATION_TIME);
-		topics.put(MapKey.getMapKey(TOPIC_ID), existingTopic);
+		topics.put(EntityId.fromPojoTopic(TOPIC_ID), existingTopic);
 		given(validator.queryableTopicStatus(TOPIC_ID, topics)).willReturn(OK);
 	}
 

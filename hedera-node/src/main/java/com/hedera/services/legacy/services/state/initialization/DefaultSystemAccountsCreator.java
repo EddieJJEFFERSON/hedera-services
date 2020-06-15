@@ -20,7 +20,7 @@ package com.hedera.services.legacy.services.state.initialization;
  * ‍
  */
 
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.initialization.NodeAccountsCreation;
 import com.hedera.services.state.initialization.SystemAccountsCreator;
 import com.hedera.services.context.domain.haccount.HederaAccount;
@@ -33,7 +33,7 @@ public class DefaultSystemAccountsCreator implements SystemAccountsCreator {
 	private final NodeAccountsCreation delegate = new NodeAccountsCreation();
 
 	@Override
-	public void createSystemAccounts(FCMap<MapKey, HederaAccount> accounts, AddressBook addressBook) throws Exception {
+	public void createSystemAccounts(FCMap<EntityId, HederaAccount> accounts, AddressBook addressBook) throws Exception {
 		delegate.initializeNodeAccounts(addressBook, accounts);
 	}
 }

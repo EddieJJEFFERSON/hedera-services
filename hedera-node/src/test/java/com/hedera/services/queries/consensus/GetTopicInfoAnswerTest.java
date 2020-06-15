@@ -38,7 +38,7 @@ import com.hederahashgraph.api.proto.java.ResponseHeader;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.Transaction;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,6 @@ import static com.hederahashgraph.api.proto.java.ResponseType.ANSWER_ONLY;
 import static com.hederahashgraph.api.proto.java.ResponseType.COST_ANSWER;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.test.utils.IdUtils.*;
 import static com.hedera.test.factories.scenarios.TxnHandlingScenario.MISC_ACCOUNT_KT;
 
@@ -97,7 +96,7 @@ class GetTopicInfoAnswerTest {
 				.get();
 		topic.setRunningHash(hash);
 		topic.setSequenceNumber(seqNo);
-		MapKey key = getMapKey(asTopic(target));
+		EntityId key = EntityId.fromPojoTopic(asTopic(target));
 		given(topics.get(key)).willReturn(topic);
 		view = new StateView(topics, StateView.EMPTY_ACCOUNTS);
 		optionValidator = mock(OptionValidator.class);

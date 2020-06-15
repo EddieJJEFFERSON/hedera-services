@@ -26,7 +26,7 @@ import com.hedera.services.txns.TransitionLogic;
 import com.hedera.services.txns.validation.OptionValidator;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TransactionBody;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,11 +41,11 @@ public class SubmitMessageTransitionLogic implements TransitionLogic {
 
 	private static final Function<TransactionBody, ResponseCodeEnum> SYNTAX_RUBBER_STAMP = ignore -> OK;
 
-	private final FCMap<MapKey, Topic> topics;
+	private final FCMap<EntityId, Topic> topics;
 	private final OptionValidator validator;
 	private final TransactionContext transactionContext;
 
-	public SubmitMessageTransitionLogic(FCMap<MapKey, Topic> topics, OptionValidator validator,
+	public SubmitMessageTransitionLogic(FCMap<EntityId, Topic> topics, OptionValidator validator,
 										TransactionContext transactionContext) {
 		this.topics = topics;
 		this.validator = validator;
@@ -69,7 +69,7 @@ public class SubmitMessageTransitionLogic implements TransitionLogic {
 			return;
 		}
 
-		var topicMapKey = MapKey.getMapKey(topicId);
+		var topicMapKey = EntityId.fromPojoTopic(topicId);
 		var topic = topics.get(topicMapKey);
 		try {
 			var updatedTopic = new Topic(topic);

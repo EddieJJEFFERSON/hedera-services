@@ -28,7 +28,7 @@ import com.hederahashgraph.api.proto.java.FeeData;
 import com.hederahashgraph.api.proto.java.Query;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.fee.ConsensusServiceFeeBuilder;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +51,7 @@ public class GetTopicInfoResourceUsage implements QueryResourceUsageEstimator {
 	@Override
 	public FeeData usageGivenType(Query query, StateView view, ResponseType responseType) {
 	    try {
-			Topic topic = view.topics().get(MapKey.getMapKey(query.getConsensusGetTopicInfo().getTopicID()));
+			Topic topic = view.topics().get(EntityId.fromPojoTopic(query.getConsensusGetTopicInfo().getTopicID()));
 			int bpr = BASIC_QUERY_RES_HEADER + getStateProofSize(responseType) +
 					BASIC_ACCTID_SIZE +  // topicID
 					getTopicInfoSize(topic);

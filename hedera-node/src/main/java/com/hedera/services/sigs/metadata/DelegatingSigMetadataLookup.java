@@ -39,7 +39,7 @@ import com.hederahashgraph.api.proto.java.ContractID;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.swirlds.fcmap.FCMap;
 
@@ -60,8 +60,8 @@ public class DelegatingSigMetadataLookup implements SigMetadataLookup {
 
 	public static DelegatingSigMetadataLookup defaultLookupsFor(
 			HederaFs hfs,
-			FCMap<MapKey, HederaAccount> accounts,
-			FCMap<MapKey, Topic> topics
+			FCMap<EntityId, HederaAccount> accounts,
+			FCMap<EntityId, Topic> topics
 	) {
 		return new DelegatingSigMetadataLookup(
 				new HfsSigMetaLookup(hfs),
@@ -73,8 +73,8 @@ public class DelegatingSigMetadataLookup implements SigMetadataLookup {
 
 	public static DelegatingSigMetadataLookup defaultLookupsPlusAccountRetriesFor(
 			HederaFs hfs,
-			FCMap<MapKey, HederaAccount> accounts,
-			FCMap<MapKey, Topic> topics,
+			FCMap<EntityId, HederaAccount> accounts,
+			FCMap<EntityId, Topic> topics,
 			int maxRetries,
 			int retryWaitIncrementMs,
 			HederaNodeStats stats
@@ -91,8 +91,8 @@ public class DelegatingSigMetadataLookup implements SigMetadataLookup {
 			HederaFs hfs,
 			PropertySource properties,
 			HederaNodeStats stats,
-			FCMap<MapKey, HederaAccount> accounts,
-			FCMap<MapKey, Topic> topics
+			FCMap<EntityId, HederaAccount> accounts,
+			FCMap<EntityId, Topic> topics
 	) {
 		return new DelegatingSigMetadataLookup(
 				new HfsSigMetaLookup(hfs),

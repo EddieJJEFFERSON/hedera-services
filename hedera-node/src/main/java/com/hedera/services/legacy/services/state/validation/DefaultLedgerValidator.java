@@ -20,7 +20,7 @@ package com.hedera.services.legacy.services.state.validation;
  * ‍
  */
 
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.handler.TransactionHandler;
 import com.hedera.services.state.validation.LedgerValidator;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
@@ -38,7 +38,7 @@ public class DefaultLedgerValidator implements LedgerValidator {
 	private final EnumSet<ResponseCodeEnum> INVALID_CODES = EnumSet.of(INVALID_ACCOUNT_ID, TOTAL_LEDGER_BALANCE_INVALID);
 
 	@Override
-	public void assertIdsAreValid(FCMap<MapKey, HederaAccount> accounts) {
+	public void assertIdsAreValid(FCMap<EntityId, HederaAccount> accounts) {
 		ResponseCodeEnum assessment =
 				txnHandlerAssessments.computeIfAbsent(accounts, TransactionHandler::validateAccountIDAndTotalBalInMap);
 		if (assessment == INVALID_ACCOUNT_ID) {
@@ -47,7 +47,7 @@ public class DefaultLedgerValidator implements LedgerValidator {
 	}
 
 	@Override
-	public boolean hasExpectedTotalBalance(FCMap<MapKey, HederaAccount> accounts) {
+	public boolean hasExpectedTotalBalance(FCMap<EntityId, HederaAccount> accounts) {
 		ResponseCodeEnum assessment =
 				txnHandlerAssessments.computeIfAbsent(accounts, TransactionHandler::validateAccountIDAndTotalBalInMap);
 		return !INVALID_CODES.contains(assessment);

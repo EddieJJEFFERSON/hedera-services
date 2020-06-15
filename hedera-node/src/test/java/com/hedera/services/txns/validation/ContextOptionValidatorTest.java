@@ -25,6 +25,7 @@ import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.context.properties.PropertySource;
 import com.hedera.services.ledger.HederaLedger;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.utils.SignedTxnAccessor;
 import com.hedera.test.factories.accounts.MapValueFactory;
 import com.hedera.test.factories.scenarios.TxnHandlingScenario;
@@ -62,7 +63,7 @@ import static org.mockito.BDDMockito.*;
 import static com.hedera.test.utils.TxnUtils.withAdjustments;
 import static org.junit.jupiter.api.Assertions.*;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.*;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
+import static com.hedera.services.state.merkle.EntityId.fromPojoContract;
 
 @RunWith(JUnitPlatform.class)
 public class ContextOptionValidatorTest {
@@ -116,20 +117,20 @@ public class ContextOptionValidatorTest {
 		properties = mock(PropertySource.class);
 		given(properties.getIntProperty("hedera.transaction.maxMemoUtf8Bytes")).willReturn(100);
 		accounts = mock(FCMap.class);
-		given(accounts.get(getMapKey(a))).willReturn(aV);
-		given(accounts.get(getMapKey(deleted))).willReturn(deletedV);
-		given(accounts.get(getMapKey(contract))).willReturn(contractV);
-		given(accounts.get(getMapKey(deletedContract))).willReturn(deletedContractV);
+		given(accounts.get(EntityId.fromPojoAccount(a))).willReturn(aV);
+		given(accounts.get(EntityId.fromPojoAccount(deleted))).willReturn(deletedV);
+		given(accounts.get(fromPojoContract(contract))).willReturn(contractV);
+		given(accounts.get(fromPojoContract(deletedContract))).willReturn(deletedContractV);
 
 		topics = mock(FCMap.class);
 		missingTopic = TopicFactory.newTopic().memo("I'm not here").get();
 		deletedTopic = TopicFactory.newTopic().deleted(true).get();
 		expiredTopic = TopicFactory.newTopic().expiry(now.minusSeconds(555L).getEpochSecond()).get();
 		topic = TopicFactory.newTopic().memo("Hi, over here!").expiry(now.plusSeconds(555L).getEpochSecond()).get();
-		given(topics.get(getMapKey(topicId))).willReturn(topic);
-		given(topics.get(getMapKey(missingTopicId))).willReturn(null);
-		given(topics.get(getMapKey(deletedTopicId))).willReturn(deletedTopic);
-		given(topics.get(getMapKey(expiredTopicId))).willReturn(expiredTopic);
+		given(topics.get(EntityId.fromPojoTopic(topicId))).willReturn(topic);
+		given(topics.get(EntityId.fromPojoTopic(missingTopicId))).willReturn(null);
+		given(topics.get(EntityId.fromPojoTopic(deletedTopicId))).willReturn(deletedTopic);
+		given(topics.get(EntityId.fromPojoTopic(expiredTopicId))).willReturn(expiredTopic);
 
 		wacl = TxnHandlingScenario.SIMPLE_NEW_WACL_KT.asJKey();
 		attr = new JFileInfo(false, wacl, expiry);

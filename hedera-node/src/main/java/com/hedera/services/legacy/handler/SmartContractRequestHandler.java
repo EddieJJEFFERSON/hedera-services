@@ -83,7 +83,7 @@ import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hederahashgraph.fee.FeeBuilder;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.legacy.core.StorageKey;
@@ -105,7 +105,6 @@ import static com.hederahashgraph.api.proto.java.ResponseType.ANSWER_ONLY;
 import static com.hederahashgraph.builder.RequestBuilder.getTimestamp;
 import static com.hederahashgraph.builder.RequestBuilder.getTransactionReceipt;
 import static com.hederahashgraph.builder.RequestBuilder.getTransactionRecord;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.core.jproto.JKey.convertJKey;
 import static com.hedera.services.legacy.core.jproto.JKey.convertKey;
 
@@ -122,7 +121,7 @@ public class SmartContractRequestHandler {
 	private HederaLedger ledger;
 	private LedgerAccountsSource ledgerSource;
 	private ServicesRepositoryRoot repository;
-	private FCMap<MapKey, HederaAccount> accounts;
+	private FCMap<EntityId, HederaAccount> accounts;
 	private FCMap<StorageKey, StorageValue> storageMap;
 	private HbarCentExchange exchange;
 	private TransactionContext txnCtx;
@@ -136,7 +135,7 @@ public class SmartContractRequestHandler {
 			ServicesRepositoryRoot repository,
 			AccountID funding,
 			HederaLedger ledger,
-			FCMap<MapKey, HederaAccount> accounts,
+			FCMap<EntityId, HederaAccount> accounts,
 			FCMap<StorageKey, StorageValue> storageMap,
 			LedgerAccountsSource ledgerSource,
 			TransactionContext txnCtx,
@@ -617,7 +616,7 @@ public class SmartContractRequestHandler {
 		String contractEthAddress = asSolidityAddressHex(id);
 		if (!StringUtils.isEmpty(contractEthAddress)) {
 			ContractInfo.Builder builder = ContractInfo.newBuilder();
-			HederaAccount contract = accounts.get(getMapKey(id));
+			HederaAccount contract = accounts.get(EntityId.fromPojoAccount(id));
 			if (contract != null && contract.isSmartContract()) {
 				builder.setContractID(cid)
 						.setBalance(contract.getBalance())
@@ -727,7 +726,7 @@ public class SmartContractRequestHandler {
 	 */
 	public ByteString getContractBytecode(ContractID cid) {
 		AccountID id = asAccount(cid);
-		HederaAccount contract = accounts.get(getMapKey(id));
+		HederaAccount contract = accounts.get(EntityId.fromPojoAccount(id));
 		if (contract != null && contract.isSmartContract()) {
 			String contractEthAddress = asSolidityAddressHex(id);
 			byte[] contractEthAddressBytes = ByteUtil.hexStringToBytes(contractEthAddress);

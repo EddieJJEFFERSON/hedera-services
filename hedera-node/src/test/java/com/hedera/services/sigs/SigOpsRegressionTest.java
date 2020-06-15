@@ -34,7 +34,7 @@ import com.hedera.test.factories.scenarios.TxnHandlingScenario;
 import com.hedera.test.factories.txns.CryptoCreateFactory;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.crypto.SignatureStatus;
 import com.hedera.services.legacy.crypto.SignatureStatusCode;
@@ -85,7 +85,7 @@ public class SigOpsRegressionTest {
 	private SignatureStatus sigCreationFailureStatus;
 	private PlatformTxnAccessor platformTxn;
 	private HederaSigningOrder signingOrder;
-	private FCMap<MapKey, HederaAccount> accounts;
+	private FCMap<EntityId, HederaAccount> accounts;
 
 	@Test
 	public void setsExpectedPlatformSigsForCryptoCreate() throws Throwable {

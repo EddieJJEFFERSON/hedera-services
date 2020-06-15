@@ -20,11 +20,11 @@ package com.hedera.services.state.validation;
  * ‍
  */
 
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.swirlds.fcmap.FCMap;
 
 public interface LedgerValidator {
-	void assertIdsAreValid(FCMap<MapKey, HederaAccount> accounts);
-	boolean hasExpectedTotalBalance(FCMap<MapKey, HederaAccount> accounts);
+	void assertIdsAreValid(FCMap<EntityId, HederaAccount> accounts);
+	boolean hasExpectedTotalBalance(FCMap<EntityId, HederaAccount> accounts);
 }

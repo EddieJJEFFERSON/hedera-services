@@ -31,7 +31,7 @@ import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransferList;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -43,7 +43,6 @@ import java.util.Optional;
 
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_TOPIC_ID;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.OK;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.core.jproto.JKey.mapKey;
 
 /**
@@ -125,8 +124,8 @@ public class ContextOptionValidator implements OptionValidator {
 	}
 
 	@Override
-	public ResponseCodeEnum queryableTopicStatus(TopicID id, FCMap<MapKey, Topic> topics) {
-		Topic topic = topics.get(getMapKey(id));
+	public ResponseCodeEnum queryableTopicStatus(TopicID id, FCMap<EntityId, Topic> topics) {
+		Topic topic = topics.get(EntityId.fromPojoTopic(id));
 
 		return Optional.ofNullable(topic)
 				.map(t -> t.isDeleted() ? INVALID_TOPIC_ID : OK)

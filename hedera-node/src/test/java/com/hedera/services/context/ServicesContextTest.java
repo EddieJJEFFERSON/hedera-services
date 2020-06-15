@@ -51,7 +51,7 @@ import com.hedera.services.grpc.controllers.FileController;
 import com.hedera.services.grpc.controllers.NetworkController;
 import com.hedera.services.ledger.HederaLedger;
 import com.hedera.services.ledger.ids.SeqNoEntityIdSource;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
 import com.hedera.services.queries.answering.ServiceAnswerFlow;
@@ -137,8 +137,8 @@ public class ServicesContextTest {
 	Cryptography crypto;
 	PropertySource properties;
 	PropertySources propertySources;
-	FCMap<MapKey, Topic> topics;
-	FCMap<MapKey, HederaAccount> accounts;
+	FCMap<EntityId, Topic> topics;
+	FCMap<EntityId, HederaAccount> accounts;
 	FCMap<StorageKey, StorageValue> storage;
 
 	@BeforeEach

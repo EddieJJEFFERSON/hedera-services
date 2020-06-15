@@ -28,7 +28,7 @@ import com.hederahashgraph.api.proto.java.FileGetInfoResponse;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.Timestamp;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.swirlds.fcmap.FCMap;
 
 import java.time.Instant;
@@ -42,7 +42,7 @@ import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_FILE_I
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_TRANSACTION_START;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.OK;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.TRANSACTION_EXPIRED;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
+import static com.hedera.services.state.merkle.EntityId.fromPojoContract;
 
 public class PureValidation {
 	public static ResponseCodeEnum queryableFileStatus(FileID id, StateView view) {
@@ -54,8 +54,8 @@ public class PureValidation {
 		}
 	}
 
-	public static ResponseCodeEnum queryableAccountStatus(AccountID id, FCMap<MapKey, HederaAccount> accounts) {
-		HederaAccount account = accounts.get(getMapKey(id));
+	public static ResponseCodeEnum queryableAccountStatus(AccountID id, FCMap<EntityId, HederaAccount> accounts) {
+		HederaAccount account = accounts.get(EntityId.fromPojoAccount(id));
 
 		return Optional.ofNullable(account)
 				.map(v -> v.isDeleted()
@@ -64,8 +64,8 @@ public class PureValidation {
 				.orElse(INVALID_ACCOUNT_ID);
 	}
 
-	public static ResponseCodeEnum queryableContractStatus(ContractID cid, FCMap<MapKey, HederaAccount> contracts) {
-		HederaAccount contract = contracts.get(getMapKey(cid));
+	public static ResponseCodeEnum queryableContractStatus(ContractID cid, FCMap<EntityId, HederaAccount> contracts) {
+		HederaAccount contract = contracts.get(fromPojoContract(cid));
 
 		return Optional.ofNullable(contract)
 				.map(v -> v.isDeleted()

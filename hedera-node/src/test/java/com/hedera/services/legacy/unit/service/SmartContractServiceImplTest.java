@@ -75,7 +75,7 @@ import com.hederahashgraph.api.proto.java.TransactionResponse;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.unit.PropertyLoaderTest;
 import com.hedera.services.legacy.unit.handler.SolidityAddress;
@@ -147,8 +147,8 @@ public class SmartContractServiceImplTest {
   long feeAccount;
   long DAY_SEC = 24 * 60 * 60;
   long DEFAULT_CONTRACT_OP_GAS = 1000000l;
-  FCMap<MapKey, HederaAccount> accountFCMap = null;
-  FCMap<MapKey, Topic> topicFCMap = null;
+  FCMap<EntityId, HederaAccount> accountFCMap = null;
+  FCMap<EntityId, Topic> topicFCMap = null;
   private FCMap<StorageKey, StorageValue> storageMap;
   ServicesRepositoryRoot repository;
   SmartContractServiceImpl smartContractImpl = null;
@@ -191,17 +191,17 @@ public class SmartContractServiceImplTest {
     receiverAccountId = RequestBuilder.getAccountIdBuild(8888l, 0l, 0l);
     storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
     // Init FCMap & Put Balances
-    accountFCMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
-    topicFCMap = new FCMap<>(MapKey::deserialize, Topic::deserialize);
-    MapKey mk = new MapKey();
-    mk.setAccountNum(payerAccount);
+    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+    topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
+    EntityId mk = new EntityId();
+    mk.setIdNum(payerAccount);
     mk.setRealmNum(0);
 
     HederaAccount mv = new HederaAccount();
     mv.setBalance(500000000000l);
     accountFCMap.put(mk, mv);
     SolidityAddress solAddress = new SolidityAddress(tempSolidityId);
-    MapKey solMapKey = new MapKey(0l, 0l, 9999l);
+    EntityId solEntityId = new EntityId(0l, 0l, 9999l);
 
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
     TransactionalLedger<AccountID, MapValueProperty, HederaAccount> delegate = new TransactionalLedger<>(

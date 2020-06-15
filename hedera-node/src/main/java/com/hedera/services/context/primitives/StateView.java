@@ -27,7 +27,7 @@ import com.hedera.services.files.store.FcBlobsBytesStore;
 import com.hederahashgraph.api.proto.java.FileGetInfoResponse;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Timestamp;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.StorageKey;
 import com.hedera.services.legacy.core.StorageValue;
@@ -51,29 +51,29 @@ public class StateView {
 	private static final byte[] EMPTY_CONTENTS = new byte[0];
 	public static final JKey EMPTY_WACL = new JKeyList();
 
-	public static final FCMap<MapKey, Topic> EMPTY_TOPICS =
-			new FCMap<>(MapKey::deserialize, Topic::deserialize);
-	public static final FCMap<MapKey, HederaAccount> EMPTY_ACCOUNTS =
-			new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+	public static final FCMap<EntityId, Topic> EMPTY_TOPICS =
+			new FCMap<>(new EntityId.Provider(), new Topic.Provider());
+	public static final FCMap<EntityId, HederaAccount> EMPTY_ACCOUNTS =
+			new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
 	public static final FCMap<StorageKey, StorageValue> EMPTY_STORAGE =
 			new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
 	public static final StateView EMPTY_VIEW = new StateView(EMPTY_TOPICS, EMPTY_ACCOUNTS);
 
 	Map<FileID, byte[]> fileContents;
 	Map<FileID, JFileInfo> fileAttrs;
-	private final FCMap<MapKey, Topic> topics;
-	private final FCMap<MapKey, HederaAccount> accounts;
+	private final FCMap<EntityId, Topic> topics;
+	private final FCMap<EntityId, HederaAccount> accounts;
 
 	public StateView(
-			FCMap<MapKey, Topic> topics,
-			FCMap<MapKey, HederaAccount> accounts
+			FCMap<EntityId, Topic> topics,
+			FCMap<EntityId, HederaAccount> accounts
 	) {
 		this(topics, accounts, EMPTY_STORAGE);
 	}
 
 	public StateView(
-			FCMap<MapKey, Topic> topics,
-			FCMap<MapKey, HederaAccount> accounts,
+			FCMap<EntityId, Topic> topics,
+			FCMap<EntityId, HederaAccount> accounts,
 			FCMap<StorageKey, StorageValue> storage
 	) {
 		this.topics = topics;
@@ -114,11 +114,11 @@ public class StateView {
 		}
 	}
 
-	public FCMap<MapKey, Topic> topics() {
+	public FCMap<EntityId, Topic> topics() {
 		return topics;
 	}
 
-	public FCMap<MapKey, HederaAccount> accounts() {
+	public FCMap<EntityId, HederaAccount> accounts() {
 		return accounts;
 	}
 }

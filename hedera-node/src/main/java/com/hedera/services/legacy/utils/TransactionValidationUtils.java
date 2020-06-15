@@ -44,7 +44,7 @@ import com.hederahashgraph.api.proto.java.Transaction;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionResponse;
 import com.hederahashgraph.builder.RequestBuilder;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
 import com.hedera.services.legacy.logic.ProtectedEntities;
 import com.swirlds.common.Platform;
@@ -275,14 +275,14 @@ public class TransactionValidationUtils {
 	public static ResponseCodeEnum validateTxBodyPostConsensus(
 			TransactionBody transactionBody,
 			Instant consensusTime,
-			FCMap<MapKey, HederaAccount> accountMap
+			FCMap<EntityId, HederaAccount> accountMap
 	) {
 		long txnValidStart = transactionBody.getTransactionID().getTransactionValidStart().getSeconds();
 		if (txnValidStart < Instant.MIN.getEpochSecond() || txnValidStart > Instant.MAX.getEpochSecond()) {
 			return INVALID_TRANSACTION_START;
 		}
 		Instant startTime = convertProtoTimeStamp(transactionBody.getTransactionID().getTransactionValidStart());
-		if (!accountMap.containsKey(MapKey.getMapKey(transactionBody.getNodeAccountID()))) {
+		if (!accountMap.containsKey(EntityId.fromPojoAccount(transactionBody.getNodeAccountID()))) {
 			return INVALID_NODE_ACCOUNT;
 		} else if (startTime.isAfter(consensusTime)) {
 			return INVALID_TRANSACTION_START;
@@ -294,7 +294,7 @@ public class TransactionValidationUtils {
 		}
 
 		AccountID payerAccount = transactionBody.getTransactionID().getAccountID();
-		MapKey payerAccountKey = MapKey.getMapKey(payerAccount);
+		EntityId payerAccountKey = EntityId.fromPojoAccount(payerAccount);
 		HederaAccount payerAccountDetails = accountMap.get(payerAccountKey);
 		if (payerAccountDetails == null) {
 			return ResponseCodeEnum.PAYER_ACCOUNT_NOT_FOUND;

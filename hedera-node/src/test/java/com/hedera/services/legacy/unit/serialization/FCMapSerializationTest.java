@@ -27,7 +27,7 @@ import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.CryptoCreateTransactionBody;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.TransactionBody;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.unit.handler.SolidityAddress;
 import com.hedera.services.legacy.core.jproto.JAccountID;
@@ -131,13 +131,13 @@ public class FCMapSerializationTest {
 
 	@Test
 	public void testMapKey() throws IOException {
-		MapKey mapKey = new MapKey(0l, 0l, 5l);
+		EntityId entityId = new EntityId(0l, 0l, 5l);
 
-		byte[] serialize = serialize(mapKey);
+		byte[] serialize = serialize(entityId);
 
-		MapKey deseralized = MapKey
-				.deserialize(new DataInputStream(new ByteArrayInputStream(serialize)));
-		Assert.assertEquals(deseralized, mapKey);
+		EntityId deseralized =
+				(EntityId)new EntityId.Provider().deserialize(new DataInputStream(new ByteArrayInputStream(serialize)));
+		Assert.assertEquals(deseralized, entityId);
 	}
 
 	@Test(expected = NegativeAccountBalanceException.class)

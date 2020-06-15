@@ -22,7 +22,7 @@ package com.hedera.services.legacy.export;
 
 import com.hedera.services.ServicesState;
 import com.hedera.test.utils.IdUtils;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.exception.InvalidTotalAccountBalanceException;
 import com.swirlds.common.Platform;
@@ -88,13 +88,14 @@ public class AccountBalanceExportTest {
     Assert.assertTrue(accountBalanceExport.timeToExport(timestamp_6));
   }
 
-  FCMap<MapKey, HederaAccount> getAccountMapForTest() throws Exception {
-    FCMap<MapKey, HederaAccount> fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+  FCMap<EntityId, HederaAccount> getAccountMapForTest() throws Exception {
+    FCMap<EntityId, HederaAccount> fcMap =
+            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     for (long[] account : accounts) {
-      MapKey mk = new MapKey();
+      EntityId mk = new EntityId();
       mk.setShardNum(account[0]);
       mk.setRealmNum(account[1]);
-      mk.setAccountNum(account[2]);
+      mk.setIdNum(account[2]);
 
       HederaAccount mv = new HederaAccount();
       mv.setBalance(account[3]);
@@ -219,13 +220,14 @@ public class AccountBalanceExportTest {
     return state;
   }
 
-  FCMap<MapKey, HederaAccount> getAccountMapWithInvalidTotalBalanceForTest() throws Exception {
-    FCMap<MapKey, HederaAccount> fcMap = new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
+  FCMap<EntityId, HederaAccount> getAccountMapWithInvalidTotalBalanceForTest() throws Exception {
+    FCMap<EntityId, HederaAccount> fcMap =
+            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     for (long[] account : accounts) {
-      MapKey mk = new MapKey();
+      EntityId mk = new EntityId();
       mk.setShardNum(account[0]);
       mk.setRealmNum(account[1]);
-      mk.setAccountNum(account[2]);
+      mk.setIdNum(account[2]);
 
       HederaAccount mv = new HederaAccount();
       mv.setBalance(account[3] + 1);

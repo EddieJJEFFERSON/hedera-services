@@ -22,7 +22,7 @@ package com.hedera.services.legacy.export;
 
 import com.hedera.services.ServicesState;
 import com.hedera.services.legacy.core.ExportAccountObject;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.exception.InvalidTotalAccountBalanceException;
 import com.hedera.services.legacy.stream.RecordStream;
@@ -120,7 +120,7 @@ public class AccountBalanceExport {
   public String exportAccountsBalanceCSVFormat(ServicesState servicesState, Instant consensusTimestamp) throws InvalidTotalAccountBalanceException {
     // get the export path from Properties
     log.debug("exportAccountsBalanceCSVFormat called. {}", consensusTimestamp);
-    FCMap<MapKey, HederaAccount> accountMap = servicesState.accounts();
+    FCMap<EntityId, HederaAccount> accountMap = servicesState.accounts();
     String nodeAccountID = readableId(servicesState.getNodeAccountId());
 
     if (!accountBalanceExportDir.endsWith(File.separator)) {
@@ -143,12 +143,12 @@ public class AccountBalanceExport {
     }
     long totalBalance = 0L;
 
-    for (Map.Entry<MapKey, HederaAccount> item : accountMap.entrySet()) {
-      MapKey currKey = item.getKey();
+    for (Map.Entry<EntityId, HederaAccount> item : accountMap.entrySet()) {
+      EntityId currKey = item.getKey();
       HederaAccount currMv = item.getValue();
       totalBalance += currMv.getBalance();
       exAccObj = new ExportAccountObject(
-              currKey.getShardNum(), currKey.getRealmNum(), currKey.getAccountNum(), currMv.getBalance());
+              currKey.getShardNum(), currKey.getRealmNum(), currKey.getIdNum(), currMv.getBalance());
       acctObjList.add(exAccObj);
       //check if the account is a node account
       long nodeId = nodeAccounts.getOrDefault(getAccountIDString(currKey), -1l);
@@ -204,11 +204,11 @@ public class AccountBalanceExport {
 
   /**
    * method to get accountID string
-   * @param mapKey
+   * @param entityId
    * @return
    */
-  private static String getAccountIDString(MapKey mapKey) {
-    return mapKey.getShardNum() + "." + mapKey.getRealmNum() + "." + mapKey.getAccountNum();
+  private static String getAccountIDString(EntityId entityId) {
+    return entityId.getShardNum() + "." + entityId.getRealmNum() + "." + entityId.getIdNum();
   }
 
   /**

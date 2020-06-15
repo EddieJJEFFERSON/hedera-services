@@ -54,7 +54,7 @@ import com.hederahashgraph.builder.TransactionSigner;
 import com.hederahashgraph.fee.FeeBuilder;
 import com.hederahashgraph.fee.SigValueObj;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
@@ -104,9 +104,9 @@ class PreCheckValidationTest {
   long payerAccountInitialBalance = 1000000000;
   private MockStorageWrapper storageWrapper = new MockStorageWrapper();
   private RecordCache recordCache = new RecordCache(CacheBuilder.newBuilder().build());
-  private FCMap<MapKey, HederaAccount> accountFCMap =
-      new FCMap<>(MapKey::deserialize, HederaAccount::legacyDeserialize);
-  FCMap<MapKey, Topic> topicFCMap = new FCMap<>(MapKey::deserialize, Topic::deserialize);
+  private FCMap<EntityId, HederaAccount> accountFCMap =
+      new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+  FCMap<EntityId, Topic> topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
   private AccountID nodeAccount = AccountID.newBuilder().setAccountNum(3).setRealmNum(0).setShardNum(0).build();
   private AccountID payerAccount = AccountID.newBuilder().setAccountNum(300).setRealmNum(0).setShardNum(0).build();
   private KeyPair payerKeyGenerated = new KeyPairGenerator().generateKeyPair();

@@ -31,7 +31,7 @@ import com.hederahashgraph.api.proto.java.Response;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.api.proto.java.Transaction;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
@@ -51,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.*;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.test.utils.IdUtils.*;
 import static com.hedera.test.utils.TxnUtils.*;
 import static com.hedera.test.factories.scenarios.TxnHandlingScenario.COMPLEX_KEY_ACCOUNT_KT;
@@ -59,7 +58,7 @@ import static com.hedera.test.factories.scenarios.TxnHandlingScenario.COMPLEX_KE
 @RunWith(JUnitPlatform.class)
 class GetAccountInfoAnswerTest {
 	private StateView view;
-	private FCMap<MapKey, HederaAccount> accounts;
+	private FCMap<EntityId, HederaAccount> accounts;
 	private OptionValidator optionValidator;
 	private String node = "0.0.3";
 	private String payer = "0.0.12345";
@@ -84,7 +83,7 @@ class GetAccountInfoAnswerTest {
 				.expirationTime(9_999_999L)
 				.get();
 		accounts = mock(FCMap.class);
-		given(accounts.get(getMapKey(asAccount(target)))).willReturn(payerAccount);
+		given(accounts.get(EntityId.fromPojoAccount(asAccount(target)))).willReturn(payerAccount);
 
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);
 		optionValidator = mock(OptionValidator.class);

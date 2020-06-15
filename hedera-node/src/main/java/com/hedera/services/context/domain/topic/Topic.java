@@ -20,16 +20,19 @@ package com.hedera.services.context.domain.topic;
  * ‍
  */
 
-import com.hederahashgraph.api.proto.java.TopicID;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
+import com.hederahashgraph.api.proto.java.TopicID;
 import com.swirlds.common.FCMValue;
 import com.swirlds.common.FastCopyable;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
+import com.swirlds.common.io.SerializedObjectProvider;
+import com.swirlds.common.merkle.MerkleLeaf;
 import com.swirlds.common.merkle.utility.AbstractMerkleNode;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,8 +48,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static com.hedera.services.context.domain.topic.TopicDeserializer.TOPIC_DESERIALIZER;
-import static com.hedera.services.context.domain.topic.TopicSerializer.TOPIC_SERIALIZER;
+import static com.hedera.services.context.domain.serdes.DomainSerdes.deserializeId;
+import static com.hedera.services.context.domain.serdes.DomainSerdes.deserializeKey;
+import static com.hedera.services.context.domain.serdes.DomainSerdes.deserializeTimestamp;
+import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeId;
+import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeKey;
+import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeTimestamp;
 
 /**
  * A consensus service topic's memo, adminKey, submitKey, autoRenew duration and account, sequenceNumber and runningHash
@@ -67,21 +74,24 @@ import static com.hedera.services.context.domain.topic.TopicSerializer.TOPIC_SER
  *   replace the Topic in the map.</li>
  * </ul>
  */
-public final class Topic extends AbstractMerkleNode implements FCMValue {
+public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleLeaf {
     public static Logger log = LogManager.getLogger(Topic.class);
 
-    private String memo; // Null if empty/unset.
-    private JKey adminKey; // Null if empty/unset.
-    private JKey submitKey; // Null if empty/unset.
+    private static final int RUNNING_HASH_BYTE_ARRAY_SIZE = 48;
+    public static final long RUNNING_HASH_VERSION = 2L;
+
+    static final int MERKLE_VERSION = 1;
+    static final long RUNTIME_CONSTRUCTABLE_ID = 0xcfc535576b57baf0L;
+
+    private String memo;
+    private JKey adminKey;
+    private JKey submitKey;
     private long autoRenewDurationSeconds;
-    private JAccountID autoRenewAccountId; // Null if empty/unset.
-    private JTimestamp expirationTimestamp; // Null if empty/unset.
+    private JAccountID autoRenewAccountId;
+    private JTimestamp expirationTimestamp;
     private boolean deleted;
-    private final int RUNNING_HASH_BYTE_ARRAY_SIZE = 48;
 
-    public static long RUNNING_HASH_VERSION = 2L;
-
-    // sequenceNumber = 0 and runningHash = 48 bytes of '\0' before the first successful submitMessage() */
+    // Before the first message is submitted to this topic, its sequenceNumber is 0 and runningHash is 48 bytes of '\0'
     private long sequenceNumber;
     private byte[] runningHash;
 
@@ -96,9 +106,14 @@ public final class Topic extends AbstractMerkleNode implements FCMValue {
      * @param autoRenewAccountId
      * @param expirationTimestamp when submitMessage will start failing
      */
-    public Topic(@Nullable String memo, @Nullable JKey adminKey, @Nullable JKey submitKey,
-                 long autoRenewDurationSeconds, @Nullable JAccountID autoRenewAccountId,
-                 @Nullable JTimestamp expirationTimestamp) {
+    public Topic(
+            @Nullable String memo,
+            @Nullable JKey adminKey,
+            @Nullable JKey submitKey,
+            long autoRenewDurationSeconds,
+            @Nullable JAccountID autoRenewAccountId,
+            @Nullable JTimestamp expirationTimestamp
+    ) {
         setMemo(memo);
         setAdminKey(adminKey);
         setSubmitKey(submitKey);
@@ -122,79 +137,36 @@ public final class Topic extends AbstractMerkleNode implements FCMValue {
         this.deleted = other.deleted;
 
         this.sequenceNumber = other.sequenceNumber;
-        this.runningHash = (null != other.runningHash) ? Arrays.copyOf(other.runningHash, other.runningHash.length)
+        this.runningHash = (null != other.runningHash)
+                ? Arrays.copyOf(other.runningHash, other.runningHash.length)
                 : null;
     }
 
-    public boolean hasMemo() { return memo != null; }
+    @Deprecated
+    public static class Provider implements SerializedObjectProvider {
+        @Override
+        @SuppressWarnings("unchecked")
+        public FastCopyable deserialize(DataInputStream in) throws IOException {
+            var topic = new Topic();
 
-    public String getMemo() { return hasMemo() ? memo : ""; }
+            in.readShort();
+            in.readShort();
 
-    public void setMemo(@Nullable String memo) { this.memo = ((null != memo) && !memo.isEmpty()) ? memo : null; }
+            deserializeV1((SerializableDataInputStream)in, topic);
 
-    public boolean hasAdminKey() { return adminKey != null; }
-
-    public JKey getAdminKey() { return hasAdminKey() ? adminKey : getDefaultJKey(); }
-
-    public void setAdminKey(@Nullable JKey adminKey) {
-        this.adminKey = ((null != adminKey) && !adminKey.isEmpty()) ? adminKey : null;
-    }
-
-    public boolean hasSubmitKey() { return submitKey != null; }
-
-    public JKey getSubmitKey() { return hasSubmitKey() ? submitKey : getDefaultJKey(); }
-
-    public void setSubmitKey(@Nullable JKey submitKey) {
-        this.submitKey = ((null != submitKey) && !submitKey.isEmpty()) ? submitKey : null;
-    }
-
-    public long getAutoRenewDurationSeconds() { return autoRenewDurationSeconds; }
-
-    public void setAutoRenewDurationSeconds(long autoRenewDurationSeconds) {
-        this.autoRenewDurationSeconds = autoRenewDurationSeconds;
-    }
-
-    public boolean hasAutoRenewAccountId() { return autoRenewAccountId != null; }
-
-    public JAccountID getAutoRenewAccountId() {
-        return hasAutoRenewAccountId() ? autoRenewAccountId : new JAccountID();
-    }
-
-    public void setAutoRenewAccountId(@Nullable JAccountID autoRenewAccountId) {
-        this.autoRenewAccountId = ((null != autoRenewAccountId) && (0 != autoRenewAccountId.getAccountNum())) ?
-                autoRenewAccountId : null;
-    }
-
-    public boolean hasExpirationTimestamp() { return expirationTimestamp != null; }
-
-    public JTimestamp getExpirationTimestamp() {
-        return hasExpirationTimestamp() ? expirationTimestamp : new JTimestamp();
-    }
-
-    public void setExpirationTimestamp(@Nullable JTimestamp expirationTimestamp) {
-        if ((null != expirationTimestamp) && ((0 != expirationTimestamp.getSeconds()) ||
-                (0 != expirationTimestamp.getNano()))) {
-            this.expirationTimestamp = expirationTimestamp;
-        } else {
-            this.expirationTimestamp = null;
+            return topic;
         }
     }
 
-    public boolean isDeleted() { return deleted; }
+    /* --- MerkleLeaf --- */
+    @Override
+    public long getClassId() {
+        return RUNTIME_CONSTRUCTABLE_ID;
+    }
 
-    public void setDeleted(boolean deleted) { this.deleted = deleted; }
-
-    public long getSequenceNumber() { return sequenceNumber; }
-
-    public void setSequenceNumber(long sequenceNumber) { this.sequenceNumber = sequenceNumber; }
-
-    public boolean hasRunningHash() { return runningHash != null; }
-
-    public byte[] getRunningHash() { return (runningHash != null) ?
-            runningHash : new byte[RUNNING_HASH_BYTE_ARRAY_SIZE]; }
-
-    public void setRunningHash(@Nullable byte[] runningHash) {
-        this.runningHash = ((null != runningHash) && (0 != runningHash.length)) ? runningHash : null;
+    @Override
+    public int getVersion() {
+        return MERKLE_VERSION;
     }
 
     @Override
@@ -202,37 +174,47 @@ public final class Topic extends AbstractMerkleNode implements FCMValue {
         return true;
     }
 
-    /**
-     * adminKeys and submitKeys will be considered unequal in cases where the objects structures are unequal.
-     * So an adminKey with an empty Threshold key will NOT be considered equal to an adminKey with an empty KeyList,
-     * even though they effectively cause the same functionality.
-     * @param other
-     * @return
-     */
     @Override
-    public boolean equals(@Nullable final Object other) {
-        if (this == other) {
+    public void deserialize(SerializableDataInputStream in, int version) throws IOException {
+    	deserializeV1(in, this);
+    }
+
+    @Override
+    public void serialize(SerializableDataOutputStream out) throws IOException {
+    	serializeV1(this, out);
+    }
+
+    /* --- FastCopyable --- */
+
+    @Override
+    public Topic copy() {
+        return new Topic(this);
+    }
+
+    @Override
+    public void delete() { }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) {
             return true;
         }
-        if ((null == other) || (getClass() != other.getClass())) {
+        if ((null == o) || !Topic.class.equals(o.getClass())) {
             return false;
         }
-        Topic oo = (Topic) other;
+        Topic that = (Topic) o;
         try {
-            return Objects.equals(this.memo, oo.memo)
+            return Objects.equals(this.memo, that.memo)
+                    && Arrays.equals(getAdminKey().serialize(), that.getAdminKey().serialize())
+                    && Arrays.equals(getSubmitKey().serialize(), that.getSubmitKey().serialize())
 
-                    // There is no decent equals() on JKey, but they should be deterministically serializable.
-                    && Arrays.equals(getAdminKey().serialize(), oo.getAdminKey().serialize())
-                    && Arrays.equals(getSubmitKey().serialize(), oo.getSubmitKey().serialize())
-
-                    && Objects.equals(this.autoRenewDurationSeconds, oo.autoRenewDurationSeconds)
-                    && Objects.equals(this.autoRenewAccountId, oo.autoRenewAccountId)
-                    && Objects.equals(this.expirationTimestamp, oo.expirationTimestamp)
-                    && (this.deleted == oo.deleted)
-                    && (this.sequenceNumber == oo.sequenceNumber)
-                    && Arrays.equals(this.runningHash, oo.runningHash);
+                    && Objects.equals(this.autoRenewDurationSeconds, that.autoRenewDurationSeconds)
+                    && Objects.equals(this.autoRenewAccountId, that.autoRenewAccountId)
+                    && Objects.equals(this.expirationTimestamp, that.expirationTimestamp)
+                    && (this.deleted == that.deleted)
+                    && (this.sequenceNumber == that.sequenceNumber)
+                    && Arrays.equals(this.runningHash, that.runningHash);
         } catch (IOException ex) {
-            // It should not be possible that serialize() fails on either key.
             throw new KeySerializationException(ex.getMessage());
         }
     }
@@ -243,40 +225,25 @@ public final class Topic extends AbstractMerkleNode implements FCMValue {
                 expirationTimestamp, deleted, sequenceNumber, runningHash);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T extends FastCopyable> T deserialize(DataInputStream in) throws IOException {
-        return (T)TOPIC_DESERIALIZER.deserialize(in);
+    @Override
+    public void copyTo(SerializableDataOutputStream out) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public Topic copy() {
-        return new Topic(this);
+    public void copyToExtra(SerializableDataOutputStream out) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void copyTo(SerializableDataOutputStream out) throws IOException {
-        TOPIC_SERIALIZER.serialize(this, out);
+    public void copyFrom(SerializableDataInputStream in) {
+        throw new UnsupportedOperationException();
     }
 
-    /**
-     * This has to be a NoOp method.
-     * @param out
-     * @throws IOException
-     */
     @Override
-    public void copyToExtra(SerializableDataOutputStream out) throws IOException {}
-
-    /**
-     * This has to be a NoOp method.
-     */
-    @Override
-    public void delete() {}
-
-    @Override
-    public void copyFrom(SerializableDataInputStream in) { throw new UnsupportedOperationException(); }
-
-    @Override
-    public void copyFromExtra(SerializableDataInputStream in) { throw new UnsupportedOperationException(); }
+    public void copyFromExtra(SerializableDataInputStream in) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void diffCopyTo(SerializableDataOutputStream out, SerializableDataInputStream in) {
@@ -284,12 +251,14 @@ public final class Topic extends AbstractMerkleNode implements FCMValue {
     }
 
     @Override
-    public void diffCopyFrom(final SerializableDataOutputStream out, final SerializableDataInputStream in) {
+    public void diffCopyFrom(SerializableDataOutputStream out, SerializableDataInputStream in) {
         throw new UnsupportedOperationException();
     }
 
+    /* --- Helpers --- */
+
     private JKey getDefaultJKey() {
-        return new JKeyList(new ArrayList<JKey>());
+        return new JKeyList(new ArrayList<>());
     }
 
     /**
@@ -333,19 +302,182 @@ public final class Topic extends AbstractMerkleNode implements FCMValue {
         }
     }
 
-    @Override
-    public long getClassId() {
-        return 0;
-    }
-
-    @Override
-    public int getVersion() {
-        return 0;
-    }
-
     public static class KeySerializationException extends RuntimeException {
         public KeySerializationException(String message){
             super(message);
         }
+    }
+
+    public static void deserializeV1(SerializableDataInputStream in, Topic to) throws IOException {
+        to.setMemo(null);
+        if (in.readBoolean()) {
+            var bytes = in.readByteArray(4_096);
+            if (null != bytes) {
+                to.setMemo(StringUtils.newStringUtf8(bytes));
+            }
+        }
+
+        to.setAdminKey(in.readBoolean() ? deserializeKey(in) : null);
+        to.setSubmitKey(in.readBoolean() ? deserializeKey(in) : null);
+        to.setAutoRenewDurationSeconds(in.readLong());
+        to.setAutoRenewAccountId(in.readBoolean() ? deserializeId(in) : null);
+        to.setExpirationTimestamp(in.readBoolean() ? deserializeTimestamp(in) : null);
+        to.setDeleted(in.readBoolean());
+        to.setSequenceNumber(in.readLong());
+        to.setRunningHash(in.readBoolean() ? in.readByteArray(4_096) : null);
+    }
+
+    public static void serializeV1(Topic topic, SerializableDataOutputStream out) throws IOException {
+        if (topic.hasMemo()) {
+            out.writeBoolean(true);
+            out.writeBytes(topic.getMemo());
+        } else {
+            out.writeBoolean(false);
+        }
+
+        if (topic.hasAdminKey()) {
+            out.writeBoolean(true);
+            serializeKey(topic.getAdminKey(), out);
+        } else {
+            out.writeBoolean(false);
+        }
+
+        if (topic.hasSubmitKey()) {
+            out.writeBoolean(true);
+            serializeKey(topic.getSubmitKey(), out);
+        } else {
+            out.writeBoolean(false);
+        }
+
+        out.writeLong(topic.getAutoRenewDurationSeconds());
+
+        if (topic.hasAutoRenewAccountId()) {
+            out.writeBoolean(true);
+            serializeId(topic.getAutoRenewAccountId(), out);
+        } else {
+            out.writeBoolean(false);
+        }
+
+        if (topic.hasExpirationTimestamp()) {
+            out.writeBoolean(true);
+            serializeTimestamp(topic.getExpirationTimestamp(), out);
+        } else {
+            out.writeBoolean(false);
+        }
+
+        out.writeBoolean(topic.isDeleted());
+        out.writeLong(topic.getSequenceNumber());
+
+        if (topic.hasRunningHash()) {
+            out.writeBoolean(true);
+            out.writeByteArray(topic.getRunningHash());
+        } else {
+            out.writeBoolean(false);
+        }
+    }
+
+    /* --- Bean --- */
+
+    public boolean hasMemo() {
+        return memo != null;
+    }
+
+    public String getMemo() {
+        return hasMemo() ? memo : "";
+    }
+
+    public void setMemo(@Nullable String memo) {
+        this.memo = ((null != memo) && !memo.isEmpty()) ? memo : null;
+    }
+
+    public boolean hasAdminKey() {
+        return adminKey != null;
+    }
+
+    public JKey getAdminKey() {
+        return hasAdminKey() ? adminKey : getDefaultJKey();
+    }
+
+    public void setAdminKey(@Nullable JKey adminKey) {
+        this.adminKey = ((null != adminKey) && !adminKey.isEmpty()) ? adminKey : null;
+    }
+
+    public boolean hasSubmitKey() {
+        return submitKey != null;
+    }
+
+    public JKey getSubmitKey() {
+        return hasSubmitKey() ? submitKey : getDefaultJKey();
+    }
+
+    public void setSubmitKey(@Nullable JKey submitKey) {
+        this.submitKey = ((null != submitKey) && !submitKey.isEmpty()) ? submitKey : null;
+    }
+
+    public long getAutoRenewDurationSeconds() {
+        return autoRenewDurationSeconds;
+    }
+
+    public void setAutoRenewDurationSeconds(long autoRenewDurationSeconds) {
+        this.autoRenewDurationSeconds = autoRenewDurationSeconds;
+    }
+
+    public boolean hasAutoRenewAccountId() {
+        return autoRenewAccountId != null;
+    }
+
+    public JAccountID getAutoRenewAccountId() {
+        return hasAutoRenewAccountId() ? autoRenewAccountId : new JAccountID();
+    }
+
+    public void setAutoRenewAccountId(@Nullable JAccountID autoRenewAccountId) {
+        this.autoRenewAccountId = ((null != autoRenewAccountId) && (0 != autoRenewAccountId.getAccountNum()))
+                ? autoRenewAccountId
+                : null;
+    }
+
+    public boolean hasExpirationTimestamp() {
+        return expirationTimestamp != null;
+    }
+
+    public JTimestamp getExpirationTimestamp() {
+        return hasExpirationTimestamp() ? expirationTimestamp : new JTimestamp();
+    }
+
+    public void setExpirationTimestamp(@Nullable JTimestamp expirationTimestamp) {
+        if ((null != expirationTimestamp) && ((0 != expirationTimestamp.getSeconds()) ||
+                (0 != expirationTimestamp.getNano()))) {
+            this.expirationTimestamp = expirationTimestamp;
+        } else {
+            this.expirationTimestamp = null;
+        }
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public long getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    public void setSequenceNumber(long sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
+
+    public boolean hasRunningHash() {
+        return runningHash != null;
+    }
+
+    public byte[] getRunningHash() {
+        return (runningHash != null) ? runningHash : new byte[RUNNING_HASH_BYTE_ARRAY_SIZE];
+    }
+
+    public void setRunningHash(@Nullable byte[] runningHash) {
+        this.runningHash = ((null != runningHash) && (0 != runningHash.length)) ? runningHash : null;
     }
 }

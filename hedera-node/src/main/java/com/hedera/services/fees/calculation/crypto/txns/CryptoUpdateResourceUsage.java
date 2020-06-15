@@ -29,12 +29,11 @@ import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.exception.InvalidTxBodyException;
 import com.hederahashgraph.fee.CryptoFeeBuilder;
 import com.hederahashgraph.fee.SigValueObj;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import static com.hedera.services.fees.calculation.FeeCalcUtils.lookupAccountExpiry;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.core.jproto.JKey.mapJKey;
 
 public class CryptoUpdateResourceUsage implements TxnResourceUsageEstimator {
@@ -54,7 +53,7 @@ public class CryptoUpdateResourceUsage implements TxnResourceUsageEstimator {
 	@Override
 	public FeeData usageGiven(TransactionBody txn, SigValueObj sigUsage, StateView view) throws InvalidTxBodyException {
 		try {
-			MapKey id = getMapKey(txn.getCryptoUpdateAccount().getAccountIDToUpdate());
+			EntityId id = EntityId.fromPojoAccount(txn.getCryptoUpdateAccount().getAccountIDToUpdate());
 			Timestamp expiry = lookupAccountExpiry(id, view.accounts());
 			Key key = mapJKey(view.accounts().get(id).getAccountKeys());
 			return usageEstimator.getCryptoUpdateTxFeeMatrices(txn, sigUsage, expiry, key);

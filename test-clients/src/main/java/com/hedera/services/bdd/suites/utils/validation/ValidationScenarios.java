@@ -56,9 +56,10 @@ import com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.ContractScenario;
 import com.hedera.services.bdd.suites.utils.validation.domain.CryptoScenario;
 
+import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYS_FILES_UP;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.TRANSFERS_ONLY;
 import static com.hedera.services.bdd.suites.utils.validation.domain.Network.SCENARIO_PAYER_NAME;
-import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYS_FILES;
+import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYS_FILES_DOWN;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.SYSTEM_KEYS;
 import static com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario.NOVEL_TOPIC_NAME;
 import static com.hedera.services.bdd.suites.utils.validation.domain.ConsensusScenario.PERSISTENT_TOPIC_NAME;
@@ -76,7 +77,9 @@ import com.hedera.services.bdd.suites.utils.validation.domain.Node;
 import com.hedera.services.bdd.suites.utils.validation.domain.PersistentContract;
 import com.hedera.services.bdd.suites.utils.validation.domain.PersistentFile;
 import com.hedera.services.bdd.suites.utils.validation.domain.Scenarios;
-import com.hedera.services.bdd.suites.utils.validation.domain.SysFileScenario;
+import com.hedera.services.bdd.suites.utils.validation.domain.SysFilesDownScenario;
+import com.hedera.services.bdd.suites.utils.validation.domain.SysFilesUpScenario;
+import com.hedera.services.bdd.suites.utils.validation.domain.UpdateAction;
 import com.hedera.services.bdd.suites.utils.validation.domain.ValidationConfig;
 import com.hedera.services.bdd.suites.utils.validation.domain.VersionInfoScenario;
 import com.hederahashgraph.api.proto.java.AccountID;
@@ -123,6 +126,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static com.hedera.services.bdd.spec.HapiApiSpec.customHapiSpec;
@@ -135,6 +139,7 @@ import static com.hedera.services.bdd.suites.utils.validation.ValidationScenario
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.FILE;
 import static com.hedera.services.bdd.suites.utils.validation.ValidationScenarios.Scenario.VERSIONS;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_SIGNATURE;
+import static java.nio.file.Files.readString;
 import static java.util.stream.Collectors.toMap;
 
 public class ValidationScenarios extends HapiApiSuite {
@@ -154,7 +159,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			"\"stateMutability\":\"payable\",\"type\":\"function\"}";
 
 	enum Scenario {
-		CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS, TRANSFERS_ONLY, VERSIONS, SYS_FILES
+		CRYPTO, FILE, CONTRACT, CONSENSUS, SYSTEM_KEYS, TRANSFERS_ONLY, VERSIONS, SYS_FILES_UP, SYS_FILES_DOWN
 	}
 
 	private static Scenarios scenarios;
@@ -197,7 +202,8 @@ public class ValidationScenarios extends HapiApiSuite {
 				Optional.ofNullable(params.getScenarios().contains(CONSENSUS) ? consensusScenario() : null),
 				Optional.ofNullable(params.getScenarios().contains(SYSTEM_KEYS) ? getSystemKeys() : null),
 				Optional.ofNullable(params.getScenarios().contains(TRANSFERS_ONLY) ? doJustTransfers() : null),
-				Optional.ofNullable(params.getScenarios().contains(SYS_FILES) ? evalSystemFiles() : null),
+				Optional.ofNullable(params.getScenarios().contains(SYS_FILES_DOWN) ? sysFilesDown() : null),
+				Optional.ofNullable(params.getScenarios().contains(SYS_FILES_UP) ? sysFilesUp() : null),
 				Optional.ofNullable(params.getScenarios().isEmpty() ? null : recordPayerBalance(endingBalance::set)))
 				.flatMap(Optional::stream)
 				.collect(Collectors.toList());
@@ -231,16 +237,51 @@ public class ValidationScenarios extends HapiApiSuite {
 		}
 	}
 
-	private static HapiApiSpec evalSystemFiles() {
+	private static HapiApiSpec sysFilesUp() {
 		ensureScenarios();
-		if (scenarios.getSysFiles() == null) {
-			scenarios.setSysFiles(new SysFileScenario());
+		if (scenarios.getSysFilesUp() == null) {
+			scenarios.setSysFilesUp(new SysFilesUpScenario());
 		}
-		var sys = scenarios.getSysFiles();
+		var sys = scenarios.getSysFilesUp();
+		long[] payers = sys.getUpdates().stream().mapToLong(UpdateAction::getPayer).toArray();
+
+		try {
+			return customHapiSpec("SysFilesUp")
+					.withProperties(Map.of(
+							"nodes", nodes(),
+							"default.payer", primaryPayer(),
+							"startupAccounts.literal", payerKeystoreLiteral()
+					)).given(
+							LongStream.of(payers).mapToObj(payer ->
+									keyFromPem(() -> pemForAccount(payer))
+											.name(String.format("payer%d", payer))
+											.linkedTo(() -> String.format("0.0.%d", payer)))
+									.toArray(HapiSpecOperation[]::new)
+					).when().then(
+							sys.getUpdates().stream().map(action ->
+									updateLargeFile(
+											String.format("payer%d", action.getPayer()),
+											String.format("0.0.%d", action.getNum()),
+											appropriateContents(action.getNum())))
+									.toArray(HapiSpecOperation[]::new)
+					);
+		} catch (Exception e) {
+			log.warn("Unable to initialize system file update scenario, skipping it!", e);
+			errorsOccurred.set(true);
+			return null;
+		}
+	}
+
+	private static HapiApiSpec sysFilesDown() {
+		ensureScenarios();
+		if (scenarios.getSysFilesDown() == null) {
+			scenarios.setSysFilesDown(new SysFilesDownScenario());
+		}
+		var sys = scenarios.getSysFilesDown();
 		final long[] targets = sys.getNumsToFetch().stream().mapToLong(Integer::longValue).toArray();
 
 		try {
-			return customHapiSpec("EvalSystemFiles")
+			return customHapiSpec("SysFilesDown")
 					.withProperties(Map.of(
 							"nodes", nodes(),
 							"default.payer", primaryPayer(),
@@ -261,7 +302,19 @@ public class ValidationScenarios extends HapiApiSuite {
 		}
 	}
 
-	private static HapiSpecOperation appropriateQuery(SysFileScenario sys, long fileNum) {
+	private static ByteString appropriateContents(long fileNum) {
+		SysFileSerde<String> serde = SYS_FILE_SERDES.get(fileNum);
+		String name = serde.preferredFileName();
+		String loc = "files/" + params.getTargetNetwork() + "/" + name;
+		try {
+			var stylized = Files.readString(Paths.get(loc));
+			return ByteString.copyFrom(serde.toRawFile(stylized));
+		} catch (IOException e) {
+			throw new IllegalStateException("Cannot read update file @ '" + loc + "'!", e);
+		}
+	}
+
+	private static HapiSpecOperation appropriateQuery(SysFilesDownScenario sys, long fileNum) {
 		String fid = String.format("0.0.%d", fileNum);
 		SysFileSerde<String> serde = SYS_FILE_SERDES.get(fileNum);
 		String fqn = params.getTargetNetwork() + "-" + serde.preferredFileName();
@@ -270,10 +323,10 @@ public class ValidationScenarios extends HapiApiSuite {
 				? ValidationScenarios::asOrdered
 				: bytes -> bytes;
 
-		if (SysFileScenario.COMPARE_EVAL_MODE.equals(sys.getEvalMode())) {
+		if (SysFilesDownScenario.COMPARE_EVAL_MODE.equals(sys.getEvalMode())) {
 			String actualLoc = "files/actual-" + fqn;
 			try {
-				byte[] expected = serde.toRawFile(Files.readString(Paths.get(loc)));
+				byte[] expected = serde.toRawFile(readString(Paths.get(loc)));
 				return getFileContents(fid)
 						.payingWith(SCENARIO_PAYER_NAME)
 						.saveReadableTo(serde::fromRawFile, actualLoc)
@@ -282,7 +335,7 @@ public class ValidationScenarios extends HapiApiSuite {
 			} catch (IOException e) {
 				throw new IllegalStateException("Cannot read comparison file @ '" + loc + "'!", e);
 			}
-		} else if (SysFileScenario.SNAPSHOT_EVAL_MODE.equals(sys.getEvalMode())) {
+		} else if (SysFilesDownScenario.SNAPSHOT_EVAL_MODE.equals(sys.getEvalMode())) {
 			return getFileContents(fid)
 					.payingWith(SCENARIO_PAYER_NAME)
 					.saveReadableTo(serde::fromRawFile, loc);
@@ -295,7 +348,7 @@ public class ValidationScenarios extends HapiApiSuite {
 		try {
 			var pre = ServicesConfigurationList.parseFrom(svcCfgList);
 			var post = ServicesConfigurationList.newBuilder();
-			Map<String, String>	lookup = pre.getNameValueList()
+			Map<String, String> lookup = pre.getNameValueList()
 					.stream()
 					.collect(toMap(Setting::getName, Setting::getValue));
 			pre.getNameValueList()
@@ -333,7 +386,7 @@ public class ValidationScenarios extends HapiApiSuite {
 									.toArray(n -> new HapiSpecOperation[n])
 					));
 		} catch (Exception e) {
-			log.warn("Unable to record inital payer balance, skipping it!", e);
+			log.warn("Unable to initialize fetch for system keys, skipping it!", e);
 			errorsOccurred.set(true);
 			return null;
 		}
@@ -1067,7 +1120,8 @@ public class ValidationScenarios extends HapiApiSuite {
 					List<String> listed = Arrays.stream(valueOf(matcher).split(","))
 							.map(name -> name.equals("syskeys") ? "SYSTEM_KEYS" : name)
 							.map(name -> name.equals("xfers") ? "TRANSFERS_ONLY" : name)
-							.map(name -> name.equals("sysfiles") ? "SYS_FILES" : name)
+							.map(name -> name.equals("sysFilesDown") ? "SYS_FILES_DOWN" : name)
+							.map(name -> name.equals("sysFilesUp") ? "SYS_FILES_UP" : name)
 							.filter(v -> legal.contains(v.toUpperCase()))
 							.collect(Collectors.toList());
 					if (listed.size() == 1) {
@@ -1241,19 +1295,28 @@ public class ValidationScenarios extends HapiApiSuite {
 	}
 
 	private static String pemForAccount(long num) {
-		return String.format("keys/%s-account%d.pem", params.getTargetNetwork(), num);
+		return pemForEntity(num, "account");
 	}
 
 	private static String pemForTopic(long num) {
-		return String.format("keys/%s-topic%d.pem", params.getTargetNetwork(), num);
+		return pemForEntity(num, "topic");
 	}
 
 	private static String pemForFile(long num) {
-		return String.format("keys/%s-file%d.pem", params.getTargetNetwork(), num);
+		return pemForEntity(num, "file");
 	}
 
 	private static String pemForContract(long num) {
-		return String.format("keys/%s-contract%d.pem", params.getTargetNetwork(), num);
+		return pemForEntity(num, "contract");
+	}
+
+	private static String pemForEntity(long num, String entity) {
+		var preferredLoc = String.format("keys/%s/%s%d.pem", params.getTargetNetwork(), entity, num);
+		if (new File(preferredLoc).exists()) {
+			return preferredLoc;
+		} else {
+			return String.format("keys/%s-%s%d.pem", params.getTargetNetwork(), entity, num);
+		}
 	}
 
 	private static String pathTo(String contents) {

@@ -22,6 +22,7 @@ package com.hedera.services.context;
 
 import com.google.protobuf.ByteString;
 import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.utils.MiscUtils;
 import com.hedera.services.utils.PlatformTxnAccessor;
 import com.hederahashgraph.api.proto.java.*;
@@ -34,7 +35,6 @@ import static com.hedera.services.utils.MiscUtils.asTimestamp;
 import static com.hedera.services.utils.MiscUtils.canonicalDiffRepr;
 import static com.hedera.services.utils.EntityIdUtils.accountParsedFromString;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.*;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 import static com.hedera.services.legacy.core.jproto.JKey.mapKey;
 
 import java.time.Instant;
@@ -102,7 +102,7 @@ public class AwareTransactionContext implements TransactionContext {
 	@Override
 	public JKey activePayerKey() {
 		return isPayerSigKnownActive
-				? ctx.accounts().get(getMapKey(accessor.getPayer())).getAccountKeys()
+				? ctx.accounts().get(EntityId.fromPojoAccount(accessor.getPayer())).getAccountKeys()
 				: EMPTY_HEDERA_KEY;
 	}
 

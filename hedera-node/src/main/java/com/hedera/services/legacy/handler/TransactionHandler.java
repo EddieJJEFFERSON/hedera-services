@@ -54,7 +54,7 @@ import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.fee.FeeBuilder;
 import com.hederahashgraph.fee.FeeObject;
 import com.hedera.services.legacy.config.PropertiesLoader;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
@@ -95,7 +95,6 @@ import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.OK;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.PAYER_ACCOUNT_NOT_FOUND;
 import static com.hederahashgraph.api.proto.java.ResponseType.ANSWER_STATE_PROOF;
 import static com.hederahashgraph.api.proto.java.ResponseType.COST_ANSWER_STATE_PROOF;
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 
 /**
  * @author Akshay
@@ -115,7 +114,7 @@ public class TransactionHandler {
   private static final Logger log = LogManager.getLogger(TransactionHandler.class);
   private RecordCache recordCache;
   private PrecheckVerifier precheckVerifier;
-  private FCMap<MapKey, HederaAccount> accounts;
+  private FCMap<EntityId, HederaAccount> accounts;
   private FunctionalityThrottling throttling;
   private AccountID nodeAccount;
   private TransactionThrottling txnThrottling;
@@ -137,7 +136,7 @@ public class TransactionHandler {
 
   public TransactionHandler(
           RecordCache recordCache,
-          FCMap<MapKey, HederaAccount> accounts,
+          FCMap<EntityId, HederaAccount> accounts,
           AccountID nodeAccount,
           PrecheckVerifier precheckVerifier,
           UsagePricesProvider usagePrices,
@@ -164,7 +163,7 @@ public class TransactionHandler {
   public TransactionHandler(
           RecordCache recordCache,
           PrecheckVerifier verifier,
-          FCMap<MapKey, HederaAccount> accounts,
+          FCMap<EntityId, HederaAccount> accounts,
           AccountID nodeAccount
   ) {
     this(recordCache, verifier, accounts, nodeAccount,
@@ -175,7 +174,7 @@ public class TransactionHandler {
   public TransactionHandler(
           RecordCache recordCache,
           PrecheckVerifier precheckVerifier,
-          FCMap<MapKey, HederaAccount> accounts,
+          FCMap<EntityId, HederaAccount> accounts,
           AccountID nodeAccount,
           TransactionThrottling txnThrottling,
           UsagePricesProvider usagePrices,
@@ -240,8 +239,8 @@ public class TransactionHandler {
   }
 
   public boolean isAccountExist(AccountID acctId) {
-    MapKey mapKey = new MapKey(acctId.getShardNum(), acctId.getRealmNum(), acctId.getAccountNum());
-    return accounts.get(mapKey) != null;
+    EntityId entityId = new EntityId(acctId.getShardNum(), acctId.getRealmNum(), acctId.getAccountNum());
+    return accounts.get(entityId) != null;
   }
 
   public void addReceiptEntry(TransactionID txnId) {
@@ -349,7 +348,7 @@ public class TransactionHandler {
     if (trBody.getTransactionID().hasAccountID()) {
       AccountID payerAccount = trBody.getTransactionID().getAccountID();
       if (isAccountExist(payerAccount)) {
-        Long payerAccountBalance = Optional.ofNullable(accounts.get(getMapKey(payerAccount)))
+        Long payerAccountBalance = Optional.ofNullable(accounts.get(EntityId.fromPojoAccount(payerAccount)))
                 .map(HederaAccount::getBalance)
                 .orElse(null);
         long suppliedFee = trBody.getTransactionFee();
@@ -366,7 +365,7 @@ public class TransactionHandler {
         if (returnCode == OK) {
           try {
             SignedTxnAccessor accessor = new SignedTxnAccessor(transaction);
-            JKey payerKey = accounts.get(getMapKey(payerAccount)).getAccountKeys();
+            JKey payerKey = accounts.get(EntityId.fromPojoAccount(payerAccount)).getAccountKeys();
             Timestamp at = trBody.getTransactionID().getTransactionValidStart();
             FeeObject txnFee = fees.estimateFee(accessor, payerKey, stateView.get(), at);
             fee = txnFee.getNetworkFee() + txnFee.getNodeFee() + txnFee.getServiceFee();
@@ -582,9 +581,9 @@ public class TransactionHandler {
   }
 
   @SuppressWarnings("unchecked")
-  public List<JTransactionRecord> getAllTransactionRecordFCM(MapKey mapKey) {
+  public List<JTransactionRecord> getAllTransactionRecordFCM(EntityId entityId) {
     try {
-      HederaAccount account = accounts.get(mapKey);
+      HederaAccount account = accounts.get(entityId);
       if (account != null) {
         return account.recordList();
       } else {
@@ -628,14 +627,14 @@ public class TransactionHandler {
    * @param accountMap
    * @return
    */
-  public static ResponseCodeEnum validateAccountIDAndTotalBalInMap(FCMap<MapKey, HederaAccount> accountMap) {
+  public static ResponseCodeEnum validateAccountIDAndTotalBalInMap(FCMap<EntityId, HederaAccount> accountMap) {
     boolean result = true;
-    MapKey mapKey = null;
+    EntityId entityId = null;
     long totalBalance =  0;
     ResponseCodeEnum response = OK;
-    for (Map.Entry<MapKey, HederaAccount> account : accountMap.entrySet()) {
-      mapKey = account.getKey();
-      result = validateAccountID(mapKey);
+    for (Map.Entry<EntityId, HederaAccount> account : accountMap.entrySet()) {
+      entityId = account.getKey();
+      result = validateAccountID(entityId);
       HederaAccount currMv = account.getValue();
       totalBalance += currMv.getBalance();
       if (!result) {
@@ -651,8 +650,8 @@ public class TransactionHandler {
     return response;
   }
 
-  public static boolean validateAccountID(MapKey mapKey) {
-    return validateAccountID(mapKey.getAccountNum(), mapKey.getRealmNum(), mapKey.getShardNum());
+  public static boolean validateAccountID(EntityId entityId) {
+    return validateAccountID(entityId.getIdNum(), entityId.getRealmNum(), entityId.getShardNum());
   }
 
   public static boolean validateAccountID(long accountNum, long realmNum, long shardNum) {

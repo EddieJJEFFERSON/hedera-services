@@ -32,13 +32,11 @@ import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransferList;
-import com.hedera.services.legacy.core.MapKey;
+import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.swirlds.fcmap.FCMap;
 
 import java.time.Instant;
-
-import static com.hedera.services.legacy.core.MapKey.getMapKey;
 
 /**
  * Defines a type able to divine the validity of various options
@@ -56,13 +54,13 @@ public interface OptionValidator {
 	boolean isValidAutoRenewPeriod(Duration autoRenewPeriod);
 	boolean isAcceptableLength(TransferList accountAmounts);
 
-	ResponseCodeEnum queryableTopicStatus(TopicID id, FCMap<MapKey, Topic> topics);
+	ResponseCodeEnum queryableTopicStatus(TopicID id, FCMap<EntityId, Topic> topics);
 
-	default ResponseCodeEnum queryableAccountStatus(AccountID id, FCMap<MapKey, HederaAccount> accounts) {
+	default ResponseCodeEnum queryableAccountStatus(AccountID id, FCMap<EntityId, HederaAccount> accounts) {
 		return PureValidation.queryableAccountStatus(id, accounts);
 	}
 
-	default ResponseCodeEnum queryableContractStatus(ContractID cid, FCMap<MapKey, HederaAccount> contracts) {
+	default ResponseCodeEnum queryableContractStatus(ContractID cid, FCMap<EntityId, HederaAccount> contracts) {
 		return PureValidation.queryableContractStatus(cid, contracts);
 	}
 
