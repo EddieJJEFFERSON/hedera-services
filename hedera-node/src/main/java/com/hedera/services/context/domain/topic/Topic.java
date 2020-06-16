@@ -20,10 +20,14 @@ package com.hedera.services.context.domain.topic;
  * ‍
  */
 
+import com.google.common.base.MoreObjects;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
+import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.utils.EntityIdUtils;
+import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.swirlds.common.FCMValue;
 import com.swirlds.common.FastCopyable;
@@ -35,6 +39,7 @@ import com.swirlds.common.merkle.utility.AbstractMerkleNode;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
@@ -54,6 +59,8 @@ import static com.hedera.services.context.domain.serdes.DomainSerdes.deserialize
 import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeId;
 import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeKey;
 import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeTimestamp;
+import static com.hedera.services.utils.EntityIdUtils.asAccount;
+import static com.hedera.services.utils.EntityIdUtils.asLiteralString;
 
 /**
  * A consensus service topic's memo, adminKey, submitKey, autoRenew duration and account, sequenceNumber and runningHash
@@ -94,6 +101,37 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
     // Before the first message is submitted to this topic, its sequenceNumber is 0 and runningHash is 48 bytes of '\0'
     private long sequenceNumber;
     private byte[] runningHash;
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("memo", memo)
+                .add("expiry", expirationTimestamp.toString())
+                .add("deleted", deleted)
+                .add("adminKey", readable(adminKey))
+                .add("submitKey", readable(submitKey))
+                .add("runningHash", (runningHash != null) ? Hex.toHexString(runningHash) : "<N/A>")
+                .add("sequenceNumber", sequenceNumber)
+				.add("autoRenewSecs", autoRenewDurationSeconds)
+                .add("autoRenewAccount", asLiteralString(asAccount(autoRenewAccountId)))
+                .toString();
+    }
+
+    private String readable(JKey bad) {
+    	if (bad == null) {
+    	    return "<N/A>";
+        } else {
+            Key good = null;
+            try {
+                if (bad != null) {
+                    good = JKey.mapJKey(bad);
+                }
+            } catch (Exception ignore) {
+                ignore.printStackTrace();
+            }
+            return String.valueOf(good);
+        }
+    }
 
     public Topic() {}
 

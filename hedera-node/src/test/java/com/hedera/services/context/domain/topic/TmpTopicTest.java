@@ -1,12 +1,6 @@
 package com.hedera.services.context.domain.topic;
 
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.test.utils.ByteArrayConverter;
-import com.hedera.test.utils.InstantConverter;
-import com.hedera.test.utils.JAccountIDConverter;
-import com.hedera.test.utils.JEd25519KeyConverter;
-import com.hedera.test.utils.JTimestampConverter;
-import com.hedera.test.utils.TopicIDConverter;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
@@ -15,12 +9,7 @@ import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.fcmap.FCMap;
-import org.apache.commons.codec.binary.StringUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.converter.ConvertWith;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
@@ -52,7 +41,7 @@ class TmpTopicTest {
 	};
 
 	@Test
-	public void readFcMap() throws IOException {
+	public void readFcMap() throws IOException, NoSuchAlgorithmException {
 		// given:
 		FCMap<EntityId, Topic> subject = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 		// and:
@@ -63,10 +52,19 @@ class TmpTopicTest {
 		subject.copyFromExtra(in);
 
 		// then:
-		assertEquals(subject.size(), 3);
-		for (int i = 0; i < 3; i++) {
-			var id = idFrom(0);
+		assertEquals(subject.size(), N);
+		for (int s = 0; s < N; s++) {
+			var id = idFrom(s);
 			assertTrue(subject.containsKey(id));
+			var actual = subject.get(id);
+			var expected = topicFrom(s);
+
+			System.out.println("--- Expected ---");
+			System.out.println(expected.toString());
+			System.out.println("--- Actual ---");
+			System.out.println(actual.toString());
+
+			assertEquals(expected, actual);
 		}
 	}
 
@@ -101,7 +99,7 @@ class TmpTopicTest {
 			topic.updateRunningHashAndSequenceNumber(
 					"Hello world!".getBytes(),
 					id,
-					Instant.now());
+					Instant.ofEpochSecond(v, i));
 		}
 		return topic;
 	}

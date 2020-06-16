@@ -69,8 +69,8 @@ import com.hedera.services.bdd.spec.keys.SigMapGenerator;
 import com.hedera.services.bdd.spec.stats.QueryObs;
 import com.hedera.services.bdd.spec.stats.TxnObs;
 import io.grpc.StatusRuntimeException;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 
 import static java.lang.Thread.sleep;

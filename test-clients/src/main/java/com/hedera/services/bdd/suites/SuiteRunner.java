@@ -58,8 +58,8 @@ import com.hedera.services.bdd.suites.regression.UmbrellaRedux;
 import com.hedera.services.bdd.suites.streaming.RecordStreamValidation;
 import com.hedera.services.bdd.suites.throttling.LegacyToBucketTransitionSpec;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;

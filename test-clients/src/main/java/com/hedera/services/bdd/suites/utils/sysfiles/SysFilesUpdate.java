@@ -46,8 +46,8 @@ import com.hedera.services.legacy.core.AccountKeyListObj;
 import com.hedera.services.legacy.core.KeyPairObj;
 import com.hedera.services.legacy.proto.utils.CommonUtils;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

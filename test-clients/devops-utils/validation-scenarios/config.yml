@@ -15,9 +15,9 @@ networks:
       crypto: {receiver: 39038, sender: 39037}
       file:
         persistent: {contents: MrBleaney.txt, num: 39040}
-      sysFiles:
+      sysFilesDown:
         evalMode: snapshot
-        numsToFetch: [101, 112, 121, 122]
+        numsToFetch: [111]
       versions: {hapiProtoSemVer: 0.5.1, servicesSemVer: 0.5.0}
   mainnet:
     bootstrap: 950
@@ -72,6 +72,10 @@ networks:
     - {account: 13, ipv4Addr: 35.200.57.21}
     - {account: 14, ipv4Addr: 34.92.120.143}
     - {account: 15, ipv4Addr: 34.87.47.168}
+    scenarios:
+      sysFilesDown:
+        evalMode: snapshot
+        numsToFetch: []
   stagingsm:
     bootstrap: 50
     ensureScenarioPayerHbars: 300

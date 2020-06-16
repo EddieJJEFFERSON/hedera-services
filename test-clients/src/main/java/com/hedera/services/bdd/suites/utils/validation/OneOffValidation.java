@@ -26,8 +26,8 @@ import com.hedera.services.bdd.spec.utilops.UtilVerbs;
 import com.hedera.services.bdd.suites.HapiApiSuite;
 import com.hedera.services.bdd.suites.utils.sysfiles.SysFilesUpdate;
 import com.hedera.services.bdd.suites.utils.sysfiles.serdes.JutilPropsToSvcCfgBytes;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.util.List;

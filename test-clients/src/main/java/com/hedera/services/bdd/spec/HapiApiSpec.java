@@ -32,8 +32,8 @@ import com.hedera.services.bdd.spec.fees.FeesAndRatesProvider;
 import com.hedera.services.bdd.spec.fees.Payment;
 import com.hedera.services.bdd.spec.keys.KeyFactory;
 import com.hedera.services.bdd.spec.transactions.TxnFactory;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.Charset;
