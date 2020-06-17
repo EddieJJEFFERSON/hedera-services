@@ -91,6 +91,7 @@ public class HapiApiSpec implements Runnable {
 	HapiApiClients hapiClients;
 	HapiSpecRegistry hapiRegistry;
 	HapiSpecOperation[] given, when, then;
+	AtomicInteger adhoc = new AtomicInteger(0);
 	AtomicInteger numLedgerOpsExecuted = new AtomicInteger(0);
 	AtomicBoolean allOpsSubmitted = new AtomicBoolean(false);
 	ThreadPoolExecutor finalizingExecutor;
@@ -98,6 +99,14 @@ public class HapiApiSpec implements Runnable {
 	CompletableFuture<Void> finalizingFuture;
 	AtomicReference<Optional<Throwable>> finishingError = new AtomicReference<>(Optional.empty());
 	BlockingQueue<HapiSpecOpFinisher> pendingOps = new PriorityBlockingQueue<>();
+
+	public void adhocIncrement() {
+		adhoc.getAndIncrement();
+	}
+
+	public int finalAdhoc() {
+		return adhoc.get();
+	}
 
 	public int numPendingOps() {
 		return pendingOps.size();

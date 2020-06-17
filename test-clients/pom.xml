@@ -97,9 +97,14 @@
                   <mainClass>com.hedera.services.bdd.suites.utils.validation.ValidationScenarios</mainClass>
                 </manifest>
               </archive>
+				<!--
               <descriptorRefs>
                 <descriptorRef>jar-with-dependencies</descriptorRef>
               </descriptorRefs>
+              -->
+              <descriptors>
+                <descriptor>src/main/resource/assemblies/modified-jar-with-dependencies.xml</descriptor>
+              </descriptors>
             </configuration>
           </execution>
           <execution>
@@ -123,7 +128,7 @@
     <repository>
       <id>ossrh-staging</id>
       <name>Staging repo</name>
-      <url>https://oss.sonatype.org/content/repositories/comhederahashgraph-1119</url>
+      <url>https://oss.sonatype.org/content/repositories/comhederahashgraph-1143</url>
     </repository>
     <repository>
       <id>Ethereum</id>

@@ -180,6 +180,7 @@ public abstract class HapiTxnOp<T extends HapiTxnOp<T>> extends HapiSpecOperatio
 			considerRecording(spec, stats);
 			return false;
 		}
+		spec.adhocIncrement();
 
 		if (!deferStatusResolution) {
 			resolveStatus(spec);

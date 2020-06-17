@@ -337,7 +337,7 @@
     <repository>
       <id>ossrh-ethereumj-staging</id>
       <name>Staging repo</name>
-      <url>https://oss.sonatype.org/content/repositories/comhederahashgraph-1136</url>
+      <url>https://oss.sonatype.org/content/repositories/comhederahashgraph-1143</url>
     </repository>
     <repository>
       <snapshots>
