@@ -21,12 +21,11 @@ package com.hedera.services.context.domain.topic;
  */
 
 import com.google.common.base.MoreObjects;
+import com.hedera.services.context.domain.serdes.TopicSerde;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.utils.EntityIdUtils;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.swirlds.common.FCMValue;
@@ -36,7 +35,6 @@ import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.common.io.SerializedObjectProvider;
 import com.swirlds.common.merkle.MerkleLeaf;
 import com.swirlds.common.merkle.utility.AbstractMerkleNode;
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongycastle.util.encoders.Hex;
@@ -53,12 +51,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static com.hedera.services.context.domain.serdes.DomainSerdes.deserializeId;
-import static com.hedera.services.context.domain.serdes.DomainSerdes.deserializeKey;
-import static com.hedera.services.context.domain.serdes.DomainSerdes.deserializeTimestamp;
-import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeId;
-import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeKey;
-import static com.hedera.services.context.domain.serdes.DomainSerdes.serializeTimestamp;
 import static com.hedera.services.utils.EntityIdUtils.asAccount;
 import static com.hedera.services.utils.EntityIdUtils.asLiteralString;
 
@@ -84,11 +76,13 @@ import static com.hedera.services.utils.EntityIdUtils.asLiteralString;
 public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleLeaf {
     public static Logger log = LogManager.getLogger(Topic.class);
 
-    private static final int RUNNING_HASH_BYTE_ARRAY_SIZE = 48;
+    public static final int RUNNING_HASH_BYTE_ARRAY_SIZE = 48;
     public static final long RUNNING_HASH_VERSION = 2L;
 
     static final int MERKLE_VERSION = 1;
     static final long RUNTIME_CONSTRUCTABLE_ID = 0xcfc535576b57baf0L;
+
+    static TopicSerde serde = new TopicSerde();
 
     private String memo;
     private JKey adminKey;
@@ -106,7 +100,8 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("memo", memo)
-                .add("expiry", expirationTimestamp.toString())
+                .add("expiry",
+                        String.format("%d.%d", expirationTimestamp.getSeconds(), expirationTimestamp.getNano()))
                 .add("deleted", deleted)
                 .add("adminKey", readable(adminKey))
                 .add("submitKey", readable(submitKey))
@@ -117,7 +112,7 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
                 .toString();
     }
 
-    private String readable(JKey bad) {
+    static String readable(JKey bad) {
     	if (bad == null) {
     	    return "<N/A>";
         } else {
@@ -190,7 +185,7 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
             in.readShort();
             in.readShort();
 
-            deserializeV1((SerializableDataInputStream)in, topic);
+            serde.deserializeV1((SerializableDataInputStream)in, topic);
 
             return topic;
         }
@@ -214,12 +209,12 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
 
     @Override
     public void deserialize(SerializableDataInputStream in, int version) throws IOException {
-    	deserializeV1(in, this);
+    	serde.deserializeV1(in, this);
     }
 
     @Override
     public void serialize(SerializableDataOutputStream out) throws IOException {
-    	serializeV1(this, out);
+    	serde.serializeCurrentVersion(this, out);
     }
 
     /* --- FastCopyable --- */
@@ -245,7 +240,6 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
             return Objects.equals(this.memo, that.memo)
                     && Arrays.equals(getAdminKey().serialize(), that.getAdminKey().serialize())
                     && Arrays.equals(getSubmitKey().serialize(), that.getSubmitKey().serialize())
-
                     && Objects.equals(this.autoRenewDurationSeconds, that.autoRenewDurationSeconds)
                     && Objects.equals(this.autoRenewAccountId, that.autoRenewAccountId)
                     && Objects.equals(this.expirationTimestamp, that.expirationTimestamp)
@@ -259,8 +253,16 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
 
     @Override
     public int hashCode() {
-        return Objects.hash(memo, adminKey, submitKey, autoRenewDurationSeconds, autoRenewAccountId,
-                expirationTimestamp, deleted, sequenceNumber, runningHash);
+        return Objects.hash(
+                memo,
+                adminKey,
+                submitKey,
+                autoRenewDurationSeconds,
+                autoRenewAccountId,
+                expirationTimestamp,
+                deleted,
+                sequenceNumber,
+                runningHash);
     }
 
     @Override
@@ -323,8 +325,8 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
             consensusTimestamp = Instant.ofEpochSecond(0);
         }
 
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try (var out = new ObjectOutputStream(bos)) {
+        var boas = new ByteArrayOutputStream();
+        try (var out = new ObjectOutputStream(boas)) {
             out.writeObject(getRunningHash());
             out.writeLong(RUNNING_HASH_VERSION);
             out.writeLong(topicId.getShardNum());
@@ -336,81 +338,13 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
             out.writeLong(sequenceNumber);
             out.writeObject(MessageDigest.getInstance("SHA-384").digest(message));
             out.flush();
-            runningHash = MessageDigest.getInstance("SHA-384").digest(bos.toByteArray());
+            runningHash = MessageDigest.getInstance("SHA-384").digest(boas.toByteArray());
         }
     }
 
     public static class KeySerializationException extends RuntimeException {
         public KeySerializationException(String message){
             super(message);
-        }
-    }
-
-    public static void deserializeV1(SerializableDataInputStream in, Topic to) throws IOException {
-        to.setMemo(null);
-        if (in.readBoolean()) {
-            var bytes = in.readByteArray(4_096);
-            if (null != bytes) {
-                to.setMemo(StringUtils.newStringUtf8(bytes));
-            }
-        }
-
-        to.setAdminKey(in.readBoolean() ? deserializeKey(in) : null);
-        to.setSubmitKey(in.readBoolean() ? deserializeKey(in) : null);
-        to.setAutoRenewDurationSeconds(in.readLong());
-        to.setAutoRenewAccountId(in.readBoolean() ? deserializeId(in) : null);
-        to.setExpirationTimestamp(in.readBoolean() ? deserializeTimestamp(in) : null);
-        to.setDeleted(in.readBoolean());
-        to.setSequenceNumber(in.readLong());
-        to.setRunningHash(in.readBoolean() ? in.readByteArray(4_096) : null);
-    }
-
-    public static void serializeV1(Topic topic, SerializableDataOutputStream out) throws IOException {
-        if (topic.hasMemo()) {
-            out.writeBoolean(true);
-            out.writeBytes(topic.getMemo());
-        } else {
-            out.writeBoolean(false);
-        }
-
-        if (topic.hasAdminKey()) {
-            out.writeBoolean(true);
-            serializeKey(topic.getAdminKey(), out);
-        } else {
-            out.writeBoolean(false);
-        }
-
-        if (topic.hasSubmitKey()) {
-            out.writeBoolean(true);
-            serializeKey(topic.getSubmitKey(), out);
-        } else {
-            out.writeBoolean(false);
-        }
-
-        out.writeLong(topic.getAutoRenewDurationSeconds());
-
-        if (topic.hasAutoRenewAccountId()) {
-            out.writeBoolean(true);
-            serializeId(topic.getAutoRenewAccountId(), out);
-        } else {
-            out.writeBoolean(false);
-        }
-
-        if (topic.hasExpirationTimestamp()) {
-            out.writeBoolean(true);
-            serializeTimestamp(topic.getExpirationTimestamp(), out);
-        } else {
-            out.writeBoolean(false);
-        }
-
-        out.writeBoolean(topic.isDeleted());
-        out.writeLong(topic.getSequenceNumber());
-
-        if (topic.hasRunningHash()) {
-            out.writeBoolean(true);
-            out.writeByteArray(topic.getRunningHash());
-        } else {
-            out.writeBoolean(false);
         }
     }
 
@@ -482,10 +416,9 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
         return hasExpirationTimestamp() ? expirationTimestamp : new JTimestamp();
     }
 
-    public void setExpirationTimestamp(@Nullable JTimestamp expirationTimestamp) {
-        if ((null != expirationTimestamp) && ((0 != expirationTimestamp.getSeconds()) ||
-                (0 != expirationTimestamp.getNano()))) {
-            this.expirationTimestamp = expirationTimestamp;
+    public void setExpirationTimestamp(@Nullable JTimestamp expiry) {
+        if ((null != expiry) && ((0 != expiry.getSeconds()) || (0 != expiry.getNano()))) {
+            this.expirationTimestamp = expiry;
         } else {
             this.expirationTimestamp = null;
         }

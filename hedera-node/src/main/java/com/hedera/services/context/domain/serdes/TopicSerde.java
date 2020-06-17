@@ -1,43 +1,37 @@
-package com.hedera.services.context.domain.topic;
+package com.hedera.services.context.domain.serdes;
 
-/*-
- * ‌
- * Hedera Services Node
- * ​
- * Copyright (C) 2018 - 2020 Hedera Hashgraph, LLC
- * ​
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ‍
- */
-
-import com.hedera.services.context.domain.serdes.DomainSerdes;
+import com.hedera.services.context.domain.topic.Topic;
+import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.commons.codec.binary.StringUtils;
 
 import java.io.IOException;
 
-public enum TopicSerializer {
-	TOPIC_SERIALIZER;
+public class TopicSerde {
+	static DomainSerdes serdes = new DomainSerdes();
 
-	DomainSerdes serdes = new DomainSerdes();
+	public static int MAX_MEMO_BYTES = 4_096;
 
-	public static final short CURRENT_VERSION = 1;
-	public static final short OBJECT_ID = 6112;
+	public void deserializeV1(SerializableDataInputStream in, Topic to) throws IOException {
+		to.setMemo(null);
+		if (in.readBoolean()) {
+			var bytes = in.readByteArray(MAX_MEMO_BYTES);
+			if (null != bytes) {
+				to.setMemo(StringUtils.newStringUtf8(bytes));
+			}
+		}
 
-	public void serialize(Topic topic, SerializableDataOutputStream out) throws IOException {
-		out.writeShort(OBJECT_ID);
-		out.writeShort(CURRENT_VERSION);
+		to.setAdminKey(in.readBoolean() ? serdes.deserializeKey(in) : null);
+		to.setSubmitKey(in.readBoolean() ? serdes.deserializeKey(in) : null);
+		to.setAutoRenewDurationSeconds(in.readLong());
+		to.setAutoRenewAccountId(in.readBoolean() ? serdes.deserializeId(in) : null);
+		to.setExpirationTimestamp(in.readBoolean() ? serdes.deserializeTimestamp(in) : null);
+		to.setDeleted(in.readBoolean());
+		to.setSequenceNumber(in.readLong());
+		to.setRunningHash(in.readBoolean() ? in.readByteArray(Topic.RUNNING_HASH_BYTE_ARRAY_SIZE) : null);
+	}
 
+	public void serializeCurrentVersion(Topic topic, SerializableDataOutputStream out) throws IOException {
 		if (topic.hasMemo()) {
 			out.writeBoolean(true);
 			out.writeBytes(topic.getMemo());
