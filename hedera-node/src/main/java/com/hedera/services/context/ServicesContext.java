@@ -28,7 +28,7 @@ import com.hedera.services.config.EntityNumbers;
 import com.hedera.services.config.FileNumbers;
 import com.hedera.services.context.domain.trackers.ConsensusStatusCounts;
 import com.hedera.services.context.domain.trackers.IssEventInfo;
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.context.properties.PropertySanitizer;
 import com.hedera.services.context.properties.StandardizedPropertySources;

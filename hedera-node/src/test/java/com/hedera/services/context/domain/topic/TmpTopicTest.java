@@ -1,6 +1,7 @@
 package com.hedera.services.context.domain.topic;
 
 import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.Topic;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;

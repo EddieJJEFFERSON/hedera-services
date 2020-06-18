@@ -21,7 +21,7 @@ package com.hedera.services.queries.consensus;
  */
 
 import com.google.protobuf.ByteString;
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.queries.AnswerService;
 import com.hedera.services.txns.validation.OptionValidator;

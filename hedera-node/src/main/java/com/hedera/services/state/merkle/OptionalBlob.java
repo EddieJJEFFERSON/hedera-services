@@ -23,6 +23,7 @@ package com.hedera.services.state.merkle;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import com.google.common.base.MoreObjects;
 import com.swirlds.common.FCMValue;
@@ -56,12 +57,15 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 	static final byte[] NO_DATA = new byte[0];
 	static final BinaryObject MISSING_DELEGATE = null;
 
+	static Supplier<BinaryObject> blobSupplier = BinaryObject::new;
+	static Supplier<BinaryObjectStore> blobStoreSupplier = BinaryObjectStore::getInstance;
+
 	private BinaryObject delegate = MISSING_DELEGATE;
 
 	public OptionalBlob() { }
 
 	public OptionalBlob(byte[] data) {
-		delegate = BinaryObjectStore.getInstance().put(data);
+		delegate = blobStoreSupplier.get().put(data);
 	}
 
 	public OptionalBlob(BinaryObject delegate) {
@@ -80,7 +84,7 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 
 			var hasData = in.readBoolean();
 			if (hasData) {
-				var delegate = new BinaryObject();
+				var delegate = blobSupplier.get();
 				delegate.copyFrom(in);
 				delegate.copyFromExtra(in);
 				blob.setDelegate(delegate);
@@ -117,8 +121,7 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 			out.writeBoolean(false);
 		} else {
 			out.writeBoolean(true);
-			delegate.copyTo(out);
-			delegate.copyToExtra(out);
+			delegate.serialize(out);
 		}
 	}
 
@@ -126,9 +129,8 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 	public void deserialize(SerializableDataInputStream in, int version) throws IOException {
 		var hasData = in.readBoolean();
 		if (hasData) {
-			delegate = new BinaryObject();
-			delegate.copyFrom(in);
-			delegate.copyFromExtra(in);
+			delegate = blobSupplier.get();
+			delegate.deserialize(in, OptionalBlob.MERKLE_VERSION);
 		}
 	}
 
@@ -143,7 +145,7 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 			int version
 	) {
 		if (!MISSING_DELEGATE_HASH.equals(hash)) {
-			delegate = new BinaryObject();
+			delegate = blobSupplier.get();
 			delegate.deserializeAbbreviated(in, hash, version);
 		}
 	}
@@ -214,23 +216,19 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 	}
 
 	/* --- Bean --- */
-	public BinaryObject getDelegate() {
-		return delegate;
-	}
-
 	public void setDelegate(BinaryObject delegate) {
 		this.delegate = delegate;
 	}
 
 	public byte[] getData() {
-		return (delegate == MISSING_DELEGATE) ? NO_DATA : BinaryObjectStore.getInstance().get(delegate);
+		return (delegate == MISSING_DELEGATE) ? NO_DATA : blobStoreSupplier.get().get(delegate);
 	}
 
 	public void setData(byte[] data) {
 		if (delegate == MISSING_DELEGATE) {
-			delegate = BinaryObjectStore.getInstance().put(data);
+			delegate = blobStoreSupplier.get().put(data);
 		} else {
-			delegate = BinaryObjectStore.getInstance().update(delegate, data);
+			delegate = blobStoreSupplier.get().update(delegate, data);
 		}
 	}
 

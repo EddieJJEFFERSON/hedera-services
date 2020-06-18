@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.ByteString;
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.fees.HbarCentExchange;
 import com.hedera.services.ledger.HederaLedger;

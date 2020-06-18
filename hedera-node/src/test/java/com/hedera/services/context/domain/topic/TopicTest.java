@@ -20,6 +20,7 @@ package com.hedera.services.context.domain.topic;
  * ‍
  */
 
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.test.utils.ByteArrayConverter;
 import com.hedera.test.utils.InstantConverter;
 import com.hedera.test.utils.JAccountIDConverter;
@@ -41,9 +42,7 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -24,7 +24,7 @@ import com.google.protobuf.ByteString;
 import com.hedera.services.context.NetworkContext;
 import com.hedera.services.context.ServicesContext;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.context.properties.PropertySources;
 import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.hedera.services.sigs.order.HederaSigningOrder;

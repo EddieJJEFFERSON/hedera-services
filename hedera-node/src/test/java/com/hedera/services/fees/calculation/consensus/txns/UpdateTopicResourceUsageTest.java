@@ -21,7 +21,7 @@ package com.hedera.services.fees.calculation.consensus.txns;
  */
 
 import com.google.protobuf.StringValue;
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.test.utils.*;
 import com.hederahashgraph.api.proto.java.*;
 import com.hederahashgraph.exception.InvalidTxBodyException;

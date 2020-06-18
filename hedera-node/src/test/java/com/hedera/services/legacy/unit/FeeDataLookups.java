@@ -20,7 +20,7 @@ package com.hedera.services.legacy.unit;
  * ‍
  */
 
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.fees.calculation.FeeCalcUtils;
 import com.hedera.services.legacy.service.GlobalFlag;
 import com.hedera.services.legacy.unit.handler.FileServiceHandler;

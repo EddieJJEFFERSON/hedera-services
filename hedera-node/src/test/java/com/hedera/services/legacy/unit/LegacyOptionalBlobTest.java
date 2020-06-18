@@ -31,7 +31,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class OptionalBlobTest {
+public class LegacyOptionalBlobTest {
 	Random random = new Random();
 
 	@Test

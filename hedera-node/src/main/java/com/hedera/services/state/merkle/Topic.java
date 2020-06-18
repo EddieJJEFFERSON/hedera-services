@@ -1,4 +1,4 @@
-package com.hedera.services.context.domain.topic;
+package com.hedera.services.state.merkle;
 
 /*-
  * ‌
@@ -349,7 +349,6 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
     }
 
     /* --- Bean --- */
-
     public boolean hasMemo() {
         return memo != null;
     }

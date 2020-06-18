@@ -1,4 +1,4 @@
-package com.hedera.services.context.domain.topic;
+package com.hedera.services.state.merkle;
 
 import com.hedera.services.context.domain.serdes.TopicSerde;
 import com.hedera.services.legacy.core.jproto.JAccountID;
@@ -6,6 +6,7 @@ import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
+import com.hedera.services.state.merkle.Topic;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.swirlds.common.io.SerializableDataInputStream;
 import org.junit.jupiter.api.AfterEach;

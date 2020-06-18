@@ -21,7 +21,7 @@ package com.hedera.services.legacy.unit;
  */
 
 import com.google.common.cache.CacheBuilder;
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.legacy.config.PropertiesLoader;
 import com.hedera.services.legacy.handler.TransactionHandler;

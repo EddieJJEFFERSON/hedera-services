@@ -20,7 +20,7 @@ package com.hedera.services.fees.calculation.consensus.queries;
  * ‍
  */
 
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.test.utils.JAccountIDConverter;
 import com.hedera.test.utils.JEd25519KeyConverter;

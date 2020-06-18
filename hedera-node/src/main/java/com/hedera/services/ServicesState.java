@@ -24,7 +24,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.hedera.services.context.NetworkContext;
 import com.hedera.services.context.ServicesContext;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.context.domain.topic.Topic;
+import com.hedera.services.state.merkle.Topic;
 import com.hedera.services.context.properties.StandardizedPropertySources;
 import com.hedera.services.legacy.config.PropertiesLoader;
 import com.hedera.services.state.merkle.EntityId;
