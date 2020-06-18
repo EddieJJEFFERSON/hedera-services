@@ -76,8 +76,7 @@ class QueryValidationTest {
   long payerAccountInitialBalance = 100000;
   private RecordCache recordCache;
   private FCMap<EntityId, HederaAccount> map = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-  private FCMap<BlobPath, OptionalBlob> storageMap = new FCMap<>(BlobPath::deserialize,
-      OptionalBlob::deserialize);
+  private FCMap<BlobPath, OptionalBlob> storageMap = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
   ;
   private AccountID nodeAccount =
       AccountID.newBuilder().setAccountNum(3).setRealmNum(0).setShardNum(0).build();

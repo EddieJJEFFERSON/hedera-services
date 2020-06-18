@@ -39,7 +39,7 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitPlatform.class)
 @TestInstance(Lifecycle.PER_CLASS)
 class StorageWrapperTest {
-  private FCMap<BlobPath, OptionalBlob> storageMap = new FCMap<>(BlobPath::deserialize, OptionalBlob::deserialize);;
+  private FCMap<BlobPath, OptionalBlob> storageMap = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
   private static final String TEST_CREATE_FILE_PATH = "/0/a1234/";
   private static final String TEST_EXPIRATION_AFTER_CREATE_FILE_PATH = "/0/a1235/";
   private static final String TEST_CREATE_DELETE_FILE_PATH = "/0/a1236/";

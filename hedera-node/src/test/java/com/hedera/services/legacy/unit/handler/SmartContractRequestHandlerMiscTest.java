@@ -194,7 +194,7 @@ public class SmartContractRequestHandlerMiscTest {
 
     //Init FCMap
     fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-    storageMap = new FCMap<>(BlobPath::deserialize, OptionalBlob::deserialize);
+    storageMap = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
     // Create accounts
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
