@@ -2,7 +2,6 @@ package com.hedera.services.state.merkle;
 
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.fcmap.FCMap;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
@@ -18,7 +17,7 @@ class TmpStorageTest {
 	@Test
 	public void readFcmap() throws IOException {
 		// given:
-		FCMap<BlobPath, OptionalBlob> subject = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
+		FCMap<BlobMeta, OptionalBlob> subject = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
 		// and:
 		var in = new SerializableDataInputStream(Files.newInputStream(Paths.get("testStorage.fcm")));
 
@@ -40,8 +39,8 @@ class TmpStorageTest {
 			"/b/c234",
 			"/c/d345",
 	};
-	private BlobPath keyFrom(int s) {
-		return new BlobPath(paths[s]);
+	private BlobMeta keyFrom(int s) {
+		return new BlobMeta(paths[s]);
 	}
 
 	private byte[][] blobs = {

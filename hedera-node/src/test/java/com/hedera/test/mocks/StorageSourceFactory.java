@@ -22,7 +22,7 @@ package com.hedera.test.mocks;
 
 import com.hedera.services.contracts.sources.BlobStorageSource;
 import com.hedera.services.files.store.FcBlobsBytesStore;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.swirlds.fcmap.FCMap;
 import org.ethereum.datasource.DbSource;
@@ -30,7 +30,7 @@ import org.ethereum.datasource.DbSource;
 import static com.hedera.services.contracts.sources.AddressKeyedMapFactory.bytecodeMapFrom;
 
 public class StorageSourceFactory {
-	public static DbSource<byte[]> from(FCMap<BlobPath, OptionalBlob> storageMap) {
+	public static DbSource<byte[]> from(FCMap<BlobMeta, OptionalBlob> storageMap) {
 		return new BlobStorageSource(bytecodeMapFrom(new FcBlobsBytesStore(OptionalBlob::new, storageMap)));
 	}
 }

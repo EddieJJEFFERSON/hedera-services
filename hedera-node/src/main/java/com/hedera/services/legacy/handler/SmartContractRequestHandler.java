@@ -86,7 +86,7 @@ import com.hederahashgraph.fee.FeeBuilder;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
@@ -122,7 +122,7 @@ public class SmartContractRequestHandler {
 	private LedgerAccountsSource ledgerSource;
 	private ServicesRepositoryRoot repository;
 	private FCMap<EntityId, HederaAccount> accounts;
-	private FCMap<BlobPath, OptionalBlob> storageMap;
+	private FCMap<BlobMeta, OptionalBlob> storageMap;
 	private HbarCentExchange exchange;
 	private TransactionContext txnCtx;
 	private UsagePricesProvider usagePrices;
@@ -136,7 +136,7 @@ public class SmartContractRequestHandler {
 			AccountID funding,
 			HederaLedger ledger,
 			FCMap<EntityId, HederaAccount> accounts,
-			FCMap<BlobPath, OptionalBlob> storageMap,
+			FCMap<BlobMeta, OptionalBlob> storageMap,
 			LedgerAccountsSource ledgerSource,
 			TransactionContext txnCtx,
 			HbarCentExchange exchange,

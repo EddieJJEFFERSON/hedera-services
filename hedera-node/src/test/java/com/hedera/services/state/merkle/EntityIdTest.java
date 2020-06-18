@@ -1,20 +1,22 @@
 package com.hedera.services.state.merkle;
 
 import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.*;
 
 @RunWith(JUnitPlatform.class)
 class EntityIdTest {
@@ -33,7 +35,7 @@ class EntityIdTest {
 	public void objectContractMet() {
 		// given:
 		var one = new EntityId();
-		var two = new EntityId(1, 2,3);
+		var two = new EntityId(1, 2, 3);
 		var three = new EntityId();
 
 		// when:
@@ -73,7 +75,7 @@ class EntityIdTest {
 		given(in.readLong()).willReturn(0l).willReturn(0l).willReturn(1l).willReturn(2l).willReturn(3l);
 
 		// when:
-		var id = (EntityId)(new EntityId.Provider().deserialize(in));
+		var id = (EntityId) (new EntityId.Provider().deserialize(in));
 
 		// then:
 		assertEquals(new EntityId(2, 1, 3), id);
@@ -85,6 +87,22 @@ class EntityIdTest {
 		assertEquals(EntityId.MERKLE_VERSION, subject.getVersion());
 		assertEquals(EntityId.RUNTIME_CONSTRUCTABLE_ID, subject.getClassId());
 		assertTrue(subject.isLeaf());
+	}
+
+	@Test
+	public void serializeWorks() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+		// and:
+		InOrder inOrder = inOrder(out);
+
+		// when:
+		subject.serialize(out);
+
+		// then:
+		inOrder.verify(out).writeLong(shard);
+		inOrder.verify(out).writeLong(realm);
+		inOrder.verify(out).writeLong(num);
 	}
 
 	@Test
@@ -101,5 +119,29 @@ class EntityIdTest {
 
 		// then:
 		assertEquals(subject, defaultSubject);
+	}
+
+	@Test
+	public void toStringWorks() {
+		// expect:
+		assertEquals(
+				"EntityId{shard=" + shard + ", realm=" + realm + ", entity=" + num + "}",
+				subject.toString());
+	}
+
+	@Test
+	public void copyWorks() {
+		// when:
+		var subjectCopy = subject.copy();
+
+		// then:
+		assertTrue(subjectCopy != subject);
+		assertEquals(subject, subjectCopy);
+	}
+
+	@Test
+	public void deleteIsNoop() {
+		// expect:
+		assertDoesNotThrow(subject::delete);
 	}
 }

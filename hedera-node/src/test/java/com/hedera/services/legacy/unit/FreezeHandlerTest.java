@@ -26,7 +26,7 @@ import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.Transaction;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.proto.utils.CommonUtils;
 import com.swirlds.common.Platform;
@@ -53,7 +53,7 @@ public class FreezeHandlerTest {
 	Instant consensusTime;
 	private HederaFs hfs;
 
-	private FCMap<BlobPath, OptionalBlob> storageMap = null;
+	private FCMap<BlobMeta, OptionalBlob> storageMap = null;
 	@BeforeAll
 	@BeforeClass
 	public static void setupAll() {

@@ -20,7 +20,7 @@ package com.hedera.services.files.store;
  * ‍
  */
 
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,18 +49,18 @@ import static org.mockito.BDDMockito.verify;
 @RunWith(JUnitPlatform.class)
 class FcBlobsBytesStoreTest {
 	byte[] aData = "BlobA".getBytes(), bData = "BlobB".getBytes();
-	BlobPath pathA = new BlobPath("pathA"), pathB = new BlobPath("pathB");
+	BlobMeta pathA = new BlobMeta("pathA"), pathB = new BlobMeta("pathB");
 
 	OptionalBlob blobA, blobB;
 	Function<byte[], OptionalBlob> blobFactory;
-	FCMap<BlobPath, OptionalBlob> pathedBlobs;
+	FCMap<BlobMeta, OptionalBlob> pathedBlobs;
 
 	FcBlobsBytesStore subject;
 
 	@Test
 	public void putDeletesReplacedValueIfNoCopyIsHeld() {
 		// setup:
-		FCMap<BlobPath, OptionalBlob> blobs = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
+		FCMap<BlobMeta, OptionalBlob> blobs = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
 
 		// given:
 		blobs.put(at("path"), new OptionalBlob("FIRST".getBytes()));
@@ -75,7 +75,7 @@ class FcBlobsBytesStoreTest {
 	@Test
 	public void putDoesNotDeleteReplacedValueIfCopyIsHeld() {
 		// setup:
-		FCMap<BlobPath, OptionalBlob> blobs = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
+		FCMap<BlobMeta, OptionalBlob> blobs = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
 
 		// given:
 		blobs.put(at("path"), new OptionalBlob("FIRST".getBytes()));
@@ -88,8 +88,8 @@ class FcBlobsBytesStoreTest {
 		assertFalse(replaced.getDelegate().isDeleted());
 	}
 
-	private BlobPath at(String key) {
-		return new BlobPath(key);
+	private BlobMeta at(String key) {
+		return new BlobMeta(key);
 	}
 
 	@BeforeEach
@@ -119,7 +119,7 @@ class FcBlobsBytesStoreTest {
 		given(pathedBlobs.remove(pathA)).willReturn(null);
 
 		// when:
-		var prev = subject.remove(pathA.getLiteral());
+		var prev = subject.remove(pathA.getPath());
 
 		// then:
 		assertNull(prev);
@@ -130,7 +130,7 @@ class FcBlobsBytesStoreTest {
 		given(pathedBlobs.remove(pathA)).willReturn(blobA);
 
 		// when:
-		byte[] prev = subject.remove(pathA.getLiteral());
+		byte[] prev = subject.remove(pathA.getPath());
 
 		// then:
 		assertEquals(new String(prev), new String(blobA.getData()));
@@ -139,10 +139,10 @@ class FcBlobsBytesStoreTest {
 	@Test
 	public void delegatesPut() {
 		// setup:
-		ArgumentCaptor<BlobPath> keyCaptor = ArgumentCaptor.forClass(BlobPath.class);
+		ArgumentCaptor<BlobMeta> keyCaptor = ArgumentCaptor.forClass(BlobMeta.class);
 		ArgumentCaptor<OptionalBlob> valueCaptor = ArgumentCaptor.forClass(OptionalBlob.class);
 		// when:
-		var oldBytes = subject.put(pathA.getLiteral(), blobA.getData());
+		var oldBytes = subject.put(pathA.getPath(), blobA.getData());
 
 		// then:
 		verify(pathedBlobs).put(keyCaptor.capture(), valueCaptor.capture());
@@ -154,10 +154,10 @@ class FcBlobsBytesStoreTest {
 
 	@Test
 	public void propagatesNullFromGet() {
-		given(pathedBlobs.get(argThat(sk -> ((BlobPath)sk).getLiteral().equals(pathA.getLiteral())))).willReturn(null);
+		given(pathedBlobs.get(argThat(sk -> ((BlobMeta)sk).getPath().equals(pathA.getPath())))).willReturn(null);
 
 		// when:
-		byte[] blob = subject.get(pathA.getLiteral());
+		byte[] blob = subject.get(pathA.getPath());
 
 		// then:
 		assertNull(blob);
@@ -165,10 +165,10 @@ class FcBlobsBytesStoreTest {
 
 	@Test
 	public void delegatesGet() {
-		given(pathedBlobs.get(argThat(sk -> ((BlobPath)sk).getLiteral().equals(pathA.getLiteral())))).willReturn(blobA);
+		given(pathedBlobs.get(argThat(sk -> ((BlobMeta)sk).getPath().equals(pathA.getPath())))).willReturn(blobA);
 
 		// when:
-		byte[] blob = subject.get(pathA.getLiteral());
+		byte[] blob = subject.get(pathA.getPath());
 
 		// then:
 		assertEquals(new String(blobA.getData()), new String(blob));
@@ -176,11 +176,11 @@ class FcBlobsBytesStoreTest {
 
 	@Test
 	public void delegatesContainsKey() {
-		given(pathedBlobs.containsKey(argThat(sk -> ((BlobPath)sk).getLiteral().equals(pathA.getLiteral()))))
+		given(pathedBlobs.containsKey(argThat(sk -> ((BlobMeta)sk).getPath().equals(pathA.getPath()))))
 				.willReturn(true);
 
 		// when:
-		boolean flag = subject.containsKey(pathA.getLiteral());
+		boolean flag = subject.containsKey(pathA.getPath());
 
 		// then:
 		assertTrue(flag);
@@ -210,7 +210,7 @@ class FcBlobsBytesStoreTest {
 	@Test
 	public void delegatesEntrySet() {
 		// setup:
-		Set<Entry<BlobPath, OptionalBlob>> blobEntries = Set.of(
+		Set<Entry<BlobMeta, OptionalBlob>> blobEntries = Set.of(
 				new AbstractMap.SimpleEntry<>(pathA, blobA),
 				new AbstractMap.SimpleEntry<>(pathB, blobB));
 

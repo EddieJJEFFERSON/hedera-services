@@ -60,7 +60,7 @@ import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
@@ -128,7 +128,7 @@ public class SmartContractRequestHandlerPayableTest {
   SmartContractRequestHandler smartHandler;
   FileServiceHandler fsHandler;
   FCMap<EntityId, HederaAccount> fcMap = null;
-  private FCMap<BlobPath, OptionalBlob> storageMap;
+  private FCMap<BlobMeta, OptionalBlob> storageMap;
   ServicesRepositoryRoot repository;
 
   EntityId payerEntityId; // fcMap key for payer account
@@ -170,7 +170,7 @@ public class SmartContractRequestHandlerPayableTest {
 
     //Init FCMap
     fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-    storageMap = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
+    storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
     // Create accounts
     createAccount(payerAccountId, INITIAL_BALANCE);
     createAccount(nodeAccountId, INITIAL_BALANCE);

@@ -29,7 +29,7 @@ import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.core.jproto.JFileInfo;
 import com.hedera.services.legacy.core.jproto.JKey;
@@ -55,8 +55,8 @@ public class StateView {
 			new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 	public static final FCMap<EntityId, HederaAccount> EMPTY_ACCOUNTS =
 			new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-	public static final FCMap<BlobPath, OptionalBlob> EMPTY_STORAGE =
-			new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
+	public static final FCMap<BlobMeta, OptionalBlob> EMPTY_STORAGE =
+			new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
 	public static final StateView EMPTY_VIEW = new StateView(EMPTY_TOPICS, EMPTY_ACCOUNTS);
 
 	Map<FileID, byte[]> fileContents;
@@ -74,7 +74,7 @@ public class StateView {
 	public StateView(
 			FCMap<EntityId, Topic> topics,
 			FCMap<EntityId, HederaAccount> accounts,
-			FCMap<BlobPath, OptionalBlob> storage
+			FCMap<BlobMeta, OptionalBlob> storage
 	) {
 		this.topics = topics;
 		this.accounts = accounts;

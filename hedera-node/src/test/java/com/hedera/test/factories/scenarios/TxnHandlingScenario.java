@@ -35,7 +35,7 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.core.jproto.JFileInfo;
 import com.swirlds.fcmap.FCMap;
@@ -133,9 +133,9 @@ public interface TxnHandlingScenario {
 		return hfs;
 	}
 
-	default FCMap<BlobPath, OptionalBlob> storage() {
+	default FCMap<BlobMeta, OptionalBlob> storage() {
 		@SuppressWarnings("unchecked")
-		FCMap<BlobPath, OptionalBlob> storage = (FCMap<BlobPath, OptionalBlob>)mock(FCMap.class);
+		FCMap<BlobMeta, OptionalBlob> storage = (FCMap<BlobMeta, OptionalBlob>)mock(FCMap.class);
 
 		return storage;
 	}

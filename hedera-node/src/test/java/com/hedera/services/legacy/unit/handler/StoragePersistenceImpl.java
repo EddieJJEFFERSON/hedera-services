@@ -24,16 +24,16 @@ package com.hedera.services.legacy.unit.handler;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
 import com.hedera.services.utils.EntityIdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.swirlds.fcmap.FCMap;
 import org.ethereum.datasource.StoragePersistence;
 
 public class StoragePersistenceImpl implements StoragePersistence {
-	private FCMap<BlobPath, OptionalBlob> storageMap;
+	private FCMap<BlobMeta, OptionalBlob> storageMap;
 
-	public StoragePersistenceImpl(FCMap<BlobPath, OptionalBlob> storageMap) {
+	public StoragePersistenceImpl(FCMap<BlobMeta, OptionalBlob> storageMap) {
 		this.storageMap = storageMap;
 	}
 

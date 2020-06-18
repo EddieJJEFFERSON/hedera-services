@@ -36,31 +36,31 @@ import java.util.Objects;
 
 import static com.swirlds.common.CommonUtils.getNormalisedStringBytes;
 
-public class BlobPath extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
+public class BlobMeta extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 	static final int MERKLE_VERSION = 1;
 	static final long RUNTIME_CONSTRUCTABLE_ID = 0x9c19df177063b4caL;
 
 	public static final int MAX_PATH_LEN = 4_096;
 
-	private String literal;
+	private String path;
 
-	public BlobPath() { }
+	public BlobMeta() { }
 
-	public BlobPath(String literal) {
-		this.literal = literal;
+	public BlobMeta(String path) {
+		this.path = path;
 	}
 
 	@Deprecated
 	public static class Provider implements SerializedObjectProvider {
 		@Override
 		public FastCopyable deserialize(DataInputStream _in) throws IOException {
-			var path = new BlobPath();
+			var path = new BlobMeta();
 			var in = (SerializableDataInputStream)_in;
 
 			in.readLong();
 			in.readLong();
 
-			path.setLiteral(in.readNormalisedString(MAX_PATH_LEN));
+			path.setPath(in.readNormalisedString(MAX_PATH_LEN));
 			return path;
 		}
 	}
@@ -78,18 +78,18 @@ public class BlobPath extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 
 	@Override
 	public void serialize(SerializableDataOutputStream out) throws IOException {
-		out.writeNormalisedString(literal);
+		out.writeNormalisedString(path);
 	}
 
 	@Override
 	public void deserialize(SerializableDataInputStream in, int version) throws IOException {
-		literal = in.readNormalisedString(MAX_PATH_LEN);
+		path = in.readNormalisedString(MAX_PATH_LEN);
 	}
 
 	/* --- FastCopyable --- */
 	@Override
-	public BlobPath copy() {
-		return new BlobPath(literal);
+	public BlobMeta copy() {
+		return new BlobMeta(path);
 	}
 
 	@Override
@@ -100,18 +100,18 @@ public class BlobPath extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || BlobPath.class != o.getClass()) {
+		if (o == null || BlobMeta.class != o.getClass()) {
 			return false;
 		}
 
-		var that = (BlobPath)o;
+		var that = (BlobMeta)o;
 
-		return Objects.equals(this.literal, that.literal);
+		return Objects.equals(this.path, that.path);
 	}
 
 	@Override
 	public int hashCode() {
-		return Arrays.hashCode(getNormalisedStringBytes(literal));
+		return Arrays.hashCode(getNormalisedStringBytes(path));
 	}
 
 	@Override
@@ -148,18 +148,18 @@ public class BlobPath extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 	}
 
 	/* --- Bean --- */
-	public String getLiteral() {
-		return literal;
+	public String getPath() {
+		return path;
 	}
 
-	public void setLiteral(String literal) {
-		this.literal = literal;
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
-				.add("literal", literal)
+				.add("path", path)
 				.toString();
 	}
 }

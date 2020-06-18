@@ -46,7 +46,7 @@ import com.hederahashgraph.builder.RequestBuilder;
 import com.hederahashgraph.builder.TransactionSigner;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.initialization.NodeAccountsCreation;
 
@@ -76,7 +76,7 @@ class QueryValidationTest {
   long payerAccountInitialBalance = 100000;
   private RecordCache recordCache;
   private FCMap<EntityId, HederaAccount> map = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-  private FCMap<BlobPath, OptionalBlob> storageMap = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
+  private FCMap<BlobMeta, OptionalBlob> storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
   ;
   private AccountID nodeAccount =
       AccountID.newBuilder().setAccountNum(3).setRealmNum(0).setShardNum(0).build();

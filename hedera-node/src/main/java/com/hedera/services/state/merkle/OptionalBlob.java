@@ -107,6 +107,11 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 	}
 
 	@Override
+	public void setHash(Hash hash) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void serialize(SerializableDataOutputStream out) throws IOException {
 		if (delegate == MISSING_DELEGATE) {
 			out.writeBoolean(false);
