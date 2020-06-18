@@ -31,8 +31,8 @@ import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
 import com.hedera.services.legacy.handler.TransactionHandler;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.service.FreezeServiceImpl;
 import com.hedera.services.legacy.service.GlobalFlag;
 import com.hedera.services.queries.validation.QueryFeeCheck;
@@ -102,7 +102,7 @@ public class FreezeServiceImplTest {
   private AccountID nodeAccountId;
   private Key key;
   private Map<String, PrivateKey> pubKey2privKeyMap;
-  private FCMap<StorageKey, StorageValue> storageMap = null;
+  private FCMap<BlobPath, OptionalBlob> storageMap = null;
   private FCStorageWrapper fcStorageWrapper;
 
   @BeforeAll

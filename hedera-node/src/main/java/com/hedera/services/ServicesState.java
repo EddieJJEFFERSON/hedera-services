@@ -28,8 +28,8 @@ import com.hedera.services.context.domain.topic.Topic;
 import com.hedera.services.context.properties.StandardizedPropertySources;
 import com.hedera.services.legacy.config.PropertiesLoader;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.utils.JvmSystemExits;
@@ -128,7 +128,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 					new ExchangeRates());
 			setChild(NETWORK_CTX_CHILD_INDEX, networkCtx);
 			setChild(TOPICS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), new Topic.Provider()));
-			setChild(STORAGE_CHILD_INDEX, new FCMap<>(StorageKey::deserialize, StorageValue::deserialize));
+			setChild(STORAGE_CHILD_INDEX, new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider()));
 			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize));
 		}
 
@@ -252,7 +252,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 		return getChild(ACCOUNTS_CHILD_INDEX);
 	}
 
-	public FCMap<StorageKey, StorageValue> storage() {
+	public FCMap<BlobPath, OptionalBlob> storage() {
 		return getChild(STORAGE_CHILD_INDEX);
 	}
 

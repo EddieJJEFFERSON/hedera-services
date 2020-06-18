@@ -27,8 +27,8 @@ import com.hedera.services.context.properties.Profile;
 import com.hedera.services.utils.JvmSystemExits;
 import com.hedera.services.utils.SystemExits;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.exception.InvalidTotalAccountBalanceException;
 import com.hedera.services.legacy.services.state.initialization.DefaultSystemAccountsCreator;
 import com.swirlds.common.NodeId;
@@ -356,7 +356,7 @@ public class ServicesMain implements SwirldMain {
 			long nodeId,
 			long round,
 			FCMap<EntityId, HederaAccount> accounts,
-			FCMap<StorageKey, StorageValue> storage,
+			FCMap<BlobPath, OptionalBlob> storage,
 			FCMap<EntityId, Topic> topics
 	) throws IOException {
 		var accountsFout = foutSupplier.apply(

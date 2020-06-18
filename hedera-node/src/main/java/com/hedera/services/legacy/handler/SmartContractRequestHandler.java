@@ -86,8 +86,8 @@ import com.hederahashgraph.fee.FeeBuilder;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.core.jproto.JAccountID;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.logic.ApplicationConstants;
@@ -122,7 +122,7 @@ public class SmartContractRequestHandler {
 	private LedgerAccountsSource ledgerSource;
 	private ServicesRepositoryRoot repository;
 	private FCMap<EntityId, HederaAccount> accounts;
-	private FCMap<StorageKey, StorageValue> storageMap;
+	private FCMap<BlobPath, OptionalBlob> storageMap;
 	private HbarCentExchange exchange;
 	private TransactionContext txnCtx;
 	private UsagePricesProvider usagePrices;
@@ -136,7 +136,7 @@ public class SmartContractRequestHandler {
 			AccountID funding,
 			HederaLedger ledger,
 			FCMap<EntityId, HederaAccount> accounts,
-			FCMap<StorageKey, StorageValue> storageMap,
+			FCMap<BlobPath, OptionalBlob> storageMap,
 			LedgerAccountsSource ledgerSource,
 			TransactionContext txnCtx,
 			HbarCentExchange exchange,
@@ -160,7 +160,7 @@ public class SmartContractRequestHandler {
 		this.lifecycle = lifecycle;
 		this.sigsVerifier = sigsVerifier;
 
-		var blobStore = new FcBlobsBytesStore(StorageValue::new, storageMap);
+		var blobStore = new FcBlobsBytesStore(OptionalBlob::new, storageMap);
 		storageView = storageMapFrom(blobStore);
 		bytecodeView = bytecodeMapFrom(blobStore);
 	}

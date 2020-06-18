@@ -45,14 +45,7 @@ networks:
     bootstrap: 950
     ensureScenarioPayerHbars: 100
     nodes:
-    - {account: 3, ipv4Addr: 35.237.200.180}
-    - {account: 4, ipv4Addr: 35.186.191.247}
-    - {account: 7, ipv4Addr: 35.203.82.240}
-    - {account: 8, ipv4Addr: 35.236.5.219}
-    - {account: 10, ipv4Addr: 35.242.233.154}
-    - {account: 11, ipv4Addr: 35.240.118.96}
-    - {account: 12, ipv4Addr: 35.204.86.32}
-    - {account: 13, ipv4Addr: 35.234.132.107}
+    - {account: 14, ipv4Addr: 169.47.178.122}
     scenarioPayer: 45385
     scenarios:
       consensus: {persistent: 39286}

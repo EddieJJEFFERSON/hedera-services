@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.swirlds.blob.BinaryObjectStore;
 import com.swirlds.common.io.SerializableDataInputStream;
 import java.io.ByteArrayInputStream;
@@ -59,7 +59,7 @@ public class StorageSerializerTest {
 
   @Test
   public void aa_serialize_deserialize_key() {
-    StorageKey sKey = new StorageKey(TEST_STRING1);
+    BlobPath sKey = new BlobPath(TEST_STRING1);
 
     byte[] serial_skey = null;
     try {
@@ -73,12 +73,12 @@ public class StorageSerializerTest {
 
     ByteArrayInputStream in = null;
     SerializableDataInputStream dis = null;
-    StorageKey sKeyReborn = new StorageKey();
+    BlobPath sKeyReborn = new BlobPath();
     try {
       in = new ByteArrayInputStream(serial_skey);
       dis = new SerializableDataInputStream(in);
 
-      sKeyReborn = StorageKey.deserialize(dis);
+      sKeyReborn = BlobPath.deserialize(dis);
       //Write Assertions Here
       assertNotNull(sKeyReborn);
       assertEquals(sKey.getPath(), sKeyReborn.getPath());
@@ -98,9 +98,9 @@ public class StorageSerializerTest {
 
   @Test
   public void ab_key_equals() {
-    StorageKey sKey1 = new StorageKey(TEST_STRING1);
-    StorageKey sKey2 = new StorageKey(TEST_STRING1);
-    StorageKey sKey3 = new StorageKey(TEST_STRING2);
+    BlobPath sKey1 = new BlobPath(TEST_STRING1);
+    BlobPath sKey2 = new BlobPath(TEST_STRING1);
+    BlobPath sKey3 = new BlobPath(TEST_STRING2);
 
     assertEquals(sKey1, sKey2);
     Assertions.assertFalse(sKey1.equals(sKey3));
@@ -108,7 +108,7 @@ public class StorageSerializerTest {
 
   @Test
   public void ba_serialize_deserialize_value() {
-    StorageValue sVal = new StorageValue(TEST_BYTES1);
+    OptionalBlob sVal = new OptionalBlob(TEST_BYTES1);
 
     byte[] serial_sval = null;
     try {
@@ -122,12 +122,12 @@ public class StorageSerializerTest {
 
     ByteArrayInputStream in;
     DataInputStream dis;
-    StorageValue sValReborn;
+    OptionalBlob sValReborn;
     try {
       in = new ByteArrayInputStream(serial_sval);
       dis = new SerializableDataInputStream(in);
       BinaryObjectStore.getInstance().startInit();
-      sValReborn = StorageValue.deserialize(dis);
+      sValReborn = OptionalBlob.deserialize(dis);
       BinaryObjectStore.getInstance().stopInit();
       //Write Assertions Here
       assertNotNull(sValReborn);
@@ -147,9 +147,9 @@ public class StorageSerializerTest {
 
   @Test
   public void bb_value_equals() {
-    StorageValue sVal1 = new StorageValue(TEST_BYTES1);
-    StorageValue sVal2 = new StorageValue(TEST_BYTES1);
-    StorageValue sVal3 = new StorageValue(TEST_BYTES2);
+    OptionalBlob sVal1 = new OptionalBlob(TEST_BYTES1);
+    OptionalBlob sVal2 = new OptionalBlob(TEST_BYTES1);
+    OptionalBlob sVal3 = new OptionalBlob(TEST_BYTES2);
 
     assert (sVal1.equals(sVal2));
     assert (!sVal1.equals(sVal3));
@@ -157,8 +157,8 @@ public class StorageSerializerTest {
 
   @Test
   public void bc_value_copy() {
-    StorageValue sVal1 = new StorageValue(TEST_BYTES1);
-    StorageValue sVal2 = new StorageValue(sVal1);
+    OptionalBlob sVal1 = new OptionalBlob(TEST_BYTES1);
+    OptionalBlob sVal2 = new OptionalBlob(sVal1);
 
     Assertions.assertNotSame(sVal1, sVal2);
     // Test that this is a different array of bytes with the same values

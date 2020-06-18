@@ -20,8 +20,8 @@ package com.hedera.services.files.store;
  * ‍
  */
 
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.swirlds.fcmap.FCMap;
 
 import java.util.AbstractMap;
@@ -32,19 +32,19 @@ import java.util.function.Function;
 import static java.util.stream.Collectors.toSet;
 
 public class FcBlobsBytesStore extends AbstractMap<String, byte[]> {
-        private final Function<byte[], StorageValue> blobFactory;
-        private final FCMap<StorageKey, StorageValue> pathedBlobs;
+        private final Function<byte[], OptionalBlob> blobFactory;
+        private final FCMap<BlobPath, OptionalBlob> pathedBlobs;
 
         public FcBlobsBytesStore(
-                        Function<byte[], StorageValue> blobFactory,
-                        FCMap<StorageKey, StorageValue> pathedBlobs
+                        Function<byte[], OptionalBlob> blobFactory,
+                        FCMap<BlobPath, OptionalBlob> pathedBlobs
         ) {
                 this.blobFactory = blobFactory;
                 this.pathedBlobs = pathedBlobs;
         }
 
-        private StorageKey at(Object key) {
-                return new StorageKey((String)key);
+        private BlobPath at(Object key) {
+                return new BlobPath((String)key);
         }
 
         @Override
@@ -55,7 +55,7 @@ public class FcBlobsBytesStore extends AbstractMap<String, byte[]> {
         @Override
         public byte[] remove(Object path) {
                 return Optional.ofNullable(pathedBlobs.remove(at(path)))
-                                .map(StorageValue::getData)
+                                .map(OptionalBlob::getData)
                                 .orElse(null);
         }
 
@@ -83,7 +83,7 @@ public class FcBlobsBytesStore extends AbstractMap<String, byte[]> {
         @Override
         public byte[] get(Object path) {
                 return Optional.ofNullable(pathedBlobs.get(at(path)))
-                                .map(StorageValue::getData)
+                                .map(OptionalBlob::getData)
                                 .orElse(null);
         }
 
@@ -106,7 +106,7 @@ public class FcBlobsBytesStore extends AbstractMap<String, byte[]> {
         public Set<Entry<String, byte[]>> entrySet() {
                 return pathedBlobs.entrySet()
                                 .stream()
-                                .map(entry -> new SimpleEntry<>(entry.getKey().getPath(), entry.getValue().getData()))
+                                .map(entry -> new SimpleEntry<>(entry.getKey().getLiteral(), entry.getValue().getData()))
                                 .collect(toSet());
         }
 }

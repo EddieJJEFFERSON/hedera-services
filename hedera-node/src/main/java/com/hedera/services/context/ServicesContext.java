@@ -211,8 +211,8 @@ import com.hedera.services.utils.SleepingPause;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.services.state.validation.DefaultLedgerValidator;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
 import com.hedera.services.legacy.services.utils.DefaultAccountsExporter;
@@ -349,7 +349,7 @@ public class ServicesContext {
 	private Supplier<ServicesRepositoryRoot> newPureRepo;
 	private AtomicReference<FCMap<EntityId, Topic>> queryableTopics;
 	private AtomicReference<FCMap<EntityId, HederaAccount>> queryableAccounts;
-	private AtomicReference<FCMap<StorageKey, StorageValue>> queryableStorage;
+	private AtomicReference<FCMap<BlobPath, OptionalBlob>> queryableStorage;
 
 	/* Context-free infrastructure. */
 	private static Pause pause;
@@ -395,7 +395,7 @@ public class ServicesContext {
 
 	public Map<String, byte[]> blobStore() {
 		if (blobStore == null) {
-			blobStore = new FcBlobsBytesStore(StorageValue::new, storage());
+			blobStore = new FcBlobsBytesStore(OptionalBlob::new, storage());
 		}
 		return blobStore;
 	}
@@ -1147,7 +1147,7 @@ public class ServicesContext {
 		return address;
 	}
 
-	public AtomicReference<FCMap<StorageKey, StorageValue>>	queryableStorage() {
+	public AtomicReference<FCMap<BlobPath, OptionalBlob>>	queryableStorage() {
 		if (queryableStorage == null) {
 			queryableStorage = new AtomicReference<>(storage());
 		}
@@ -1261,7 +1261,7 @@ public class ServicesContext {
 		return state.topics();
 	}
 
-	public FCMap<StorageKey, StorageValue> storage() {
+	public FCMap<BlobPath, OptionalBlob> storage() {
 		return state.storage();
 	}
 }

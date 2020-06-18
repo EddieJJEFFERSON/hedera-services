@@ -52,8 +52,8 @@ import com.hedera.services.grpc.controllers.NetworkController;
 import com.hedera.services.ledger.HederaLedger;
 import com.hedera.services.ledger.ids.SeqNoEntityIdSource;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.queries.answering.ServiceAnswerFlow;
 import com.hedera.services.queries.consensus.HcsAnswers;
 import com.hedera.services.queries.validation.QueryFeeCheck;
@@ -139,7 +139,7 @@ public class ServicesContextTest {
 	PropertySources propertySources;
 	FCMap<EntityId, Topic> topics;
 	FCMap<EntityId, HederaAccount> accounts;
-	FCMap<StorageKey, StorageValue> storage;
+	FCMap<BlobPath, OptionalBlob> storage;
 
 	@BeforeEach
 	void setup() {

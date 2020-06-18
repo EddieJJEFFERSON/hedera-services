@@ -79,8 +79,8 @@ import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.unit.PropertyLoaderTest;
 import com.hedera.services.legacy.unit.handler.SolidityAddress;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.handler.TransactionHandler;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
 import com.hedera.services.legacy.unit.handler.StoragePersistenceImpl;
@@ -149,7 +149,7 @@ public class SmartContractServiceImplTest {
   long DEFAULT_CONTRACT_OP_GAS = 1000000l;
   FCMap<EntityId, HederaAccount> accountFCMap = null;
   FCMap<EntityId, Topic> topicFCMap = null;
-  private FCMap<StorageKey, StorageValue> storageMap;
+  private FCMap<BlobPath, OptionalBlob> storageMap;
   ServicesRepositoryRoot repository;
   SmartContractServiceImpl smartContractImpl = null;
   TransactionHandler transactionHandler = null;
@@ -189,7 +189,7 @@ public class SmartContractServiceImplTest {
     System.out.println("Node Account:" + nodeAccountId);
     senderAccountId = RequestBuilder.getAccountIdBuild(9999l, 0l, 0l);
     receiverAccountId = RequestBuilder.getAccountIdBuild(8888l, 0l, 0l);
-    storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
+    storageMap = new FCMap<>(BlobPath::deserialize, OptionalBlob::deserialize);
     // Init FCMap & Put Balances
     accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());

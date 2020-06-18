@@ -40,8 +40,8 @@ import com.hedera.test.utils.IdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
 
 import java.math.BigInteger;
@@ -66,8 +66,7 @@ public class RepoNewCacheTest {
   public void test() {
     FCMap<EntityId, HederaAccount> accountMap =
             new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-    FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize,
-        StorageValue::deserialize);
+    FCMap<BlobPath, OptionalBlob> storageMap = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
 
     TransactionalLedger<AccountID, MapValueProperty, HederaAccount> delegate = new TransactionalLedger<>(
@@ -168,7 +167,7 @@ public class RepoNewCacheTest {
   public void rollbackTest() {
     FCMap<EntityId, HederaAccount> accountMap =
             new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-    FCMap<StorageKey, StorageValue> storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
+    FCMap<BlobPath, OptionalBlob> storageMap = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
 
     FCMapBackingAccounts backingAccounts = new FCMapBackingAccounts(accountMap);

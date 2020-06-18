@@ -58,8 +58,8 @@ import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.exception.InvalidFileWACLException;
 import com.hedera.services.legacy.exception.SerializationException;
@@ -76,7 +76,7 @@ public class DynamicPropertiesLoadTest {
 	FCStorageWrapper storageWrapper;
 	TransactionHandler transactionHandler = null;
 	FCMap<EntityId, HederaAccount> fcMap = null;
-	private FCMap<StorageKey, StorageValue> storageMap;
+	private FCMap<BlobPath, OptionalBlob> storageMap;
 	private FileServiceHandler fileServiceHandler;
 	FileCreateTransactionBody fileCreateTransactionBody;
 
@@ -87,7 +87,7 @@ public class DynamicPropertiesLoadTest {
 		payerAccountId = RequestBuilder.getAccountIdBuild(payerAccount, 0l, 0l);
 		nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
 		fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-		storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
+		storageMap = new FCMap<>(BlobPath::deserialize, OptionalBlob::deserialize);
 		storageWrapper = new FCStorageWrapper(storageMap);
 		FeeScheduleInterceptor feeScheduleInterceptor = mock(FeeScheduleInterceptor.class);
 		fileServiceHandler = new FileServiceHandler(

@@ -65,8 +65,8 @@ import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.exception.StorageKeyNotFoundException;
 import com.hedera.services.state.submerkle.ExchangeRates;
@@ -134,7 +134,7 @@ public class SmartContractRequestHandlerStorageTest {
   SmartContractRequestHandler smartHandler;
   FileServiceHandler fsHandler;
   FCMap<EntityId, HederaAccount> fcMap = null;
-  private FCMap<StorageKey, StorageValue> storageMap;
+  private FCMap<BlobPath, OptionalBlob> storageMap;
   ServicesRepositoryRoot repository;
 
   EntityId payerEntityId; // fcMap key for payer account
@@ -176,7 +176,7 @@ public class SmartContractRequestHandlerStorageTest {
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
     fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-    storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
+    storageMap = new FCMap<>(BlobPath::deserialize, OptionalBlob::deserialize);
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
     createAccount(feeCollAccountId, 10_000L);

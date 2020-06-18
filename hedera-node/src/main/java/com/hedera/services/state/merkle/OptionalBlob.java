@@ -9,9 +9,9 @@ package com.hedera.services.state.merkle;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,23 +20,23 @@ package com.hedera.services.state.merkle;
  * ‍
  */
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.Objects;
+
 import com.google.common.base.MoreObjects;
-import com.swirlds.blob.BinaryObject;
-import com.swirlds.blob.BinaryObjectStore;
 import com.swirlds.common.FCMValue;
 import com.swirlds.common.FastCopyable;
 import com.swirlds.common.crypto.Hash;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
+import com.swirlds.blob.BinaryObject;
+import com.swirlds.blob.BinaryObjectStore;
 import com.swirlds.common.io.SerializedObjectProvider;
 import com.swirlds.common.merkle.MerkleExternalLeaf;
 import com.swirlds.common.merkle.utility.AbstractMerkleNode;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.Objects;
-
-public class Blob extends AbstractMerkleNode implements FCMValue, MerkleExternalLeaf {
+public class OptionalBlob extends AbstractMerkleNode implements FCMValue, MerkleExternalLeaf {
 	static final int MERKLE_VERSION = (int)BinaryObject.CLASS_VERSION;
 	static final long RUNTIME_CONSTRUCTABLE_ID = 0x4cefb15eb131d9e3L;
 	static final Hash MISSING_DELEGATE_HASH = new Hash(new byte[] {
@@ -62,13 +62,13 @@ public class Blob extends AbstractMerkleNode implements FCMValue, MerkleExternal
 
 	private BinaryObject delegate = MISSING_DELEGATE;
 
-	public Blob() { }
+	public OptionalBlob() { }
 
-	public Blob(byte[] data) {
+	public OptionalBlob(byte[] data) {
 		delegate = BinaryObjectStore.getInstance().put(data);
 	}
 
-	public Blob(BinaryObject delegate) {
+	public OptionalBlob(BinaryObject delegate) {
 		this.delegate = delegate;
 	}
 
@@ -76,7 +76,7 @@ public class Blob extends AbstractMerkleNode implements FCMValue, MerkleExternal
 	public static class Provider implements SerializedObjectProvider {
 		@Override
 		public FastCopyable deserialize(DataInputStream _in) throws IOException {
-			var blob = new Blob();
+			var blob = new OptionalBlob();
 			var in = (SerializableDataInputStream)_in;
 
 			var hasData = in.readBoolean();
@@ -146,8 +146,8 @@ public class Blob extends AbstractMerkleNode implements FCMValue, MerkleExternal
 
 	/* --- FastCopyable --- */
 	@Override
-	public Blob copy() {
-		return new Blob(delegate.copy());
+	public OptionalBlob copy() {
+		return new OptionalBlob(delegate.copy());
 	}
 
 	@Override
@@ -162,11 +162,11 @@ public class Blob extends AbstractMerkleNode implements FCMValue, MerkleExternal
 		if (this == o) {
 			return true;
 		}
-		if (o == null || Blob.class != o.getClass()) {
+		if (o == null || OptionalBlob.class != o.getClass()) {
 			return false;
 		}
 
-		var that = (Blob)o;
+		var that = (OptionalBlob)o;
 
 		return Objects.equals(this.delegate, that.delegate);
 	}

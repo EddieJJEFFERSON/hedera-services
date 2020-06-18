@@ -20,7 +20,7 @@ package com.hedera.services.legacy.unit;
  * ‍
  */
 
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.swirlds.blob.BinaryObjectNotFoundException;
 import com.swirlds.blob.internal.db.BlobStoragePipeline;
 import com.swirlds.blob.internal.db.DbManager;
@@ -31,7 +31,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class StorageValueTest {
+public class OptionalBlobTest {
 	Random random = new Random();
 
 	@Test
@@ -41,7 +41,7 @@ public class StorageValueTest {
 			byte[] fileContents = new byte[1024];
 			random.nextBytes(fileContents);
 
-			StorageValue sv = new StorageValue(fileContents);
+			OptionalBlob sv = new OptionalBlob(fileContents);
 
 			final long binaryObjectCountAfter = pipeline.retrieveNumberOfBlobs();
 
@@ -56,12 +56,12 @@ public class StorageValueTest {
 
 			byte[] fileContents = new byte[1024];
 			random.nextBytes(fileContents);
-			final StorageValue sv = new StorageValue(fileContents);
-			final long svId = sv.getBinaryObject().getId();
+			final OptionalBlob sv = new OptionalBlob(fileContents);
+			final long svId = sv.getDelegate().getId();
 
 			byte[] fileContents2 = new byte[1024];
 			random.nextBytes(fileContents2);
-			final StorageValue sv2 = new StorageValue(fileContents2);
+			final OptionalBlob sv2 = new OptionalBlob(fileContents2);
 
 			final long binaryObjectCountAfterCreate = pipeline.retrieveNumberOfBlobs();
 

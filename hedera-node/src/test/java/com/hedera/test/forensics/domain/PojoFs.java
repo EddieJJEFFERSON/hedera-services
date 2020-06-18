@@ -21,8 +21,8 @@ package com.hedera.test.forensics.domain;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.fcmap.FCMap;
 
@@ -40,15 +40,14 @@ public class PojoFs {
 
 	public static PojoFs fromDisk(String dumpLoc) throws Exception {
 		try (SerializableDataInputStream fin = new SerializableDataInputStream(Files.newInputStream(Path.of(dumpLoc)))) {
-			FCMap<StorageKey, StorageValue> fcm =
-					new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
+			FCMap<BlobPath, OptionalBlob> fcm = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
 			fcm.copyFrom(fin);
 			fcm.copyFromExtra(fin);
 			return from(fcm);
 		}
 	}
 
-	public static PojoFs from(FCMap<StorageKey, StorageValue> fs) {
+	public static PojoFs from(FCMap<BlobPath, OptionalBlob> fs) {
 		var pojo = new PojoFs();
 		var readable = fs.entrySet()
 				.stream()

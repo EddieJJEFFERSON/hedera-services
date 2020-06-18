@@ -64,8 +64,8 @@ import com.hedera.services.legacy.TestHelper;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
-import com.hedera.services.legacy.core.StorageKey;
-import com.hedera.services.legacy.core.StorageValue;
+import com.hedera.services.state.merkle.BlobPath;
+import com.hedera.services.state.merkle.OptionalBlob;
 import com.hedera.services.legacy.core.jproto.JContractIDKey;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.exception.NoFeeScheduleExistsException;
@@ -140,7 +140,7 @@ public class SmartContractRequestHandlerMiscTest {
   SmartContractRequestHandler smartHandler;
   FileServiceHandler fsHandler;
   FCMap<EntityId, HederaAccount> fcMap = null;
-  private FCMap<StorageKey, StorageValue> storageMap;
+  private FCMap<BlobPath, OptionalBlob> storageMap;
   ServicesRepositoryRoot repository;
   LedgerAccountsSource ledgerSource;
   HederaLedger ledger;
@@ -194,7 +194,7 @@ public class SmartContractRequestHandlerMiscTest {
 
     //Init FCMap
     fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
-    storageMap = new FCMap<>(StorageKey::deserialize, StorageValue::deserialize);
+    storageMap = new FCMap<>(BlobPath::deserialize, OptionalBlob::deserialize);
     // Create accounts
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
