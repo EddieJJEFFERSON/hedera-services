@@ -2,6 +2,7 @@ package com.hedera.services.state.merkle;
 
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.fcmap.FCMap;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
@@ -10,10 +11,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @RunWith(JUnitPlatform.class)
 class TmpStorageTest {
 	@Test
-	public void dumpFcmap() throws IOException {
+	public void readFcmap() throws IOException {
 		// given:
 		FCMap<BlobPath, OptionalBlob> subject = new FCMap<>(new BlobPath.Provider(), new OptionalBlob.Provider());
 		// and:
@@ -24,7 +27,12 @@ class TmpStorageTest {
 		subject.copyFromExtra(in);
 
 		// then:
-
+		assertEquals(3, subject.size());
+		for (int s = 0; s < 3; s++)	 {
+			var key = keyFrom(s);
+			var expectedBlob = blobFrom(s);
+			assertEquals(expectedBlob, subject.get(key));
+		}
 	}
 
 	private String[] paths = {

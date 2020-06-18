@@ -52,10 +52,6 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 			(byte)0x24, (byte)0x25, (byte)0x26, (byte)0x27,
 			(byte)0x28, (byte)0x29, (byte)0x2a, (byte)0x2b,
 			(byte)0x2c, (byte)0x2d, (byte)0x2e, (byte)0x2f,
-			(byte)0x30, (byte)0x31, (byte)0x32, (byte)0x33,
-			(byte)0x34, (byte)0x35, (byte)0x36, (byte)0x37,
-			(byte)0x38, (byte)0x39, (byte)0x3a, (byte)0x3b,
-			(byte)0x3c, (byte)0x3d, (byte)0x3e, (byte)0x3f,
 	});
 	static final byte[] NO_DATA = new byte[0];
 	static final BinaryObject MISSING_DELEGATE = null;
@@ -78,6 +74,9 @@ public class OptionalBlob extends AbstractMerkleNode implements FCMValue, Merkle
 		public FastCopyable deserialize(DataInputStream _in) throws IOException {
 			var blob = new OptionalBlob();
 			var in = (SerializableDataInputStream)_in;
+
+			in.readLong();
+			in.readLong();
 
 			var hasData = in.readBoolean();
 			if (hasData) {
