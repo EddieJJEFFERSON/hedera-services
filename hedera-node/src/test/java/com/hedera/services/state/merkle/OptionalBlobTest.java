@@ -42,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.inOrder;
@@ -108,29 +107,6 @@ class OptionalBlobTest {
 	public void getDataWorksWithNoStuff() {
 		// expect:
 		assertArrayEquals(OptionalBlob.NO_DATA, new OptionalBlob().getData());
-	}
-
-	@Test
-	public void setDataWorksWithStuff() {
-		// when:
-		subject.setData(stuff);
-
-		// then:
-		verify(blobStore).update(argThat(stuffDelegate::equals), argThat((byte[] bytes) -> Arrays.equals(bytes, stuff)));
-	}
-
-	@Test
-	public void setDataWorksWithNoStuff() {
-		// given:
-		var defaultSubject = new OptionalBlob();
-
-		// when:
-		defaultSubject.setData(stuff);
-
-		// then:
-		verify(blobStore, never()).update(any(), any());
-		// and:
-		verify(blobStore, times(2)).put(stuff);
 	}
 
 	@Test
@@ -216,6 +192,19 @@ class OptionalBlobTest {
 	}
 
 	@Test
+	public void deserializeAbbrevWorksWithoutDelegate() {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+
+		// when:
+		subject.deserializeAbbreviated(in, OptionalBlob.MISSING_DELEGATE_HASH, OptionalBlob.MERKLE_VERSION);
+
+		// then:
+		assertEquals(OptionalBlob.NO_DATA, subject.getData());
+		assertEquals(OptionalBlob.MISSING_DELEGATE, subject.getDelegate());
+	}
+
+	@Test
 	public void deserializeWorksWithDelegate() throws IOException {
 		// setup:
 		var in = mock(SerializableDataInputStream.class);
@@ -276,7 +265,26 @@ class OptionalBlobTest {
 	}
 
 	@Test
-	public void legacyProviderWorks() throws IOException {
+	public void legacyProviderWorksWithoutDelegate() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+		// and:
+		InOrder inOrder = inOrder(newDelegate, in);
+
+		given(in.readLong()).willReturn(0l).willReturn(1l);
+		given(in.readBoolean()).willReturn(false);
+
+		// when:
+		var something = new OptionalBlob.Provider().deserialize(in);
+
+		// then:
+		inOrder.verify(in, times(2)).readLong();
+		inOrder.verify(in).readBoolean();
+		assertNotNull(something);
+	}
+
+	@Test
+	public void legacyProviderWorksWithDelegate() throws IOException {
 		// setup:
 		var in = mock(SerializableDataInputStream.class);
 		// and:
@@ -315,16 +323,14 @@ class OptionalBlobTest {
 		// given:
 		var one = new OptionalBlob();
 		var two = new OptionalBlob(stuff);
-		var three = new OptionalBlob();
-
-		// when:
-		three.setData(stuff);
+		var three = new OptionalBlob(stuff);
+		var four = new Object();
 
 		// then:
 		assertNotEquals(null, one);
+		assertNotEquals(four, one);
 		assertNotEquals(two, one);
 		assertEquals(one, one);
-		assertEquals(two, three);
 		// and:
 		assertNotEquals(one.hashCode(), two.hashCode());
 		assertEquals(two.hashCode(), three.hashCode());
