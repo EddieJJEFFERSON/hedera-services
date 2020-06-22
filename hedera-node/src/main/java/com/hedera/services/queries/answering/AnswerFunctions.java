@@ -44,7 +44,7 @@ public class AnswerFunctions {
 
 	public List<TransactionRecord> accountRecords(StateView view, Query query) {
 		CryptoGetAccountRecordsQuery op = query.getCryptoGetAccountRecords();
-		EntityId key = EntityId.fromPojoAccount(op.getAccountID());
+		EntityId key = EntityId.fromPojoAccountId(op.getAccountID());
 		HederaAccount account = view.accounts().get(key);
 		return convert(account.recordList());
 	}
@@ -56,7 +56,7 @@ public class AnswerFunctions {
 		} else {
 			try {
 				AccountID id = txnId.getAccountID();
-				HederaAccount account = view.accounts().get(EntityId.fromPojoAccount(id));
+				HederaAccount account = view.accounts().get(EntityId.fromPojoAccountId(id));
 				JTransactionID searchableId = JTransactionID.convert(txnId);
 				return account.recordList()
 						.stream()

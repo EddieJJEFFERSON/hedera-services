@@ -22,7 +22,7 @@ package com.hedera.services.context.domain.haccount;
 
 import com.hedera.services.context.domain.serdes.DomainSerdes;
 import com.hederahashgraph.api.proto.java.Key;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.hedera.services.legacy.logic.ApplicationConstants;
@@ -120,7 +120,7 @@ class HederaAccountDeserializerTest {
 	private boolean isReceiverSigRequired = true;
 	private boolean isSmartContract = true;
 	private JKey contractKey = uncheckedDecode(Key.newBuilder().setContractID(asContract("1.2.3")).build());
-	private JAccountID proxy = new JAccountID(3, 2, 1);
+	private HEntityId proxy = new HEntityId(3, 2, 1);
 
 	private JKey uncheckedDecode(Key key) {
 		try {

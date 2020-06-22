@@ -236,8 +236,8 @@ public class CryptoTxRecordTransferListTest {
 
 	private void createAccount(AccountID payerAccount, long balance, Key key) throws Exception {
 		EntityId mk = new EntityId();
-		mk.setIdNum(payerAccount.getAccountNum());
-		mk.setRealmNum(0);
+		mk.setNum(payerAccount.getAccountNum());
+		mk.setRealm(0);
 		HederaAccount mv = new HederaAccount();
 		mv.setBalance(balance);
 		JKey jkey = JKey.mapKey(key);

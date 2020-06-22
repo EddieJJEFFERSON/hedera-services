@@ -121,7 +121,7 @@ public class GetTopicInfoAnswer implements AnswerService {
 	private static ConsensusTopicInfo.Builder infoBuilder(ConsensusGetTopicInfoQuery op, StateView view) {
 
 		TopicID id = op.getTopicID();
-		Topic topic = view.topics().get(EntityId.fromPojoTopic(id));
+		Topic topic = view.topics().get(EntityId.fromPojoTopicId(id));
 		ConsensusTopicInfo.Builder info = ConsensusTopicInfo.newBuilder();
 		if (topic.hasMemo()) {
 			info.setMemo(topic.getMemo());

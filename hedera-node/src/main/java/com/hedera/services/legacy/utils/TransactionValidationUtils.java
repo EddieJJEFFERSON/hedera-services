@@ -282,7 +282,7 @@ public class TransactionValidationUtils {
 			return INVALID_TRANSACTION_START;
 		}
 		Instant startTime = convertProtoTimeStamp(transactionBody.getTransactionID().getTransactionValidStart());
-		if (!accountMap.containsKey(EntityId.fromPojoAccount(transactionBody.getNodeAccountID()))) {
+		if (!accountMap.containsKey(EntityId.fromPojoAccountId(transactionBody.getNodeAccountID()))) {
 			return INVALID_NODE_ACCOUNT;
 		} else if (startTime.isAfter(consensusTime)) {
 			return INVALID_TRANSACTION_START;
@@ -294,7 +294,7 @@ public class TransactionValidationUtils {
 		}
 
 		AccountID payerAccount = transactionBody.getTransactionID().getAccountID();
-		EntityId payerAccountKey = EntityId.fromPojoAccount(payerAccount);
+		EntityId payerAccountKey = EntityId.fromPojoAccountId(payerAccount);
 		HederaAccount payerAccountDetails = accountMap.get(payerAccountKey);
 		if (payerAccountDetails == null) {
 			return ResponseCodeEnum.PAYER_ACCOUNT_NOT_FOUND;

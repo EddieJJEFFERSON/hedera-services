@@ -48,12 +48,12 @@ public class MockFCMapFactory {
 	}
 
 	public MockFCMapFactory withAccount(String id, HederaAccount meta) {
-		EntityId account = EntityId.fromPojoAccount(asAccount(id));
+		EntityId account = EntityId.fromPojoAccountId(asAccount(id));
 		given(mock.get(account)).willReturn(meta);
 		return this;
 	}
 	public MockFCMapFactory withContract(String id, HederaAccount meta) {
-		EntityId contract = EntityId.fromPojoContract(asContract(id));
+		EntityId contract = EntityId.fromPojoContractId(asContract(id));
 		given(mock.get(contract)).willReturn(meta);
 		return this;
 	}

@@ -56,7 +56,7 @@ public class DefaultFCMapContractLookup implements ContractSigMetaLookup {
 	 */
 	@Override
 	public ContractSigningMetadata lookup(ContractID id) throws Exception {
-		HederaAccount contract = accounts.get(EntityId.fromPojoContract(id));
+		HederaAccount contract = accounts.get(EntityId.fromPojoContractId(id));
 		if (contract == null || contract.isDeleted() || !contract.isSmartContract()) {
 			throw new InvalidContractIDException("Invalid contract!", id);
 		} else if (contract.getAccountKeys() == null) {

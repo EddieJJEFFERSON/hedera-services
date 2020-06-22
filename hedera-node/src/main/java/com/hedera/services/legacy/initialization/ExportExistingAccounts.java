@@ -22,7 +22,7 @@ package com.hedera.services.legacy.initialization;
 
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -44,18 +44,18 @@ public class ExportExistingAccounts {
     JSONArray accountObjArr = new JSONArray();
     JSONObject cryptoAccount = null;
     HederaAccount mapValue = null;
-    JAccountID proxyAccountID = null;
+    HEntityId proxyAccountID = null;
     for (EntityId currKey : accountMap.keySet()) {
       try {
         cryptoAccount = new JSONObject();
         log.info("retrieving account info from path :: Solidity Address in getAccountDetails "
-            + currKey.getIdNum());
+            + currKey.getNum());
         mapValue = accountMap.get(currKey);
         cryptoAccount.put("initialBalance", mapValue.getBalance());
         proxyAccountID = mapValue.getProxyAccount();
         if (proxyAccountID != null) {
-          cryptoAccount.put("proxyAccountNum", proxyAccountID.getAccountNum());
-          cryptoAccount.put("proxyRealmNum", proxyAccountID.getRealmNum());
+          cryptoAccount.put("proxyAccountNum", proxyAccountID.getNum());
+          cryptoAccount.put("proxyRealmNum", proxyAccountID.getRealm());
           cryptoAccount.put("proxyShardNum", mapValue.getProxyAccount());
         } else {
           cryptoAccount.put("proxyAccountNum", 0);
@@ -66,9 +66,9 @@ public class ExportExistingAccounts {
         cryptoAccount.put("receiveRecordThreshold", mapValue.getReceiverThreshold());
         cryptoAccount.put("receiverSigRequired", mapValue.isReceiverSigRequired());
         cryptoAccount.put("autoRenewPeriod", mapValue.getAutoRenewPeriod());
-        cryptoAccount.put("shardID", currKey.getShardNum());
-        cryptoAccount.put("realmID", currKey.getRealmNum());
-        cryptoAccount.put("accountNum", currKey.getIdNum());
+        cryptoAccount.put("shardID", currKey.getShard());
+        cryptoAccount.put("realmID", currKey.getRealm());
+        cryptoAccount.put("accountNum", currKey.getNum());
         String key = Hex.encodeHexString(SerializationUtils.serialize(mapValue.getAccountKeys()));
         cryptoAccount.put("key", key);
       } catch (Exception e) {

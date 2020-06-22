@@ -25,7 +25,7 @@ import com.hedera.test.factories.keys.KeyTree;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 
 import java.util.Optional;
@@ -47,7 +47,7 @@ public class MapValueFactory {
 	public HederaAccount get() {
 		HederaAccount value = new HederaAccount();
 		memo.ifPresent(s -> value.setMemo(s));
-		proxy.ifPresent(p -> value.setProxyAccount(JAccountID.convert(p)));
+		proxy.ifPresent(p -> value.setProxyAccount(HEntityId.convert(p)));
 		balance.ifPresent(b -> { try { value.setBalance(b); } catch (Exception ignore) {} });
 		deleted.ifPresent(b -> value.setDeleted(b));
 		accountKeys.ifPresent(k -> value.setAccountKeys(k));

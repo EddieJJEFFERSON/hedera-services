@@ -1,7 +1,7 @@
 package com.hedera.services.context.domain.serdes;
 
 import com.hedera.services.state.merkle.Topic;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.swirlds.common.io.SerializableDataInputStream;
@@ -25,7 +25,7 @@ class TopicSerdeTest {
 	byte[] hash = new byte[Topic.RUNNING_HASH_BYTE_ARRAY_SIZE];
 	JKey adminKey, submitKey;
 	String memo = "Anything";
-	JAccountID autoRenewId;
+	HEntityId autoRenewId;
 	JTimestamp expiry;
 
 	DomainSerdes serdes;
@@ -37,8 +37,8 @@ class TopicSerdeTest {
 		adminKey = mock(JKey.class);
 		submitKey = mock(JKey.class);
 		serdes = mock(DomainSerdes.class);
-		autoRenewId = mock(JAccountID.class);
-		given(autoRenewId.getAccountNum()).willReturn(13257L);
+		autoRenewId = mock(HEntityId.class);
+		given(autoRenewId.getNum()).willReturn(13257L);
 		expiry = mock(JTimestamp.class);
 		given(expiry.getSeconds()).willReturn(1_234_567L);
 		TopicSerde.serdes = serdes;

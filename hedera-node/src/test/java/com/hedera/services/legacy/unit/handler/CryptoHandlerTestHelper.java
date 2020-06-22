@@ -147,7 +147,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 					isAccountSetForDeletion = true;
 					break;
 				}
-				EntityId entityId = EntityId.fromPojoAccount(acctId);
+				EntityId entityId = EntityId.fromPojoAccountId(acctId);
 				HederaAccount mapValue = map.get(entityId);
 				if (mapValue == null) {
 					if (log.isDebugEnabled()) {
@@ -179,7 +179,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 			} else {
 				for (AccountAmount actAmt : accountAmounts) {
 					acctId = actAmt.getAccountID();
-					EntityId entityId = EntityId.fromPojoAccount(acctId);
+					EntityId entityId = EntityId.fromPojoAccountId(acctId);
 					HederaAccount mapValue = new HederaAccount(map.get(entityId));
 					if (log.isDebugEnabled()) {
 						log.debug(
@@ -280,7 +280,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 
 	public boolean validateAccountID(AccountID accountID) {
 		boolean isValid = false;
-		EntityId entityId = EntityId.fromPojoAccount(accountID);
+		EntityId entityId = EntityId.fromPojoAccountId(accountID);
 		if (map.containsKey(entityId)) {
 			HederaAccount mapValue = map.get(entityId);
 			if (mapValue != null) {
@@ -295,7 +295,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 	 * The method checks whether an account is set for deletion or not
 	 */
 	public boolean isAccountSetForDelete(AccountID accountID) {
-		EntityId accountKey = EntityId.fromPojoAccount(accountID);
+		EntityId accountKey = EntityId.fromPojoAccountId(accountID);
 		if (map.containsKey(accountKey)) {
 			HederaAccount accountValue = map.get(accountKey);
 			return accountValue.isDeleted();
@@ -389,7 +389,7 @@ class AccountOperations {
 	}
 
 	static void markDeleted(AccountID target, FCMap<EntityId, HederaAccount> ledger) {
-		EntityId key = EntityId.fromPojoAccount(target);
+		EntityId key = EntityId.fromPojoAccountId(target);
 		HederaAccount account = new HederaAccount(ledger.get(key));
 		account.setDeleted(true);
 		ledger.replace(key, account);
@@ -419,7 +419,7 @@ class AccountOperations {
 
 	static boolean isValid(AccountID account, FCMap<EntityId, HederaAccount> ledger) {
 		return Optional
-				.ofNullable(ledger.get(EntityId.fromPojoAccount(account)))
+				.ofNullable(ledger.get(EntityId.fromPojoAccountId(account)))
 				.map(a -> !a.getAccountKeys().hasContractID())
 				.orElse(false);
 	}
@@ -427,7 +427,7 @@ class AccountOperations {
 	static void doTransfer(
 			AccountAmount transfer, FCMap<EntityId, HederaAccount> ledger)
 			throws NegativeAccountBalanceException {
-		EntityId key = EntityId.fromPojoAccount(transfer.getAccountID());
+		EntityId key = EntityId.fromPojoAccountId(transfer.getAccountID());
 		HederaAccount account = new HederaAccount(ledger.get(key));
 		long adjustedBalance = Math.addExact(account.getBalance(), transfer.getAmount());
 		account.setBalance(adjustedBalance);
@@ -467,7 +467,7 @@ class AccountOperations {
 	}
 
 	static long balanceOf(AccountID account, FCMap<EntityId, HederaAccount> ledger) {
-		EntityId key = EntityId.fromPojoAccount(account);
+		EntityId key = EntityId.fromPojoAccountId(account);
 		return ledger.get(key).getBalance();
 	}
 

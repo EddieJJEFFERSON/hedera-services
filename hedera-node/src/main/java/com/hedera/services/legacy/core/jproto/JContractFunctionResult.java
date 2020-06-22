@@ -55,13 +55,13 @@ public class JContractFunctionResult implements FastCopyable {
 	private static final long LEGACY_VERSION_2 = 2;
 	private static final long CURRENT_VERSION = 3;
 
-	private JAccountID contractID;
+	private HEntityId contractID;
 	private byte[] result;
 	private String error;
 	private byte[] bloom;
 	private long gasUsed;
 	private List<JContractLogInfo> jContractLogInfo;
-	private List<JAccountID> jCreatedContractIDs;
+	private List<HEntityId> jCreatedContractIDs;
 
 	private OptionalLong versionToSerialize = OptionalLong.empty();
 
@@ -72,10 +72,10 @@ public class JContractFunctionResult implements FastCopyable {
 		this.jCreatedContractIDs = new ArrayList<>();
 	}
 
-	public JContractFunctionResult(final JAccountID contractID, final byte[] result, final String error,
+	public JContractFunctionResult(final HEntityId contractID, final byte[] result, final String error,
 			final byte[] bloom,
 			final long gasUsed, final List<JContractLogInfo> jContractLogInfo,
-			final List<JAccountID> jCreatedContractIDs) {
+			final List<HEntityId> jCreatedContractIDs) {
 		this.contractID = contractID;
 		this.result = result;
 		this.error = error;
@@ -86,7 +86,7 @@ public class JContractFunctionResult implements FastCopyable {
 	}
 
 	public JContractFunctionResult(final JContractFunctionResult other) {
-		this.contractID = (other.contractID != null) ? (JAccountID) other.contractID.copy() : null;
+		this.contractID = (other.contractID != null) ? (HEntityId) other.contractID.copy() : null;
 		this.result = (other.result != null) ? Arrays.copyOf(other.result, other.result.length) : null;
 		this.error = other.error;
 		this.bloom = (other.bloom != null) ? Arrays.copyOf(other.bloom, other.bloom.length) : null;
@@ -101,11 +101,11 @@ public class JContractFunctionResult implements FastCopyable {
 		this.versionToSerialize = OptionalLong.of(versionToSerialize);
 	}
 
-	public JAccountID getContractID() {
+	public HEntityId getContractID() {
 		return contractID;
 	}
 
-	public void setContractID(final JAccountID contractID) {
+	public void setContractID(final HEntityId contractID) {
 		this.contractID = contractID;
 	}
 
@@ -145,7 +145,7 @@ public class JContractFunctionResult implements FastCopyable {
 		return jContractLogInfo;
 	}
 
-	public List<JAccountID> getjCreatedContractIDs() {
+	public List<HEntityId> getjCreatedContractIDs() {
 		return jCreatedContractIDs;
 	}
 
@@ -158,17 +158,17 @@ public class JContractFunctionResult implements FastCopyable {
 					.collect(Collectors.toList());
 		}
 
-		List<JAccountID> jCreatedContractIDsList = new ArrayList<>();
+		List<HEntityId> jCreatedContractIDsList = new ArrayList<>();
 		if (!contractCallResult.getCreatedContractIDsList().isEmpty())
 		{
 			jCreatedContractIDsList = contractCallResult.getCreatedContractIDsList()
 					.stream()
-					.map(JAccountID::convert)
+					.map(HEntityId::ofNullableContractId)
 					.collect(Collectors.toList());
 		}
 
-		JAccountID contractID = contractCallResult.hasContractID() ?
-				JAccountID.convert(contractCallResult.getContractID()) : null;
+		HEntityId contractID = contractCallResult.hasContractID() ?
+				HEntityId.ofNullableContractId(contractCallResult.getContractID()) : null;
 		byte[] result = new byte[0];
 		if (!contractCallResult.getContractCallResult().isEmpty()) {
 			result = contractCallResult.getContractCallResult().toByteArray();
@@ -192,8 +192,8 @@ public class JContractFunctionResult implements FastCopyable {
 					.collect(Collectors.toList());
 		}
 
-		JAccountID contractID = logInfo.hasContractID() ?
-				JAccountID.convert(logInfo.getContractID()) : null;
+		HEntityId contractID = logInfo.hasContractID() ?
+				HEntityId.ofNullableContractId(logInfo.getContractID()) : null;
 		byte[] bloom = new byte[0];
 		if (!logInfo.getBloom().isEmpty()) {
 			bloom = logInfo.getBloom().toByteArray();
@@ -210,7 +210,7 @@ public class JContractFunctionResult implements FastCopyable {
 
 		ContractFunctionResult.Builder builder = ContractFunctionResult.newBuilder();
 		if (jContractCallResult.getContractID() != null) {
-			builder.setContractID(JAccountID.convert(jContractCallResult.getContractID()));
+			builder.setContractID(HEntityId.convert(jContractCallResult.getContractID()));
 		}
 		if (jContractCallResult.getResult() != null) {
 			builder.setContractCallResult(ByteString.copyFrom(jContractCallResult.getResult()));
@@ -228,7 +228,7 @@ public class JContractFunctionResult implements FastCopyable {
 
 		if (CollectionUtils.isNotEmpty(jContractCallResult.getjCreatedContractIDs())) {
 			List<ContractID> createdContractIDs = jContractCallResult.getjCreatedContractIDs().stream()
-					.map(JAccountID::convert).collect(Collectors.toList());
+					.map(HEntityId::convert).collect(Collectors.toList());
 			builder.addAllCreatedContractIDs(createdContractIDs);
 		}
 
@@ -240,9 +240,9 @@ public class JContractFunctionResult implements FastCopyable {
 
 	public static ContractLoginfo convert(final JContractLogInfo jInfo) {
 		ContractID contractId = RequestBuilder.getContractIdBuild(
-				jInfo.getContractID().getAccountNum(),
-				jInfo.getContractID().getRealmNum(),
-				jInfo.getContractID().getShardNum());
+				jInfo.getContractID().getNum(),
+				jInfo.getContractID().getRealm(),
+				jInfo.getContractID().getShard());
 		ContractLoginfo.Builder builder = ContractLoginfo.newBuilder().setContractID(contractId);
 
 		if (jInfo.getBloom() != null) {
@@ -314,9 +314,7 @@ public class JContractFunctionResult implements FastCopyable {
 
 		if (this.contractID != null) {
 			outStream.writeBoolean(true);
-			this.contractID.copyTo(outStream);
-			this.contractID.copyToExtra(outStream);
-
+			outStream.writeSerializable(contractID, true);
 		} else {
 			outStream.writeBoolean(false);
 		}
@@ -358,9 +356,8 @@ public class JContractFunctionResult implements FastCopyable {
 		if (versionToSerialize.orElse(CURRENT_VERSION) > LEGACY_VERSION_2) {
 			if (CollectionUtils.isNotEmpty(jCreatedContractIDs)) {
 				outStream.writeInt(jCreatedContractIDs.size());
-				for (JAccountID createdContractID : jCreatedContractIDs) {
-					createdContractID.copyTo(outStream);
-					createdContractID.copyToExtra(outStream);
+				for (HEntityId createdContractID : jCreatedContractIDs) {
+					outStream.writeSerializable(createdContractID, true);
 				}
 			} else {
 				outStream.writeInt(0);
@@ -409,7 +406,7 @@ public class JContractFunctionResult implements FastCopyable {
 		}
 
 		if (contractIDPresent) {
-			functionResult.contractID = JAccountID.deserialize(inStream);
+			functionResult.contractID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
 		} else {
 			functionResult.contractID = null;
 		}
@@ -445,12 +442,13 @@ public class JContractFunctionResult implements FastCopyable {
 		}
 		functionResult.jContractLogInfo = jContractLogInfoList;
 
-		final List<JAccountID> jCreatedContractIDs = new ArrayList<>();
+		final List<HEntityId> jCreatedContractIDs = new ArrayList<>();
 		if (version > LEGACY_VERSION_2) {
 			final int numberOfCreatedContractID = inStream.readInt();
 			if (numberOfCreatedContractID > 0) {
 				for (int i = 0; i < numberOfCreatedContractID; i++) {
-					jCreatedContractIDs.add(JAccountID.deserialize(inStream));
+					var createdId = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
+					jCreatedContractIDs.add(createdId);
 				}
 			}
 		}

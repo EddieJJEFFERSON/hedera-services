@@ -23,7 +23,7 @@ package com.hedera.services.ledger.accounts;
 import com.hedera.services.ledger.properties.TestAccountProperty;
 import com.hedera.services.ledger.TransactionalLedger;
 import com.hedera.services.ledger.properties.ChangeSummaryManager;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import org.junit.jupiter.api.Test;
@@ -133,7 +133,7 @@ public class AccountCustomizerTest {
 		setupWithMockChangeManager();
 
 		// given:
-		JAccountID proxy = new JAccountID();
+		HEntityId proxy = new HEntityId();
 
 		// when:
 		subject.proxy(proxy);

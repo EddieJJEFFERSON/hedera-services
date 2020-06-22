@@ -86,7 +86,7 @@ class AnswerFunctionsTest {
 		payerAccount.getRecords().offer(targetRecord);
 
 		accounts = mock(FCMap.class);
-		given(accounts.get(EntityId.fromPojoAccount(asAccount(target)))).willReturn(payerAccount);
+		given(accounts.get(EntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);
 
 		recordCache = mock(RecordCache.class);

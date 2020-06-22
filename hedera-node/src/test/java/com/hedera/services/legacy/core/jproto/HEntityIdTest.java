@@ -28,24 +28,24 @@ import org.junit.runner.RunWith;
 import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(JUnitPlatform.class)
-public class JAccountIDTest {
+public class HEntityIdTest {
   @Test
   public void convertTopicId() {
     final var shard = 11L;
     final var realm = 222L;
     final var num = 3333L;
     final var topicId = TopicID.newBuilder().setShardNum(shard).setRealmNum(realm).setTopicNum(num).build();
-    final var cut = JAccountID.convert(topicId);
+    final var cut = HEntityId.ofNullableTopicId(topicId);
 
     assertAll(
-            () -> assertEquals(shard, cut.getShardNum()),
-            () -> assertEquals(realm, cut.getRealmNum()),
-            () -> assertEquals(num, cut.getAccountNum())
+            () -> assertEquals(shard, cut.getShard()),
+            () -> assertEquals(realm, cut.getRealm()),
+            () -> assertEquals(num, cut.getNum())
     );
   }
 
   @Test
   public void convertTopicIdNull() {
-    assertNull(JAccountID.convert((TopicID)null));
+    assertNull(HEntityId.ofNullableTopicId((TopicID)null));
   }
 }

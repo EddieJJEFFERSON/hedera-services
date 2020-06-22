@@ -36,7 +36,7 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -142,13 +142,13 @@ class TopicCreateTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(EntityId.fromPojoAccount(NEW_TOPIC_ID));
+		var topic = topics.get(EntityId.fromPojoAccountId(NEW_TOPIC_ID));
 		assertNotNull(topic);
 		assertEquals(VALID_MEMO, topic.getMemo());
 		assertArrayEquals(JKey.mapKey(key).serialize(), topic.getAdminKey().serialize());
 		assertArrayEquals(JKey.mapKey(key).serialize(), topic.getSubmitKey().serialize());
 		assertEquals(VALID_AUTORENEW_PERIOD_SECONDS, topic.getAutoRenewDurationSeconds());
-		assertEquals(JAccountID.convert(MISC_ACCOUNT), topic.getAutoRenewAccountId());
+		assertEquals(HEntityId.convert(MISC_ACCOUNT), topic.getAutoRenewAccountId());
 		assertEquals(expirationTimestamp.getEpochSecond(), topic.getExpirationTimestamp().getSeconds());
 		verify(transactionContext).setStatus(SUCCESS);
 	}

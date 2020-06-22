@@ -88,7 +88,7 @@ import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.state.merkle.BlobMeta;
 import com.hedera.services.state.merkle.OptionalBlob;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
@@ -616,7 +616,7 @@ public class SmartContractRequestHandler {
 		String contractEthAddress = asSolidityAddressHex(id);
 		if (!StringUtils.isEmpty(contractEthAddress)) {
 			ContractInfo.Builder builder = ContractInfo.newBuilder();
-			HederaAccount contract = accounts.get(EntityId.fromPojoAccount(id));
+			HederaAccount contract = accounts.get(EntityId.fromPojoAccountId(id));
 			if (contract != null && contract.isSmartContract()) {
 				builder.setContractID(cid)
 						.setBalance(contract.getBalance())
@@ -678,7 +678,7 @@ public class SmartContractRequestHandler {
 					} else {
 						HederaAccountCustomizer customizer = new HederaAccountCustomizer();
 						if (op.hasProxyAccountID()) {
-							customizer.proxy(JAccountID.convert(op.getProxyAccountID()));
+							customizer.proxy(HEntityId.convert(op.getProxyAccountID()));
 						}
 						if (op.hasAutoRenewPeriod()) {
 							customizer.autoRenewPeriod(op.getAutoRenewPeriod().getSeconds());
@@ -726,7 +726,7 @@ public class SmartContractRequestHandler {
 	 */
 	public ByteString getContractBytecode(ContractID cid) {
 		AccountID id = asAccount(cid);
-		HederaAccount contract = accounts.get(EntityId.fromPojoAccount(id));
+		HederaAccount contract = accounts.get(EntityId.fromPojoAccountId(id));
 		if (contract != null && contract.isSmartContract()) {
 			String contractEthAddress = asSolidityAddressHex(id);
 			byte[] contractEthAddressBytes = ByteUtil.hexStringToBytes(contractEthAddress);

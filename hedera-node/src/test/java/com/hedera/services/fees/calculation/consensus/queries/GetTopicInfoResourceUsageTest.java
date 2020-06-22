@@ -26,7 +26,7 @@ import com.hedera.test.utils.JAccountIDConverter;
 import com.hedera.test.utils.JEd25519KeyConverter;
 import com.hederahashgraph.api.proto.java.*;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.swirlds.fcmap.FCMap;
@@ -91,7 +91,7 @@ class GetTopicInfoResourceUsageTest {
 			String memo,
 			@ConvertWith(JEd25519KeyConverter.class) JEd25519Key adminKey,
 			@ConvertWith(JEd25519KeyConverter.class) JEd25519Key submitKey,
-			@ConvertWith(JAccountIDConverter.class) JAccountID autoRenewAccountId,
+			@ConvertWith(JAccountIDConverter.class) HEntityId autoRenewAccountId,
 			int expectedBpt,  // query header + topic id size
 			int expectedBpr  // query response header + topic id size + topic info size
 	) {
@@ -104,7 +104,7 @@ class GetTopicInfoResourceUsageTest {
 				.build();
 
 		// given:
-		given(topics.get(EntityId.fromPojoTopic(topicId))).willReturn(topic);
+		given(topics.get(EntityId.fromPojoTopicId(topicId))).willReturn(topic);
 
 		// when:
 		FeeData costAnswerEstimate = subject.usageGiven(topicInfoQuery(topicId, COST_ANSWER), view);

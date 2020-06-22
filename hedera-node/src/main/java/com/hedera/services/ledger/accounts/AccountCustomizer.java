@@ -23,7 +23,7 @@ package com.hedera.services.ledger.accounts;
 import com.hedera.services.ledger.TransactionalLedger;
 import com.hedera.services.ledger.properties.BeanProperty;
 import com.hedera.services.ledger.properties.ChangeSummaryManager;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 
 import java.util.EnumMap;
@@ -101,7 +101,7 @@ public abstract class AccountCustomizer<K, A, P extends Enum<P> & BeanProperty<A
 		return self();
 	}
 
-	public T proxy(JAccountID option) {
+	public T proxy(HEntityId option) {
 		changeManager.update(changes, optionProperties.get(PROXY), option);
 		return self();
 	}

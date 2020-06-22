@@ -348,7 +348,7 @@ public class TransactionHandler {
     if (trBody.getTransactionID().hasAccountID()) {
       AccountID payerAccount = trBody.getTransactionID().getAccountID();
       if (isAccountExist(payerAccount)) {
-        Long payerAccountBalance = Optional.ofNullable(accounts.get(EntityId.fromPojoAccount(payerAccount)))
+        Long payerAccountBalance = Optional.ofNullable(accounts.get(EntityId.fromPojoAccountId(payerAccount)))
                 .map(HederaAccount::getBalance)
                 .orElse(null);
         long suppliedFee = trBody.getTransactionFee();
@@ -365,7 +365,7 @@ public class TransactionHandler {
         if (returnCode == OK) {
           try {
             SignedTxnAccessor accessor = new SignedTxnAccessor(transaction);
-            JKey payerKey = accounts.get(EntityId.fromPojoAccount(payerAccount)).getAccountKeys();
+            JKey payerKey = accounts.get(EntityId.fromPojoAccountId(payerAccount)).getAccountKeys();
             Timestamp at = trBody.getTransactionID().getTransactionValidStart();
             FeeObject txnFee = fees.estimateFee(accessor, payerKey, stateView.get(), at);
             fee = txnFee.getNetworkFee() + txnFee.getNodeFee() + txnFee.getServiceFee();
@@ -651,7 +651,7 @@ public class TransactionHandler {
   }
 
   public static boolean validateAccountID(EntityId entityId) {
-    return validateAccountID(entityId.getIdNum(), entityId.getRealmNum(), entityId.getShardNum());
+    return validateAccountID(entityId.getNum(), entityId.getRealm(), entityId.getShard());
   }
 
   public static boolean validateAccountID(long accountNum, long realmNum, long shardNum) {

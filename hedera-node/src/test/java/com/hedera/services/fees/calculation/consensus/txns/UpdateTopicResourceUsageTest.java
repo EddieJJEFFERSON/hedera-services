@@ -26,7 +26,7 @@ import com.hedera.test.utils.*;
 import com.hederahashgraph.api.proto.java.*;
 import com.hederahashgraph.exception.InvalidTxBodyException;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +95,7 @@ class UpdateTopicResourceUsageTest extends TopicResourceUsageTestBase {
             @ConvertWith(Ed25519KeyConverter.class) Key newAdminKey,
             @ConvertWith(JEd25519KeyConverter.class) JEd25519Key oldSubmitKey,
             @ConvertWith(Ed25519KeyConverter.class) Key newSubmitKey,
-            @ConvertWith(JAccountIDConverter.class) JAccountID oldAutoRenewAccountId,
+            @ConvertWith(JAccountIDConverter.class) HEntityId oldAutoRenewAccountId,
             @ConvertWith(AccountIDConverter.class) AccountID newAutoRenewAccountId,
             @ConvertWith(DurationConverter.class) Duration newAutoRenewPeriod,
             @ConvertWith(JTimestampConverter.class) JTimestamp oldExpirationTimestamp,
@@ -110,7 +110,7 @@ class UpdateTopicResourceUsageTest extends TopicResourceUsageTestBase {
                 newAutoRenewAccountId, newAutoRenewPeriod, JTimestamp.convert(newExpirationTimestamp));
 
         // when:
-        given(topics.get(EntityId.fromPojoTopic(topicId))).willReturn(topic);
+        given(topics.get(EntityId.fromPojoTopicId(topicId))).willReturn(topic);
         FeeData feeData = subject.usageGiven(txBody, sigValueObj, view);
 
         // expect:

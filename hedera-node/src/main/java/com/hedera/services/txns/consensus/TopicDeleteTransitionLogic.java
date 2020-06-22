@@ -64,7 +64,7 @@ public class TopicDeleteTransitionLogic implements TransitionLogic {
 			return;
 		}
 
-		var topicMapKey = EntityId.fromPojoTopic(topicId);
+		var topicMapKey = EntityId.fromPojoTopicId(topicId);
 		var topic = topics.get(topicMapKey);
 		if (!topic.hasAdminKey()) {
 			// Topics without adminKeys can't be deleted.

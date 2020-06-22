@@ -93,9 +93,9 @@ public class AccountBalanceExportTest {
             new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     for (long[] account : accounts) {
       EntityId mk = new EntityId();
-      mk.setShardNum(account[0]);
-      mk.setRealmNum(account[1]);
-      mk.setIdNum(account[2]);
+      mk.setShard(account[0]);
+      mk.setRealm(account[1]);
+      mk.setNum(account[2]);
 
       HederaAccount mv = new HederaAccount();
       mv.setBalance(account[3]);
@@ -225,9 +225,9 @@ public class AccountBalanceExportTest {
             new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     for (long[] account : accounts) {
       EntityId mk = new EntityId();
-      mk.setShardNum(account[0]);
-      mk.setRealmNum(account[1]);
-      mk.setIdNum(account[2]);
+      mk.setShard(account[0]);
+      mk.setRealm(account[1]);
+      mk.setNum(account[2]);
 
       HederaAccount mv = new HederaAccount();
       mv.setBalance(account[3] + 1);

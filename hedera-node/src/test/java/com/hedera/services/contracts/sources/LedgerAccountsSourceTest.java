@@ -30,7 +30,7 @@ import com.hedera.services.utils.EntityIdUtils;
 import com.hedera.test.utils.IdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.Key;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import org.apache.commons.codec.DecoderException;
 import org.apache.logging.log4j.Logger;
@@ -114,7 +114,7 @@ class LedgerAccountsSourceTest {
 		HederaAccount account = mock(HederaAccount.class);
 		given(account.getAutoRenewPeriod()).willReturn(autoRenew);
 		given(account.getExpirationTime()).willReturn(expiry);
-		given(account.getProxyAccount()).willReturn(JAccountID.convert(IdUtils.asAccount("1.2.3")));
+		given(account.getProxyAccount()).willReturn(HEntityId.convert(IdUtils.asAccount("1.2.3")));
 		given(account.getSenderThreshold()).willReturn(sendThreshold);
 		given(account.getReceiverThreshold()).willReturn(receiveThreshold);
 		given(account.isReceiverSigRequired()).willReturn(receiverSigRequired);
@@ -214,7 +214,7 @@ class LedgerAccountsSourceTest {
 		verify(txnLedger).set(target, FUNDS_SENT_RECORD_THRESHOLD, sendThreshold);
 		verify(txnLedger).set(target, IS_SMART_CONTRACT, true);
 		verify(txnLedger).set(target, AUTO_RENEW_PERIOD, autoRenew);
-		verify(txnLedger).set(target, PROXY, JAccountID.convert(proxy));
+		verify(txnLedger).set(target, PROXY, HEntityId.convert(proxy));
 		verify(txnLedger).set(target, MEMO, "");
 	}
 
@@ -257,7 +257,7 @@ class LedgerAccountsSourceTest {
 		verify(txnLedger).set(target, FUNDS_SENT_RECORD_THRESHOLD, sendThreshold);
 		verify(txnLedger).set(target, IS_SMART_CONTRACT, true);
 		verify(txnLedger).set(target, AUTO_RENEW_PERIOD, autoRenew);
-		verify(txnLedger).set(target, PROXY, JAccountID.convert(proxy));
+		verify(txnLedger).set(target, PROXY, HEntityId.convert(proxy));
 		verify(txnLedger).set(target, MEMO, "");
 		// and:
 		verify(properties, never()).getLongProperty(any());

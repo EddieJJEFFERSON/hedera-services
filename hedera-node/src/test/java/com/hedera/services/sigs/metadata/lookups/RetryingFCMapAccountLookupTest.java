@@ -57,7 +57,7 @@ public class RetryingFCMapAccountLookupTest {
 	private Pause pause;
 	private final Pause defaultPause = SleepingPause.INSTANCE;
 	private final AccountID account = IdUtils.asAccount("0.0.1337");
-	private final EntityId accountKey = EntityId.fromPojoAccount(account);
+	private final EntityId accountKey = EntityId.fromPojoAccountId(account);
 	private final HederaAccount accountValue = newAccount().receiverSigRequired(true).accountKeys(accountKeys).get();
 	private static JKey accountKeys;
 	private static final int RETRY_WAIT_MS = 10;

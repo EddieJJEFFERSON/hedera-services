@@ -28,7 +28,7 @@ import com.hedera.test.utils.JEd25519KeyConverter;
 import com.hedera.test.utils.JTimestampConverter;
 import com.hedera.test.utils.TopicIDConverter;
 import com.hederahashgraph.api.proto.java.TopicID;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
@@ -69,7 +69,7 @@ public class TopicTest {
 	@Test
 	public void constructorWithEmptyValuesTestingAccessors() {
 		// given:
-		var topic = new Topic("", new JKeyList(), new JKeyList(), 0L, new JAccountID(), new JTimestamp());
+		var topic = new Topic("", new JKeyList(), new JKeyList(), 0L, new HEntityId(), new JTimestamp());
 
 		// expect:
 		assertDefaultTopicAccessors(topic);
@@ -84,7 +84,7 @@ public class TopicTest {
 												 	  @ConvertWith(JEd25519KeyConverter.class) JEd25519Key adminKey,
 												  	  @ConvertWith(JEd25519KeyConverter.class) JEd25519Key submitKey,
 												  	  long autoRenewDurationSeconds,
-												  	  @ConvertWith(JAccountIDConverter.class) JAccountID autoRenewAccountId,
+												  	  @ConvertWith(JAccountIDConverter.class) HEntityId autoRenewAccountId,
 												  	  @ConvertWith(JTimestampConverter.class) JTimestamp expirationTimestamp
 	) throws Exception {
 		// given:
@@ -115,7 +115,7 @@ public class TopicTest {
 		var adminKey = new JEd25519Key(new byte[32]);
 		var submitKey = new JEd25519Key(new byte[32]);
 		var autoRenewDurationSeconds = 4L;
-		var autoRenewAccountId = new JAccountID(1L, 2L, 3L);
+		var autoRenewAccountId = new HEntityId(1L, 2L, 3L);
 		var expirationTimestamp = new JTimestamp(111L, 222);
 		var from = new Topic(memo, adminKey, submitKey, autoRenewDurationSeconds, autoRenewAccountId,
 				expirationTimestamp);
@@ -181,7 +181,7 @@ public class TopicTest {
 	public void equalsViaCopy(String memo, @ConvertWith(JEd25519KeyConverter.class) JEd25519Key adminKey,
 							  @ConvertWith(JEd25519KeyConverter.class) JEd25519Key submitKey,
 							  long autoRenewDurationSeconds,
-							  @ConvertWith(JAccountIDConverter.class) JAccountID autoRenewAccountId,
+							  @ConvertWith(JAccountIDConverter.class) HEntityId autoRenewAccountId,
 							  @ConvertWith(JTimestampConverter.class) JTimestamp expirationTimestamp) {
 		// given:
 		var topic = new Topic(memo, adminKey, submitKey, autoRenewDurationSeconds, autoRenewAccountId,
@@ -207,14 +207,14 @@ public class TopicTest {
 	public void notEquals(String aMemo, @ConvertWith(JEd25519KeyConverter.class) JEd25519Key aAdminKey,
 					      @ConvertWith(JEd25519KeyConverter.class) JEd25519Key aSubmitKey,
 					      long aAutoRenewDurationSeconds,
-						  @ConvertWith(JAccountIDConverter.class) JAccountID aAutoRenewAccountId,
+						  @ConvertWith(JAccountIDConverter.class) HEntityId aAutoRenewAccountId,
 						  @ConvertWith(JTimestampConverter.class) JTimestamp aExpirationTimestamp,
 					      boolean aDeleted, long aSequenceNumber,
 					      @ConvertWith(ByteArrayConverter.class) byte[] aRunningHash,
 					      String bMemo, @ConvertWith(JEd25519KeyConverter.class) JEd25519Key bAdminKey,
 					      @ConvertWith(JEd25519KeyConverter.class) JEd25519Key bSubmitKey,
 					      long bAutoRenewDurationSeconds,
-					      @ConvertWith(JAccountIDConverter.class) JAccountID bAutoRenewAccountId,
+					      @ConvertWith(JAccountIDConverter.class) HEntityId bAutoRenewAccountId,
 					      @ConvertWith(JTimestampConverter.class) JTimestamp bExpirationTimestamp,
 					      boolean bDeleted, long bSequenceNumber,
 					      @ConvertWith(ByteArrayConverter.class) byte[] bRunningHash) {
@@ -248,7 +248,7 @@ public class TopicTest {
 	public void hashCodeIsSafe(String memo, @ConvertWith(JEd25519KeyConverter.class) JEd25519Key adminKey,
 							   @ConvertWith(JEd25519KeyConverter.class) JEd25519Key submitKey,
 							   long autoRenewDurationSeconds,
-							   @ConvertWith(JAccountIDConverter.class) JAccountID autoRenewAccountId,
+							   @ConvertWith(JAccountIDConverter.class) HEntityId autoRenewAccountId,
 							   @ConvertWith(JTimestampConverter.class) JTimestamp expirationTimestamp) {
 		// expect:
 		assertDoesNotThrow(() -> new Topic(memo, adminKey, submitKey, autoRenewDurationSeconds, autoRenewAccountId,
@@ -314,7 +314,7 @@ public class TopicTest {
 		assertTrue(topic.getSubmitKey().isEmpty());
 		assertEquals(0L, topic.getAutoRenewDurationSeconds());
 		assertFalse(topic.hasAutoRenewAccountId());
-		assertEquals(new JAccountID(), topic.getAutoRenewAccountId());
+		assertEquals(new HEntityId(), topic.getAutoRenewAccountId());
 		assertFalse(topic.hasExpirationTimestamp());
 		assertEquals(new JTimestamp(), topic.getExpirationTimestamp());
 		assertFalse(topic.isDeleted());
@@ -336,7 +336,7 @@ public class TopicTest {
 	 * @throws IOException
 	 */
 	public void assertPostConstructorAccessors(Topic topic, String memo, JKey adminKey, JKey submitKey,
-											   long autoRenewDurationSeconds, JAccountID autoRenewAccountId,
+											   long autoRenewDurationSeconds, HEntityId autoRenewAccountId,
 											   JTimestamp expirationTimestamp) throws IOException {
 		assertTrue(topic.hasMemo());
 		assertEquals(memo, topic.getMemo());

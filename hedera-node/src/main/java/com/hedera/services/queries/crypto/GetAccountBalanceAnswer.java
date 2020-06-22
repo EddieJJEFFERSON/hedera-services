@@ -78,7 +78,7 @@ public class GetAccountBalanceAnswer implements AnswerService {
 				.setAccountID(id);
 
 		if (validity == OK) {
-			EntityId key = EntityId.fromPojoAccount(id);
+			EntityId key = EntityId.fromPojoAccountId(id);
 			opAnswer.setBalance(accounts.get(key).getBalance());
 		}
 

@@ -194,8 +194,8 @@ public class SmartContractServiceImplTest {
     accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
     EntityId mk = new EntityId();
-    mk.setIdNum(payerAccount);
-    mk.setRealmNum(0);
+    mk.setNum(payerAccount);
+    mk.setRealm(0);
 
     HederaAccount mv = new HederaAccount();
     mv.setBalance(500000000000l);

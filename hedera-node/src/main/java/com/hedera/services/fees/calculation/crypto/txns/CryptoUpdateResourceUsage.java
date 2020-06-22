@@ -53,7 +53,7 @@ public class CryptoUpdateResourceUsage implements TxnResourceUsageEstimator {
 	@Override
 	public FeeData usageGiven(TransactionBody txn, SigValueObj sigUsage, StateView view) throws InvalidTxBodyException {
 		try {
-			EntityId id = EntityId.fromPojoAccount(txn.getCryptoUpdateAccount().getAccountIDToUpdate());
+			EntityId id = EntityId.fromPojoAccountId(txn.getCryptoUpdateAccount().getAccountIDToUpdate());
 			Timestamp expiry = lookupAccountExpiry(id, view.accounts());
 			Key key = mapJKey(view.accounts().get(id).getAccountKeys());
 			return usageEstimator.getCryptoUpdateTxFeeMatrices(txn, sigUsage, expiry, key);

@@ -148,7 +148,7 @@ public class AccountBalanceExport {
       HederaAccount currMv = item.getValue();
       totalBalance += currMv.getBalance();
       exAccObj = new ExportAccountObject(
-              currKey.getShardNum(), currKey.getRealmNum(), currKey.getIdNum(), currMv.getBalance());
+              currKey.getShard(), currKey.getRealm(), currKey.getNum(), currMv.getBalance());
       acctObjList.add(exAccObj);
       //check if the account is a node account
       long nodeId = nodeAccounts.getOrDefault(getAccountIDString(currKey), -1l);
@@ -208,7 +208,7 @@ public class AccountBalanceExport {
    * @return
    */
   private static String getAccountIDString(EntityId entityId) {
-    return entityId.getShardNum() + "." + entityId.getRealmNum() + "." + entityId.getIdNum();
+    return entityId.getShard() + "." + entityId.getRealm() + "." + entityId.getNum();
   }
 
   /**

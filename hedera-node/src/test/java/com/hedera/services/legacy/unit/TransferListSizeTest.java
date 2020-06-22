@@ -238,9 +238,9 @@ public class TransferListSizeTest {
    */
   public long getBalance(AccountID aid) {
     EntityId mk = new EntityId();
-    mk.setIdNum(aid.getAccountNum());
-    mk.setRealmNum(aid.getRealmNum());
-    mk.setShardNum(aid.getShardNum());
+    mk.setNum(aid.getAccountNum());
+    mk.setRealm(aid.getRealmNum());
+    mk.setShard(aid.getShardNum());
     HederaAccount mv = new HederaAccount();
     mv = fcMap.get(mk);
 //    assertNotNull(mv);
@@ -302,8 +302,8 @@ public class TransferListSizeTest {
 
   protected void createAccount(AccountID payerAccount, long balance) throws Exception {
     EntityId mk = new EntityId();
-    mk.setIdNum(payerAccount.getAccountNum());
-    mk.setRealmNum(0);
+    mk.setNum(payerAccount.getAccountNum());
+    mk.setRealm(0);
     HederaAccount mv = new HederaAccount();
     mv.setBalance(balance);
     Key accountKey = ComplexKeyManager

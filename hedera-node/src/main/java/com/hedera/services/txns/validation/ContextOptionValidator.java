@@ -125,7 +125,7 @@ public class ContextOptionValidator implements OptionValidator {
 
 	@Override
 	public ResponseCodeEnum queryableTopicStatus(TopicID id, FCMap<EntityId, Topic> topics) {
-		Topic topic = topics.get(EntityId.fromPojoTopic(id));
+		Topic topic = topics.get(EntityId.fromPojoTopicId(id));
 
 		return Optional.ofNullable(topic)
 				.map(t -> t.isDeleted() ? INVALID_TOPIC_ID : OK)

@@ -34,27 +34,27 @@ public class JAccountAmount implements FastCopyable {
   private static final Logger log = LogManager.getLogger(JAccountAmount.class);
   private static final long LEGACY_VERSION_1 = 1;
   private static final long CURRENT_VERSION = 2;
-  private JAccountID accountID;
+  private HEntityId accountID;
   private long amount;
 
   public JAccountAmount() {
   }
 
-  public JAccountAmount(final JAccountID accountID, final long amount) {
+  public JAccountAmount(final HEntityId accountID, final long amount) {
     this.accountID = accountID;
     this.amount = amount;
   }
 
   public JAccountAmount(final JAccountAmount other) {
-    this.accountID = (JAccountID) other.accountID.copy();
+    this.accountID = (HEntityId) other.accountID.copy();
     this.amount = other.amount;
   }
 
-  public JAccountID getAccountID() {
+  public HEntityId getAccountID() {
     return accountID;
   }
 
-  public void setAccountID(final JAccountID accountID) {
+  public void setAccountID(final HEntityId accountID) {
     this.accountID = accountID;
   }
 
@@ -93,11 +93,8 @@ public class JAccountAmount implements FastCopyable {
     outStream.writeLong(CURRENT_VERSION);
     outStream.writeLong(JObjectType.JAccountAmount.longValue());
 
-    this.accountID.copyTo(outStream);
-    this.accountID.copyToExtra(outStream);
-
+    outStream.writeSerializable(accountID, true);
     outStream.writeLong(this.amount);
-
   }
 
   /**
@@ -129,7 +126,7 @@ public class JAccountAmount implements FastCopyable {
       throw new IllegalStateException("Illegal JObjectType was read from the stream");
     }
 
-    accountAmount.accountID = JAccountID.deserialize(inStream);
+    accountAmount.accountID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
     accountAmount.amount = inStream.readLong();
   }
 

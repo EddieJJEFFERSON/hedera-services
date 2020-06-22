@@ -22,11 +22,11 @@ package com.hedera.services.state.merkle;
 
 import com.google.common.base.MoreObjects;
 import com.hedera.services.context.domain.serdes.TopicSerde;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
-import com.hederahashgraph.api.proto.java.Key;
+import com.hedera.services.utils.MiscUtils;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.swirlds.common.FCMValue;
 import com.swirlds.common.FastCopyable;
@@ -88,7 +88,7 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
     private JKey adminKey;
     private JKey submitKey;
     private long autoRenewDurationSeconds;
-    private JAccountID autoRenewAccountId;
+    private HEntityId autoRenewAccountId;
     private JTimestamp expirationTimestamp;
     private boolean deleted;
 
@@ -103,29 +103,13 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
                 .add("expiry",
                         String.format("%d.%d", expirationTimestamp.getSeconds(), expirationTimestamp.getNano()))
                 .add("deleted", deleted)
-                .add("adminKey", readable(adminKey))
-                .add("submitKey", readable(submitKey))
+                .add("adminKey", MiscUtils.describe(adminKey))
+                .add("submitKey", MiscUtils.describe(submitKey))
                 .add("runningHash", (runningHash != null) ? Hex.toHexString(runningHash) : "<N/A>")
                 .add("sequenceNumber", sequenceNumber)
 				.add("autoRenewSecs", autoRenewDurationSeconds)
                 .add("autoRenewAccount", asLiteralString(asAccount(autoRenewAccountId)))
                 .toString();
-    }
-
-    static String readable(JKey bad) {
-    	if (bad == null) {
-    	    return "<N/A>";
-        } else {
-            Key good = null;
-            try {
-                if (bad != null) {
-                    good = JKey.mapJKey(bad);
-                }
-            } catch (Exception ignore) {
-                ignore.printStackTrace();
-            }
-            return String.valueOf(good);
-        }
     }
 
     public Topic() {}
@@ -144,7 +128,7 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
             @Nullable JKey adminKey,
             @Nullable JKey submitKey,
             long autoRenewDurationSeconds,
-            @Nullable JAccountID autoRenewAccountId,
+            @Nullable HEntityId autoRenewAccountId,
             @Nullable JTimestamp expirationTimestamp
     ) {
         setMemo(memo);
@@ -165,7 +149,7 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
         this.adminKey = other.hasAdminKey() ? other.getAdminKey().clone() : null;
         this.submitKey = other.hasSubmitKey() ? other.getSubmitKey().clone() : null;
         this.autoRenewDurationSeconds = other.autoRenewDurationSeconds;
-        this.autoRenewAccountId = other.hasAutoRenewAccountId() ? new JAccountID(other.autoRenewAccountId) : null;
+        this.autoRenewAccountId = other.hasAutoRenewAccountId() ? new HEntityId(other.autoRenewAccountId) : null;
         this.expirationTimestamp = other.hasExpirationTimestamp() ? new JTimestamp(other.expirationTimestamp) : null;
         this.deleted = other.deleted;
 
@@ -397,12 +381,12 @@ public final class Topic extends AbstractMerkleNode implements FCMValue, MerkleL
         return autoRenewAccountId != null;
     }
 
-    public JAccountID getAutoRenewAccountId() {
-        return hasAutoRenewAccountId() ? autoRenewAccountId : new JAccountID();
+    public HEntityId getAutoRenewAccountId() {
+        return hasAutoRenewAccountId() ? autoRenewAccountId : new HEntityId();
     }
 
-    public void setAutoRenewAccountId(@Nullable JAccountID autoRenewAccountId) {
-        this.autoRenewAccountId = ((null != autoRenewAccountId) && (0 != autoRenewAccountId.getAccountNum()))
+    public void setAutoRenewAccountId(@Nullable HEntityId autoRenewAccountId) {
+        this.autoRenewAccountId = ((null != autoRenewAccountId) && (0 != autoRenewAccountId.getNum()))
                 ? autoRenewAccountId
                 : null;
     }

@@ -32,7 +32,7 @@ import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.core.AccountKeyListObj;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 
@@ -62,7 +62,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static com.hedera.services.legacy.core.jproto.JAccountID.convert;
+import static com.hedera.services.legacy.core.jproto.HEntityId.convert;
 
 public class NodeAccountsCreation {
 	private static final Logger log = LogManager.getLogger(NodeAccountsCreation.class);
@@ -89,10 +89,10 @@ public class NodeAccountsCreation {
 								.setEd25519(ByteString.copyFrom(MiscUtils.commonsHexToBytes(publicKey))).build())
 						.build())
 				.build();
-		EntityId entityId = EntityId.fromPojoAccount(accountID);
+		EntityId entityId = EntityId.fromPojoAccountId(accountID);
 
 		JKey jKey = JKey.mapKey(accountKeys);
-		JAccountID proxyId = convert(AccountID.getDefaultInstance());
+		HEntityId proxyId = convert(AccountID.getDefaultInstance());
 		HederaAccount hAccount = new HederaAccountCustomizer()
 				.fundsSentRecordThreshold(INITIAL_GENESIS_COINS)
 				.fundsReceivedRecordThreshold(INITIAL_GENESIS_COINS)

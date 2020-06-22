@@ -131,7 +131,7 @@ public class AwareTransactionContextTest {
 		HederaAccount payerAccount = mock(HederaAccount.class);
 		given(payerAccount.getAccountKeys()).willReturn(payerKey);
 		FCMap<EntityId, HederaAccount> accounts = mock(FCMap.class);
-		given(accounts.get(EntityId.fromPojoAccount(payer))).willReturn(payerAccount);
+		given(accounts.get(EntityId.fromPojoAccountId(payer))).willReturn(payerAccount);
 
 		ctx = mock(ServicesContext.class);
 		given(ctx.exchange()).willReturn(exchange);

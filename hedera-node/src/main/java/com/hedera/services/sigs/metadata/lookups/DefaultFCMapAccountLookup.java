@@ -49,7 +49,7 @@ public class DefaultFCMapAccountLookup implements AccountSigMetaLookup {
 	 */
 	@Override
 	public AccountSigningMetadata lookup(AccountID id) throws Exception {
-		HederaAccount account = accounts.get(EntityId.fromPojoAccount(id));
+		HederaAccount account = accounts.get(EntityId.fromPojoAccountId(id));
 		if (account == null) {
 			throw new InvalidAccountIDException("Invalid account!", id);
 		}

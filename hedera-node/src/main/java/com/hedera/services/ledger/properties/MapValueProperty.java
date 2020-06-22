@@ -21,7 +21,7 @@ package com.hedera.services.ledger.properties;
  */
 
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
@@ -157,7 +157,7 @@ public enum MapValueProperty implements BeanProperty<HederaAccount> {
 	PROXY {
 		@Override
 		public BiConsumer<HederaAccount, Object> setter() {
-			return (a, p) -> a.setProxyAccount((JAccountID)p);
+			return (a, p) -> a.setProxyAccount((HEntityId)p);
 		}
 
 		@Override

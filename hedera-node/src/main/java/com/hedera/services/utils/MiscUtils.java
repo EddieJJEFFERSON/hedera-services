@@ -323,4 +323,16 @@ public class MiscUtils {
 			throw new IllegalStateException(e);
 		}
 	}
+
+	public static String describe(JKey k) {
+		if (k == null) {
+			return "<N/A>";
+		} else {
+			Key readable = null;
+			try {
+				readable = mapJKey(k);
+			} catch (Exception ignore) { }
+			return String.valueOf(readable);
+		}
+	}
 }

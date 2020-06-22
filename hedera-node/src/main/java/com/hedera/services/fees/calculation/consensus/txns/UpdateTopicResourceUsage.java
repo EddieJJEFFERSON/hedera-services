@@ -48,7 +48,7 @@ public class UpdateTopicResourceUsage implements TxnResourceUsageEstimator {
     @Override
     public FeeData usageGiven(TransactionBody txn, SigValueObj sigUsage, StateView view) throws InvalidTxBodyException {
         try {
-            Topic topic = view.topics().get(EntityId.fromPojoTopic(txn.getConsensusUpdateTopic().getTopicID()));
+            Topic topic = view.topics().get(EntityId.fromPojoTopicId(txn.getConsensusUpdateTopic().getTopicID()));
             long rbsIncrease = getUpdateTopicRbsIncrease(
                     txn.getTransactionID().getTransactionValidStart(),
                     JKey.mapJKey(topic.getAdminKey()),

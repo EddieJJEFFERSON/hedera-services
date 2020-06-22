@@ -81,10 +81,10 @@ class TxnAwareSoliditySigsVerifierTest {
 		given(txnCtx.activePayer()).willReturn(payer);
 
 		accounts = mock(FCMap.class);
-		given(accounts.get(EntityId.fromPojoAccount(payer))).willReturn(sigReqAccount);
-		given(accounts.get(EntityId.fromPojoAccount(sigRequired))).willReturn(sigReqAccount);
-		given(accounts.get(EntityId.fromPojoAccount(noSigRequired))).willReturn(noSigReqAccount);
-		given(accounts.get(EntityId.fromPojoAccount(smartContract))).willReturn(contract);
+		given(accounts.get(EntityId.fromPojoAccountId(payer))).willReturn(sigReqAccount);
+		given(accounts.get(EntityId.fromPojoAccountId(sigRequired))).willReturn(sigReqAccount);
+		given(accounts.get(EntityId.fromPojoAccountId(noSigRequired))).willReturn(noSigReqAccount);
+		given(accounts.get(EntityId.fromPojoAccountId(smartContract))).willReturn(contract);
 
 		areActive = mock(SyncActivationCheck.class);
 

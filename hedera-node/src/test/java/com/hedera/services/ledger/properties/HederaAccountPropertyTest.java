@@ -28,7 +28,7 @@ import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
@@ -82,7 +82,7 @@ public class HederaAccountPropertyTest {
 		long newExpiry = 2L;
 		JKey newKey = new JKeyList();
 		String newMemo = "b";
-		JAccountID newProxy = new JAccountID(0, 0, 2);
+		HEntityId newProxy = new HEntityId(0, 0, 2);
 		FCQueue<JTransactionRecord> newRecords = new FCQueue<>(JTransactionRecord::deserialize);
 		newRecords.offer(jRecordWith(ResponseCodeEnum.SUCCESS));
 		// and:
@@ -91,7 +91,7 @@ public class HederaAccountPropertyTest {
 				.fundsSentRecordThreshold(origSendRecordThresh)
 				.key(JKey.mapKey(origKey))
 				.expiry(origExpiry)
-				.proxy(JAccountID.convert(origProxy))
+				.proxy(HEntityId.convert(origProxy))
 				.autoRenewPeriod(origAutoRenew)
 				.isDeleted(origIsDeleted)
 				.memo(origMemo)

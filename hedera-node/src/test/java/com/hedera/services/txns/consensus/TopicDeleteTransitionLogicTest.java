@@ -95,7 +95,7 @@ class TopicDeleteTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)));
 		assertNotNull(topic);
 		assertTrue(topic.isDeleted());
 		verify(transactionContext).setStatus(SUCCESS);
@@ -110,7 +110,7 @@ class TopicDeleteTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)));
 		assertNotNull(topic);
 		assertFalse(topic.isDeleted());
 		verify(transactionContext).setStatus(UNAUTHORIZED);
@@ -148,13 +148,13 @@ class TopicDeleteTransitionLogicTest {
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
 		var topicWithAdminKey = new Topic();
 		topicWithAdminKey.setAdminKey(MISC_ACCOUNT_KT.asJKey());
-		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), topicWithAdminKey);
+		topics.put(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)), topicWithAdminKey);
 	}
 
 	private void givenTransactionContextNoAdminKey() {
 		givenTransaction(getBasicValidTransactionBodyBuilder());
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
-		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), new Topic());
+		topics.put(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)), new Topic());
 	}
 
 	private void givenTransactionContextInvalidTopic() {

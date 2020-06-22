@@ -48,13 +48,13 @@ public class JTransactionID implements FastCopyable, Serializable {
 	private static final Logger log = LogManager.getLogger(JTransactionID.class);
 	private static final long LEGACY_VERSION_1 = 1;
 	private static final long CURRENT_VERSION = 2;
-	private JAccountID payerAccount;
+	private HEntityId payerAccount;
 	private JTimestamp startTime;
 
 	public JTransactionID() {
 	}
 
-	public JTransactionID(final JAccountID payerAccount, final JTimestamp startTime) {
+	public JTransactionID(final HEntityId payerAccount, final JTimestamp startTime) {
 		this.payerAccount = payerAccount;
 		this.startTime = startTime;
 	}
@@ -64,11 +64,11 @@ public class JTransactionID implements FastCopyable, Serializable {
 		this.startTime = other.startTime;
 	}
 
-	public JAccountID getPayerAccount() {
+	public HEntityId getPayerAccount() {
 		return payerAccount;
 	}
 
-	public void setPayerAccount(final JAccountID payerAccount) {
+	public void setPayerAccount(final HEntityId payerAccount) {
 		this.payerAccount = payerAccount;
 	}
 
@@ -92,8 +92,7 @@ public class JTransactionID implements FastCopyable, Serializable {
 
 		if (this.payerAccount != null) {
 			outStream.writeChar(ApplicationConstants.P);
-			this.payerAccount.copyTo(outStream);
-			this.payerAccount.copyToExtra(outStream);
+			outStream.writeSerializable(payerAccount, true);
 		} else {
 			outStream.writeChar(ApplicationConstants.N);
 		}
@@ -140,7 +139,7 @@ public class JTransactionID implements FastCopyable, Serializable {
 		}
 
 		if (inStream.readChar() == ApplicationConstants.P) {
-			transactionID.payerAccount = JAccountID.deserialize(inStream);
+			transactionID.payerAccount = HEntityId.legacyProvider(inStream);
 		}
 
 		final boolean startTimePresent = inStream.readBoolean();
@@ -194,8 +193,8 @@ public class JTransactionID implements FastCopyable, Serializable {
 	public static JTransactionID convert(final TransactionID transactionID) {
 		JTimestamp jTimestamp = transactionID.hasTransactionValidStart() ?
 				JTimestamp.convert(transactionID.getTransactionValidStart()) : null;
-		JAccountID payerAccount = transactionID.hasAccountID() ?
-				JAccountID.convert(transactionID.getAccountID()) : null;
+		HEntityId payerAccount = transactionID.hasAccountID() ?
+				HEntityId.convert(transactionID.getAccountID()) : null;
 		return new JTransactionID(payerAccount, jTimestamp);
 	}
 
@@ -203,9 +202,9 @@ public class JTransactionID implements FastCopyable, Serializable {
 	    Builder builder = TransactionID.newBuilder();
         if(transactionID.getPayerAccount() != null) {
           AccountID payerAccountID = RequestBuilder.getAccountIdBuild(
-                transactionID.getPayerAccount().getAccountNum(),
-                transactionID.getPayerAccount().getRealmNum(),
-                transactionID.getPayerAccount().getShardNum());
+                transactionID.getPayerAccount().getNum(),
+                transactionID.getPayerAccount().getRealm(),
+                transactionID.getPayerAccount().getShard());
           builder.setAccountID(payerAccountID);
         }
         

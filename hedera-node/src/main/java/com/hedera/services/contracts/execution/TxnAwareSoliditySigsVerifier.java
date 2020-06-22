@@ -82,7 +82,7 @@ public class TxnAwareSoliditySigsVerifier implements SoliditySigsVerifier {
 	}
 
 	private Stream<JKey> keyRequirement(AccountID id) {
-		return Optional.ofNullable(accounts.get(EntityId.fromPojoAccount(id)))
+		return Optional.ofNullable(accounts.get(EntityId.fromPojoAccountId(id)))
 				.filter(account -> !account.isSmartContract())
 				.filter(HederaAccount::isReceiverSigRequired)
 				.map(HederaAccount::getAccountKeys)

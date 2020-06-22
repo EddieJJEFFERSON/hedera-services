@@ -242,9 +242,9 @@ public class SmartContractRequestHandlerMiscTest {
       Assert.fail("Failure building solidity key for payer account");
     }
     payerEntityId = new EntityId();
-    payerEntityId.setIdNum(payerAccount);
-    payerEntityId.setRealmNum(0);
-    payerEntityId.setShardNum(0);
+    payerEntityId.setNum(payerAccount);
+    payerEntityId.setRealm(0);
+    payerEntityId.setShard(0);
     PropertyLoaderTest.populatePropertiesWithConfigFilesPath(
         "../../../configuration/dev/application.properties",
         "../../../configuration/dev/api-permission.properties");
@@ -253,8 +253,8 @@ public class SmartContractRequestHandlerMiscTest {
   private void createAccount(AccountID payerAccount, long balance)
       throws NegativeAccountBalanceException {
     EntityId mk = new EntityId();
-    mk.setIdNum(payerAccount.getAccountNum());
-    mk.setRealmNum(0);
+    mk.setNum(payerAccount.getAccountNum());
+    mk.setRealm(0);
     HederaAccount mv = new HederaAccount();
     mv.setBalance(balance);
     fcMap.put(mk, mv);
@@ -334,9 +334,9 @@ public class SmartContractRequestHandlerMiscTest {
 
   private void checkContractArtifactsExist(ContractID contractId) {
     EntityId mk = new EntityId();
-    mk.setIdNum(contractId.getContractNum());
-    mk.setRealmNum(contractId.getRealmNum());
-    mk.setShardNum(contractId.getShardNum());
+    mk.setNum(contractId.getContractNum());
+    mk.setRealm(contractId.getRealmNum());
+    mk.setShard(contractId.getShardNum());
     HederaAccount mv = fcMap.get(mk);
     Assert.assertNotNull(mv);
     Assert.assertNotNull(mv.getAccountKeys());
@@ -1076,9 +1076,9 @@ public class SmartContractRequestHandlerMiscTest {
 
   private long getBalance(AccountID accountId) {
     EntityId mk = new EntityId();
-    mk.setIdNum(accountId.getAccountNum());
-    mk.setRealmNum(0);
-    mk.setShardNum(0);
+    mk.setNum(accountId.getAccountNum());
+    mk.setRealm(0);
+    mk.setShard(0);
 
     HederaAccount mv = fcMap.get(mk);
     if (mv == null) {

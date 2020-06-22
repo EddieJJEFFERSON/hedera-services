@@ -59,9 +59,9 @@ class EntityIdTest {
 		var three = new EntityId();
 
 		// when:
-		three.setShardNum(1);
-		three.setRealmNum(2);
-		three.setIdNum(3);
+		three.setShard(1);
+		three.setRealm(2);
+		three.setNum(3);
 
 		// then:
 		assertNotEquals(null, one);

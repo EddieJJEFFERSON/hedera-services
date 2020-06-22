@@ -74,7 +74,7 @@ public class GetAccountInfoAnswer implements AnswerService {
 				response.setHeader(costAnswerHeader(OK, cost));
 			} else {
 				AccountID id = op.getAccountID();
-				HederaAccount account = view.accounts().get(EntityId.fromPojoAccount(id));
+				HederaAccount account = view.accounts().get(EntityId.fromPojoAccountId(id));
 				String solidityAddress = asSolidityAddressHex(id);
 				CryptoGetInfoResponse.AccountInfo.Builder info = CryptoGetInfoResponse.AccountInfo.newBuilder()
 						.setKey(asKeyUnchecked(account.getAccountKeys()))

@@ -64,7 +64,7 @@ public class PojoFunctionResult {
 		if (value.getjCreatedContractIDs() != null) {
 			pojo.setCreations(value.getjCreatedContractIDs()
 					.stream()
-					.map(jId -> String.format("%d.%d.%d", jId.getShardNum(), jId.getRealmNum(), jId.getAccountNum()))
+					.map(jId -> String.format("%d.%d.%d", jId.getShard(), jId.getRealm(), jId.getNum()))
 					.collect(toList()));
 		}
 		pojo.setError(value.getError());

@@ -20,14 +20,12 @@ package com.hedera.services.context.domain.haccount;
  * ‍
  */
 
-import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.hedera.services.context.domain.serdes.DomainSerdes;
 import com.hedera.services.ledger.accounts.HederaAccountCustomizer;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.fcqueue.FCQueue;
 import org.junit.jupiter.api.Test;
@@ -36,7 +34,6 @@ import org.junit.runner.RunWith;
 
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -288,7 +285,7 @@ public class HederaAccountTest {
 
 	public static HederaAccount legacyAccount() throws Exception {
 		HederaAccount account = new HederaAccountCustomizer()
-				.proxy(new JAccountID(1,2, 3))
+				.proxy(new HEntityId(1,2, 3))
 				.key(legacyKey())
 				.memo("This was Mr. Bleaney's room...")
 				.isSmartContract(true)

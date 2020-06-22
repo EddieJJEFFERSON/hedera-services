@@ -93,7 +93,7 @@ public class QueryFeeCheck {
 
 	ResponseCodeEnum adjustmentPlausibility(AccountAmount adjustment) {
 		var id = adjustment.getAccountID();
-		var key = EntityId.fromPojoAccount(id);
+		var key = EntityId.fromPojoAccountId(id);
 		long amount = adjustment.getAmount();
 
 		if (amount == Long.MIN_VALUE) {

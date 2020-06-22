@@ -33,7 +33,7 @@ import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.api.proto.java.Transaction;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,7 +83,7 @@ class GetAccountInfoAnswerTest {
 				.expirationTime(9_999_999L)
 				.get();
 		accounts = mock(FCMap.class);
-		given(accounts.get(EntityId.fromPojoAccount(asAccount(target)))).willReturn(payerAccount);
+		given(accounts.get(EntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);
 
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);
 		optionValidator = mock(OptionValidator.class);
@@ -144,7 +144,7 @@ class GetAccountInfoAnswerTest {
 		assertEquals(payerAccount.getReceiverThreshold(), info.getGenerateReceiveRecordThreshold());
 		assertEquals(payerAccount.getSenderThreshold(), info.getGenerateSendRecordThreshold());
 		assertEquals(payerAccount.getAutoRenewPeriod(), info.getAutoRenewPeriod().getSeconds());
-		assertEquals(payerAccount.getProxyAccount(), JAccountID.convert(info.getProxyAccountID()));
+		assertEquals(payerAccount.getProxyAccount(), HEntityId.convert(info.getProxyAccountID()));
 		assertEquals(JKey.mapJKey(payerAccount.getAccountKeys()), info.getKey());
 		assertEquals(payerAccount.isReceiverSigRequired(), info.getReceiverSigRequired());
 		assertEquals(payerAccount.getExpirationTime(), info.getExpirationTime().getSeconds());

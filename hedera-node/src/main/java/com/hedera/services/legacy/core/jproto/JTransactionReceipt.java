@@ -54,13 +54,13 @@ public class JTransactionReceipt implements FastCopyable {
   static final long MISSING_RUNNING_HASH_VERSION = 0L;
 
   private String status;
-  private JAccountID accountID;
-  private JAccountID fileID;
-  private JAccountID contractID;
+  private HEntityId accountID;
+  private HEntityId fileID;
+  private HEntityId contractID;
   private JExchangeRateSet exchangeRate;
 
   // new fields after VERSION_BEFORE_HCS
-  private JAccountID topicID;
+  private HEntityId topicID;
   private long topicSequenceNumber; // 0 represents unset/invalid.
   private byte[] topicRunningHash; // null if empty/unset.
   // After VERSION_WITHOUT_EXPLICIT_RUNNING_HASH_VERSION
@@ -69,16 +69,16 @@ public class JTransactionReceipt implements FastCopyable {
   public JTransactionReceipt() {
   }
 
-  public JTransactionReceipt(@Nullable String status, @Nullable JAccountID accountID, @Nullable JAccountID fileID,
-                             @Nullable JAccountID contractID, @Nullable JExchangeRateSet exchangeRate,
-                             @Nullable JAccountID topicId, long topicSequenceNumber, @Nullable byte[] topicRunningHash) {
+  public JTransactionReceipt(@Nullable String status, @Nullable HEntityId accountID, @Nullable HEntityId fileID,
+                             @Nullable HEntityId contractID, @Nullable JExchangeRateSet exchangeRate,
+                             @Nullable HEntityId topicId, long topicSequenceNumber, @Nullable byte[] topicRunningHash) {
     this(status, accountID, fileID, contractID, exchangeRate,
             topicId, topicSequenceNumber, topicRunningHash, MISSING_RUNNING_HASH_VERSION);
   }
 
-  public JTransactionReceipt(@Nullable String status, @Nullable JAccountID accountID, @Nullable JAccountID fileID,
-          @Nullable JAccountID contractID, @Nullable JExchangeRateSet exchangeRate,
-          @Nullable JAccountID topicId, long topicSequenceNumber, @Nullable byte[] topicRunningHash, long runningHashVersion) {
+  public JTransactionReceipt(@Nullable String status, @Nullable HEntityId accountID, @Nullable HEntityId fileID,
+          @Nullable HEntityId contractID, @Nullable JExchangeRateSet exchangeRate,
+          @Nullable HEntityId topicId, long topicSequenceNumber, @Nullable byte[] topicRunningHash, long runningHashVersion) {
     this.status = status;
     this.accountID = accountID;
     this.fileID = fileID;
@@ -96,12 +96,12 @@ public class JTransactionReceipt implements FastCopyable {
    */
   public JTransactionReceipt(final JTransactionReceipt other) {
     this.status = other.status;
-    this.accountID = (other.accountID != null) ? (JAccountID) other.accountID.copy() : null;
-    this.fileID = (other.fileID != null) ? (JAccountID) other.fileID.copy() : null;
-    this.contractID = (other.contractID != null) ? (JAccountID) other.contractID.copy() : null;
+    this.accountID = (other.accountID != null) ? (HEntityId) other.accountID.copy() : null;
+    this.fileID = (other.fileID != null) ? (HEntityId) other.fileID.copy() : null;
+    this.contractID = (other.contractID != null) ? (HEntityId) other.contractID.copy() : null;
     this.exchangeRate =
         (other.exchangeRate != null) ? (JExchangeRateSet) other.exchangeRate.copy() : null;
-    this.topicID = (other.topicID != null) ? (JAccountID)other.topicID.copy() : null;
+    this.topicID = (other.topicID != null) ? (HEntityId)other.topicID.copy() : null;
     this.topicSequenceNumber = other.topicSequenceNumber;
     this.topicRunningHash = ((null != other.topicRunningHash) && (other.topicRunningHash.length > 0)) ?
             Arrays.copyOf(other.topicRunningHash, other.topicRunningHash.length) : null;
@@ -120,27 +120,27 @@ public class JTransactionReceipt implements FastCopyable {
     this.status = status;
   }
 
-  public JAccountID getAccountID() {
+  public HEntityId getAccountID() {
     return accountID;
   }
 
-  public void setAccountID(JAccountID accountID) {
+  public void setAccountID(HEntityId accountID) {
     this.accountID = accountID;
   }
 
-  public JAccountID getFileID() {
+  public HEntityId getFileID() {
     return fileID;
   }
 
-  public void setFileID(JAccountID fileID) {
+  public void setFileID(HEntityId fileID) {
     this.fileID = fileID;
   }
 
-  public JAccountID getContractID() {
+  public HEntityId getContractID() {
     return contractID;
   }
 
-  public void setContractID(JAccountID contractID) {
+  public void setContractID(HEntityId contractID) {
     this.contractID = contractID;
   }
 
@@ -152,11 +152,11 @@ public class JTransactionReceipt implements FastCopyable {
     this.exchangeRate = exchangeRate;
   }
 
-  public JAccountID getTopicID() {
+  public HEntityId getTopicID() {
     return topicID;
   }
 
-  public void setTopicID(JAccountID topicId) {
+  public void setTopicID(HEntityId topicId) {
     this.topicID = topicId;
   }
 
@@ -182,16 +182,16 @@ public class JTransactionReceipt implements FastCopyable {
 
   public static JTransactionReceipt convert(TransactionReceipt receipt) {
     String status = receipt.getStatus() != null ? receipt.getStatus().name() : null;
-    JAccountID jAccountID =
-        receipt.hasAccountID() ? JAccountID.convert(receipt.getAccountID()) : null;
-    JAccountID jFileID = receipt.hasFileID() ? JAccountID.convert(receipt.getFileID()) : null;
-    JAccountID jContractID =
-        receipt.hasContractID() ? JAccountID.convert(receipt.getContractID()) : null;
+    HEntityId accountId =
+        receipt.hasAccountID() ? HEntityId.convert(receipt.getAccountID()) : null;
+    HEntityId jFileID = receipt.hasFileID() ? HEntityId.ofNullableFileId(receipt.getFileID()) : null;
+    HEntityId jContractID =
+        receipt.hasContractID() ? HEntityId.ofNullableContractId(receipt.getContractID()) : null;
     JExchangeRateSet jExchangeRateSet =
         receipt.hasExchangeRate() ? JExchangeRateSet.convert(receipt.getExchangeRate()) : null;
-    JAccountID topicId = receipt.hasTopicID() ? JAccountID.convert(receipt.getTopicID()) : null;
+    HEntityId topicId = receipt.hasTopicID() ? HEntityId.ofNullableTopicId(receipt.getTopicID()) : null;
     long runningHashVersion = Math.max(MISSING_RUNNING_HASH_VERSION, receipt.getTopicRunningHashVersion());
-    return new JTransactionReceipt(status, jAccountID, jFileID, jContractID, jExchangeRateSet, topicId,
+    return new JTransactionReceipt(status, accountId, jFileID, jContractID, jExchangeRateSet, topicId,
             receipt.getTopicSequenceNumber(), receipt.getTopicRunningHash().toByteArray(), runningHashVersion);
   }
 
@@ -200,30 +200,30 @@ public class JTransactionReceipt implements FastCopyable {
         .setStatus(ResponseCodeEnum.valueOf(txReceipt.getStatus()));
     if (txReceipt.getAccountID() != null) {
       builder.setAccountID(RequestBuilder.getAccountIdBuild(
-          txReceipt.getAccountID().getAccountNum(),
-          txReceipt.getAccountID().getRealmNum(),
-          txReceipt.getAccountID().getShardNum()));
+          txReceipt.getAccountID().getNum(),
+          txReceipt.getAccountID().getRealm(),
+          txReceipt.getAccountID().getShard()));
     }
     if (txReceipt.getFileID() != null) {
       builder.setFileID(RequestBuilder.getFileIdBuild(
-          txReceipt.getFileID().getAccountNum(),
-          txReceipt.getFileID().getRealmNum(),
-          txReceipt.getFileID().getShardNum()));
+          txReceipt.getFileID().getNum(),
+          txReceipt.getFileID().getRealm(),
+          txReceipt.getFileID().getShard()));
     }
     if (txReceipt.getContractID() != null) {
       builder.setContractID(RequestBuilder.getContractIdBuild(
-          txReceipt.getContractID().getAccountNum(),
-          txReceipt.getContractID().getRealmNum(),
-          txReceipt.getContractID().getShardNum()));
+          txReceipt.getContractID().getNum(),
+          txReceipt.getContractID().getRealm(),
+          txReceipt.getContractID().getShard()));
     }
     if (txReceipt.getExchangeRate() != null) {
       builder.setExchangeRate(JExchangeRateSet.convert(txReceipt.getExchangeRate()));
     }
     if (txReceipt.getTopicID() != null) {
       var receiptTopic = txReceipt.getTopicID();
-      builder.setTopicID(TopicID.newBuilder().setShardNum(receiptTopic.getShardNum())
-              .setRealmNum(receiptTopic.getRealmNum())
-              .setTopicNum(receiptTopic.getAccountNum()).build());
+      builder.setTopicID(TopicID.newBuilder().setShardNum(receiptTopic.getShard())
+              .setRealmNum(receiptTopic.getRealm())
+              .setTopicNum(receiptTopic.getNum()).build());
     }
     if (txReceipt.getTopicSequenceNumber() != 0) {
       builder.setTopicSequenceNumber(txReceipt.getTopicSequenceNumber());
@@ -251,24 +251,21 @@ public class JTransactionReceipt implements FastCopyable {
 
     if (this.accountID != null) {
       outStream.writeBoolean(true);
-      this.accountID.copyTo((SerializableDataOutputStream) outStream);
-      this.accountID.copyToExtra((SerializableDataOutputStream) outStream);
+      ((SerializableDataOutputStream) outStream).writeSerializable(accountID, true);
     } else {
       outStream.writeBoolean(false);
     }
 
     if (this.fileID != null) {
       outStream.writeBoolean(true);
-      this.fileID.copyTo((SerializableDataOutputStream) outStream);
-      this.fileID.copyToExtra((SerializableDataOutputStream) outStream);
+      ((SerializableDataOutputStream) outStream).writeSerializable(fileID, true);
     } else {
       outStream.writeBoolean(false);
     }
 
     if (this.contractID != null) {
       outStream.writeBoolean(true);
-      this.contractID.copyTo((SerializableDataOutputStream) outStream);
-      this.contractID.copyToExtra((SerializableDataOutputStream) outStream);
+      ((SerializableDataOutputStream) outStream).writeSerializable(contractID, true);
     } else {
       outStream.writeBoolean(false);
     }
@@ -292,8 +289,7 @@ public class JTransactionReceipt implements FastCopyable {
     // new fields after VERSION_BEFORE_HCS
     if (this.topicID != null) {
       outStream.writeBoolean(true);
-      this.topicID.copyTo((SerializableDataOutputStream) outStream);
-      this.topicID.copyToExtra((SerializableDataOutputStream) outStream);
+      ((SerializableDataOutputStream) outStream).writeSerializable(topicID, true);
     } else {
       outStream.writeBoolean(false);
     }
@@ -338,17 +334,17 @@ public class JTransactionReceipt implements FastCopyable {
 
     final boolean accountIDPresent = inStream.readBoolean();
     if (accountIDPresent) {
-      receipt.accountID = JAccountID.deserialize(inStream);
+      receipt.accountID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
     }
 
     final boolean fileIDPresent = inStream.readBoolean();
     if (fileIDPresent) {
-      receipt.fileID = JAccountID.deserialize(inStream);
+      receipt.fileID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
     }
 
     final boolean contractIDPresent = inStream.readBoolean();
     if (contractIDPresent) {
-      receipt.contractID = JAccountID.deserialize(inStream);
+      receipt.contractID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
     }
 
     byte[] sBytes = new byte[inStream.readInt()];
@@ -369,7 +365,7 @@ public class JTransactionReceipt implements FastCopyable {
     receipt.topicRunningHash = null;
     if (version > VERSION_BEFORE_HCS) {
       if (inStream.readBoolean()) { // topicID
-        receipt.topicID = JAccountID.deserialize(inStream);
+        receipt.topicID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
       }
       if (inStream.readBoolean()) { // topicSequenceNumber and topicRunningHash
         receipt.topicSequenceNumber = inStream.readLong();

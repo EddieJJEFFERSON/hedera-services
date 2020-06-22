@@ -29,7 +29,7 @@ import com.hederahashgraph.api.proto.java.ConsensusUpdateTopicTransactionBody;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.swirlds.fcmap.FCMap;
@@ -73,7 +73,7 @@ public class TopicUpdateTransitionLogic implements TransitionLogic {
 			return;
 		}
 
-		var topicMapKey = EntityId.fromPojoTopic(topicId);
+		var topicMapKey = EntityId.fromPojoTopicId(topicId);
 		var updatedTopic = new Topic(topics.get(topicMapKey));
 
 		if (!updatedTopic.hasAdminKey() &&
@@ -154,7 +154,7 @@ public class TopicUpdateTransitionLogic implements TransitionLogic {
 				return false;
 			}
 		}
-		updatedTopic.setAutoRenewAccountId(JAccountID.convert(newAutoRenewAccountId));
+		updatedTopic.setAutoRenewAccountId(HEntityId.convert(newAutoRenewAccountId));
 		return true;
 	}
 

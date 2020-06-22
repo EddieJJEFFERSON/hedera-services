@@ -97,7 +97,7 @@ class SubmitMessageTransitionLogicTest {
 		subject.doStateTransition();
 
 		// then:
-		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)));
 		assertNotNull(topic);
 		assertEquals(1L, topic.getSequenceNumber()); // Starts at 0.
 
@@ -136,7 +136,7 @@ class SubmitMessageTransitionLogicTest {
 	}
 
 	private void assertUnchangedTopics() {
-		var topic = topics.get(EntityId.fromPojoTopic(asTopic(TOPIC_ID)));
+		var topic = topics.get(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)));
 		assertEquals(0L, topic.getSequenceNumber());
 		assertArrayEquals(new byte[48], topic.getRunningHash());
 	}
@@ -159,14 +159,14 @@ class SubmitMessageTransitionLogicTest {
 	private void givenValidTransactionContext() {
 		givenTransaction(getBasicValidTransactionBodyBuilder());
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
-		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), new Topic());
+		topics.put(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)), new Topic());
 	}
 
 	private void givenTransactionContextNoMessage() {
 		givenTransaction(ConsensusSubmitMessageTransactionBody.newBuilder()
 				.setTopicID(asTopic(TOPIC_ID)).setTopicID(asTopic(TOPIC_ID)));
 		given(validator.queryableTopicStatus(asTopic(TOPIC_ID), topics)).willReturn(OK);
-		topics.put(EntityId.fromPojoTopic(asTopic(TOPIC_ID)), new Topic());
+		topics.put(EntityId.fromPojoTopicId(asTopic(TOPIC_ID)), new Topic());
 	}
 
 	private void givenTransactionContextInvalidTopic() {

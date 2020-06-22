@@ -30,7 +30,7 @@ import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.swirlds.fcmap.FCMap;
@@ -90,7 +90,7 @@ public class TopicCreateTransitionLogic implements TransitionLogic {
 					op.hasAdminKey() ? JKey.mapKey(op.getAdminKey()) : null,
 					op.hasSubmitKey() ? JKey.mapKey(op.getSubmitKey()) : null,
 					op.getAutoRenewPeriod().getSeconds(),
-					op.hasAutoRenewAccount() ? JAccountID.convert(op.getAutoRenewAccount()) : null,
+					op.hasAutoRenewAccount() ? HEntityId.convert(op.getAutoRenewAccount()) : null,
 					new JTimestamp(expirationTime.getEpochSecond(), expirationTime.getNano()));
 
 			var newEntityId = entityIdSource.newAccountId(payerAccountId);
@@ -100,7 +100,7 @@ public class TopicCreateTransitionLogic implements TransitionLogic {
 					.setTopicNum(newEntityId.getAccountNum())
 					.build();
 
-			topics.put(EntityId.fromPojoTopic(newTopicId), topic);
+			topics.put(EntityId.fromPojoTopicId(newTopicId), topic);
 			transactionContext.setCreated(newTopicId);
 			transactionContext.setStatus(SUCCESS);
 		} catch (DecoderException e) {

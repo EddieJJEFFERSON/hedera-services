@@ -34,7 +34,7 @@ import org.apache.commons.collections4.CollectionUtils;
 public class JContractLogInfo implements FastCopyable {
 	private static final long LEGACY_VERSION_1 = 1;
 	private static final long CURRENT_VERSION = 2;
-	private JAccountID contractID;
+	private HEntityId contractID;
 	private byte[] bloom;
 	private byte[] data;
 	private List<byte[]> topic;
@@ -43,7 +43,7 @@ public class JContractLogInfo implements FastCopyable {
 		this.topic = new LinkedList<>();
 	}
 
-	public JContractLogInfo(final JAccountID contractID, final byte[] bloom, final List<byte[]> topic,
+	public JContractLogInfo(final HEntityId contractID, final byte[] bloom, final List<byte[]> topic,
 			final byte[] data) {
 		this.contractID = contractID;
 		this.bloom = bloom;
@@ -52,17 +52,17 @@ public class JContractLogInfo implements FastCopyable {
 	}
 
 	public JContractLogInfo(final JContractLogInfo other) {
-		this.contractID = (other.contractID != null) ? (JAccountID) other.contractID.copy() : null;
+		this.contractID = (other.contractID != null) ? (HEntityId) other.contractID.copy() : null;
 		this.bloom = (other.bloom != null) ? Arrays.copyOf(other.bloom, other.bloom.length) : null;
 		this.data = (other.data != null) ? Arrays.copyOf(other.data, other.data.length) : null;
 		this.topic = (other.topic != null) ? new LinkedList<>(other.topic) : new LinkedList<>();
 	}
 
-	public JAccountID getContractID() {
+	public HEntityId getContractID() {
 		return contractID;
 	}
 
-	public void setContractID(final JAccountID contractID) {
+	public void setContractID(final HEntityId contractID) {
 		this.contractID = contractID;
 	}
 
@@ -137,8 +137,7 @@ public class JContractLogInfo implements FastCopyable {
 
 		if (this.contractID != null) {
 			outStream.writeBoolean(true);
-			this.contractID.copyTo(outStream);
-			this.contractID.copyToExtra(outStream);
+			outStream.writeSerializable(contractID, true);
 		} else {
 			outStream.writeBoolean(false);
 		}
@@ -210,7 +209,7 @@ public class JContractLogInfo implements FastCopyable {
 		}
 
 		if (contractIDPresent) {
-			contractLogInfo.contractID = JAccountID.deserialize(inStream);
+			contractLogInfo.contractID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
 		} else {
 			contractLogInfo.contractID = null;
 		}

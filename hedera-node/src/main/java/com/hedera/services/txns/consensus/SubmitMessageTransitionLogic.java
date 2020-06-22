@@ -69,7 +69,7 @@ public class SubmitMessageTransitionLogic implements TransitionLogic {
 			return;
 		}
 
-		var topicMapKey = EntityId.fromPojoTopic(topicId);
+		var topicMapKey = EntityId.fromPojoTopicId(topicId);
 		var topic = topics.get(topicMapKey);
 		try {
 			var updatedTopic = new Topic(topic);

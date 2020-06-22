@@ -154,7 +154,7 @@ public class FeeDataLookups {
 
 	static public FeeData getConsensusUpdateTopicTransactionFeeMatrices(
 			TransactionBody txBody, SigValueObj sigValObj, FCMap<EntityId, Topic> topicFCMap) throws Exception {
-		Topic topic = topicFCMap.get(EntityId.fromPojoTopic(txBody.getConsensusUpdateTopic().getTopicID()));
+		Topic topic = topicFCMap.get(EntityId.fromPojoTopicId(txBody.getConsensusUpdateTopic().getTopicID()));
 		long rbsIncrease = ConsensusServiceFeeBuilder.getUpdateTopicRbsIncrease(
 				txBody.getTransactionID().getTransactionValidStart(),
 				JKey.mapJKey(topic.getAdminKey()), JKey.mapJKey(topic.getSubmitKey()),
@@ -178,7 +178,7 @@ public class FeeDataLookups {
 			} else if (txBody.hasCryptoDelete()) {
 				feeMatrices = getCryptoDeleteTransactionFeeMatrices(txBody, sigValObj);
 			} else if (txBody.hasCryptoUpdateAccount()) {
-				EntityId accountIDEntityId = EntityId.fromPojoAccount(txBody.getTransactionID().getAccountID());
+				EntityId accountIDEntityId = EntityId.fromPojoAccountId(txBody.getTransactionID().getAccountID());
 				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(accountIDEntityId, accountFCMap);
 				HederaAccount account = accountFCMap.get(accountIDEntityId);
 				Key existingKey = JKey.mapJKey(account.getAccountKeys());
@@ -189,7 +189,7 @@ public class FeeDataLookups {
 				feeMatrices = getSmartContractCallTransactionFeeMatrices(txBody, sigValObj);
 			} else if (txBody.hasContractUpdateInstance()) {
 				ContractID contractID = txBody.getContractUpdateInstance().getContractID();
-				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(EntityId.fromPojoContract(contractID), accountFCMap);
+				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(EntityId.fromPojoContractId(contractID), accountFCMap);
 				feeMatrices = getSmartContractUpdateTransactionFeeMatrices(txBody, expirationTimeStamp, sigValObj);
 			} else if (txBody.hasFileCreate()) {
 				feeMatrices = getFileCreateTransactionFeeMatrices(txBody, sigValObj);

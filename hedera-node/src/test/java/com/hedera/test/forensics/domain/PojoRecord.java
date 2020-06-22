@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.hedera.services.utils.MiscUtils;
 import com.hederahashgraph.api.proto.java.TransferList;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.hedera.services.legacy.core.jproto.JTransactionID;
 import com.hedera.services.legacy.core.jproto.JTransactionReceipt;
@@ -158,11 +158,11 @@ public class PojoRecord {
 		this.receipt = receipt;
 	}
 
-	public static String asString(JAccountID id) {
+	public static String asString(HEntityId id) {
 		if (id == null) {
 			return null;
 		}
-		return String.format("%d.%d.%d", id.getShardNum(), id.getRealmNum(), id.getAccountNum());
+		return String.format("%d.%d.%d", id.getShard(), id.getRealm(), id.getNum());
 	}
 
 	public static String asString(JTimestamp stamp) {

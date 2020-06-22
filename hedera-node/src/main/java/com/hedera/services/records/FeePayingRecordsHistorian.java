@@ -183,9 +183,9 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 		EarliestRecordExpiry ere = new EarliestRecordExpiry(
 				account.expiryOfEarliestRecord(),
 				AccountID.newBuilder()
-						.setShardNum(key.getShardNum())
-						.setRealmNum(key.getRealmNum())
-						.setAccountNum(key.getIdNum())
+						.setShardNum(key.getShard())
+						.setRealmNum(key.getRealm())
+						.setAccountNum(key.getNum())
 						.build());
 		return ere;
 	}
@@ -246,7 +246,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	}
 
 	private boolean isCallableContract(AccountID id) {
-		return Optional.ofNullable(accounts.get(EntityId.fromPojoAccount(id)))
+		return Optional.ofNullable(accounts.get(EntityId.fromPojoAccountId(id)))
 				.map(v -> v.isSmartContract() && !v.isDeleted())
 				.orElse(false);
 	}

@@ -20,14 +20,14 @@ package com.hedera.services.context.domain.serdes;
  * ‍
  */
 
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeySerializer;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.swirlds.common.io.SelfSerializable;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
-import com.swirlds.common.list.ListDigestException;
 import com.swirlds.fcqueue.FCQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,6 +35,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public class DomainSerdes {
 	private static final Logger log = LogManager.getLogger(DomainSerdes.class);
@@ -47,11 +49,48 @@ public class DomainSerdes {
 		out.write(key.serialize());
 	}
 
+	public <T> void writeNullable(
+			T data,
+			SerializableDataOutputStream out,
+			BiConsumer<T, DataOutputStream> writer
+	) throws IOException {
+		if (data == null) {
+			out.writeBoolean(false);
+		} else {
+			out.writeBoolean(true);
+			writer.accept(data, out);
+		}
+	}
+
+	public <T> T readNullable(
+			SerializableDataInputStream in,
+			Function<DataInputStream, T> reader
+	) throws IOException {
+		return in.readBoolean() ? reader.apply(in) : null;
+	}
+
+	public <T extends SelfSerializable> void writeNullableSerializable(
+			T data,
+			SerializableDataOutputStream out
+	) throws IOException {
+		if (data == null) {
+			out.writeBoolean(false);
+		} else {
+			out.writeBoolean(true);
+			out.writeSerializable(data, true);
+		}
+	}
+
+	public <T extends SelfSerializable> T readNullableSerializable(
+			SerializableDataInputStream in
+	) throws IOException {
+		return in.readBoolean() ? in.readSerializable() : null;
+	}
+
 	@SuppressWarnings("unchecked")
-	public void serializeId(JAccountID id, DataOutputStream out) throws IOException {
-		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
-		id.copyTo(fcOut);
-		id.copyToExtra(fcOut);
+	public void serializeId(HEntityId id, DataOutputStream _out) throws IOException {
+		var out = (SerializableDataOutputStream) _out;
+		out.writeSerializable(id, true);
 	}
 
 	public JTimestamp deserializeTimestamp(DataInputStream in) throws IOException {
@@ -65,8 +104,9 @@ public class DomainSerdes {
 		ts.copyToExtra(fcOut);
 	}
 
-	public JAccountID deserializeId(DataInputStream in) throws IOException {
-		return JAccountID.deserialize(in);
+	public HEntityId deserializeId(DataInputStream _in) throws IOException {
+		var in = (SerializableDataInputStream)_in;
+		return in.readSerializable();
 	}
 
 	@SuppressWarnings("unchecked")

@@ -34,19 +34,19 @@ public class FCMapBackingAccounts implements BackingAccounts<AccountID, HederaAc
 
 	@Override
 	public HederaAccount getRef(AccountID id) {
-		return delegate.get(EntityId.fromPojoAccount(id));
+		return delegate.get(EntityId.fromPojoAccountId(id));
 	}
 
 	@Override
 	public HederaAccount getCopy(AccountID id) {
-		HederaAccount ref = delegate.get(EntityId.fromPojoAccount(id));
+		HederaAccount ref = delegate.get(EntityId.fromPojoAccountId(id));
 
 		return (ref == null) ? null : new HederaAccount(ref);
 	}
 
 	@Override
 	public void replace(AccountID id, HederaAccount account) {
-		EntityId delegateId = EntityId.fromPojoAccount(id);
+		EntityId delegateId = EntityId.fromPojoAccountId(id);
 		if (!delegate.containsKey(delegateId)) {
 			delegate.put(delegateId, account);
 		} else {
@@ -56,11 +56,11 @@ public class FCMapBackingAccounts implements BackingAccounts<AccountID, HederaAc
 
 	@Override
 	public boolean contains(AccountID id) {
-		return delegate.containsKey(EntityId.fromPojoAccount(id));
+		return delegate.containsKey(EntityId.fromPojoAccountId(id));
 	}
 
 	@Override
 	public void remove(AccountID id) {
-		delegate.remove(EntityId.fromPojoAccount(id));
+		delegate.remove(EntityId.fromPojoAccountId(id));
 	}
 }

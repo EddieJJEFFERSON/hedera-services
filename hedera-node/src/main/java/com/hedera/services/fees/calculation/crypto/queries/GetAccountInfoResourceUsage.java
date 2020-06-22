@@ -58,7 +58,7 @@ public class GetAccountInfoResourceUsage implements QueryResourceUsageEstimator 
 	public FeeData usageGivenType(Query query, StateView view, ResponseType type) {
 		try {
 			CryptoGetInfoQuery infoQuery = query.getCryptoGetInfo();
-			EntityId key = EntityId.fromPojoAccount(infoQuery.getAccountID());
+			EntityId key = EntityId.fromPojoAccountId(infoQuery.getAccountID());
 			HederaAccount account = view.accounts().get(key);
 
 			return usageEstimator.getAccountInfoQueryFeeMatrices(

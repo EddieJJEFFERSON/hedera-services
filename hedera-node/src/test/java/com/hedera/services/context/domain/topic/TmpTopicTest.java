@@ -3,7 +3,7 @@ package com.hedera.services.context.domain.topic;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.state.merkle.Topic;
 import com.hederahashgraph.api.proto.java.TopicID;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
@@ -94,7 +94,7 @@ class TmpTopicTest {
 				adminKeys[s],
 				submitKeys[s],
 				v,
-				new JAccountID(s, s, s),
+				new HEntityId(s, s, s),
 				new JTimestamp(v, s));
 		for (int i = 0; i < s; i++) {
 			topic.updateRunningHashAndSequenceNumber(

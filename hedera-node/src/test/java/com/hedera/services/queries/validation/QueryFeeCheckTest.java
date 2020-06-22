@@ -52,10 +52,10 @@ class QueryFeeCheckTest {
 	AccountID aBroke = asAccount("0.0.13257");
 	long aLittle = 2L, aLot = Long.MAX_VALUE - 1L;
 	HederaAccount broke, rich;
-	EntityId missingKey = EntityId.fromPojoAccount(aMissing);
-	EntityId richKey = EntityId.fromPojoAccount(aRich);
-	EntityId brokeKey = EntityId.fromPojoAccount(aBroke);
-	EntityId nodeKey = EntityId.fromPojoAccount(aNode);
+	EntityId missingKey = EntityId.fromPojoAccountId(aMissing);
+	EntityId richKey = EntityId.fromPojoAccountId(aRich);
+	EntityId brokeKey = EntityId.fromPojoAccountId(aBroke);
+	EntityId nodeKey = EntityId.fromPojoAccountId(aNode);
 
 	FCMap<EntityId, HederaAccount> accounts;
 

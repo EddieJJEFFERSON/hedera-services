@@ -96,7 +96,7 @@ public class FeePayingRecordsHistorianTest {
 	final private long aSendThresh = 999L;
 	final private long aReceiveThresh = 1_001L;
 	final private EarliestRecordExpiry aERE = new EarliestRecordExpiry(nows - 100L, a);
-	final private EntityId aKey = EntityId.fromPojoAccount(a);
+	final private EntityId aKey = EntityId.fromPojoAccountId(a);
 	final private List<Long> bExps = List.of(expiry - 55L);
 	final private List<Long> bCons = List.of(lastCons - cacheTtl - 1);
 	final private List<TransactionID> bIds = List.of(txnIdB);
@@ -104,12 +104,12 @@ public class FeePayingRecordsHistorianTest {
 	final private long bSendThresh = 2_000L;
 	final private long bReceiveThresh = 201L;
 	final private EarliestRecordExpiry bERE = new EarliestRecordExpiry(nows - 55L, b);
-	final private EntityId bKey = EntityId.fromPojoAccount(b);
+	final private EntityId bKey = EntityId.fromPojoAccountId(b);
 	final private List<Long> cExps = List.of();
 	final private long cBalance = recordFee + 1L;
 	final private long cSendThresh = 3_000L;
 	final private long cReceiveThresh = 301L;
-	final private EntityId cKey = EntityId.fromPojoAccount(c);
+	final private EntityId cKey = EntityId.fromPojoAccountId(c);
 	final private EarliestRecordExpiry cERE = new EarliestRecordExpiry(nows + 50L, c);
 	final private List<Long> dExps = List.of();
 	final private long dBalance = recordFee + 1L;
@@ -362,7 +362,7 @@ public class FeePayingRecordsHistorianTest {
 
 		HederaAccount v = new HederaAccount();
 		IS_SMART_CONTRACT.setter().accept(v, false);
-		given(accounts.get(EntityId.fromPojoAccount(asAccount(contract)))).willReturn(v);
+		given(accounts.get(EntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
 	}
 
 	private void addSetupForCallToDeletedContract() {
@@ -380,7 +380,7 @@ public class FeePayingRecordsHistorianTest {
 		HederaAccount v = new HederaAccount();
 		IS_SMART_CONTRACT.setter().accept(v, true);
 		IS_DELETED.setter().accept(v, true);
-		given(accounts.get(EntityId.fromPojoAccount(asAccount(contract)))).willReturn(v);
+		given(accounts.get(EntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
 	}
 
 	private void addSetupForValidContractCall() {
@@ -399,7 +399,7 @@ public class FeePayingRecordsHistorianTest {
 
 		HederaAccount v = new HederaAccount();
 		IS_SMART_CONTRACT.setter().accept(v, true);
-		given(accounts.get(EntityId.fromPojoAccount(asAccount(contract)))).willReturn(v);
+		given(accounts.get(EntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
 	}
 
 	private void addSetupForValidContractCreate() {
@@ -520,7 +520,7 @@ public class FeePayingRecordsHistorianTest {
 			List<Long> consensusTimes,
 			List<TransactionID> txnIds
 	) {
-		EntityId key = EntityId.fromPojoAccount(id);
+		EntityId key = EntityId.fromPojoAccountId(id);
 		HederaAccount value = new HederaAccount();
 		given(ledger.getBalance(id)).willReturn(balance);
 		given(ledger.fundsSentRecordThreshold(id)).willReturn(sendThreshold);

@@ -38,7 +38,6 @@ import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
-import com.swirlds.common.crypto.Hash;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.common.merkle.utility.AbstractMerkleNode;
@@ -217,7 +216,7 @@ public class JTransactionRecord extends AbstractMerkleNode implements FCQueueEle
 		try {
 			TransactionReceipt txReceipt = JTransactionReceipt.convert(jTransactionRecord.getTxReceipt());
 			if (jTransactionRecord.getTransactionID() != null) {
-				JAccountID payer = jTransactionRecord.getTransactionID().getPayerAccount();
+				HEntityId payer = jTransactionRecord.getTransactionID().getPayerAccount();
 				JTimestamp timestamp = jTransactionRecord.getTransactionID().getStartTime();
 
 				// if both payer and timestamp are null, transactionID field will not be set

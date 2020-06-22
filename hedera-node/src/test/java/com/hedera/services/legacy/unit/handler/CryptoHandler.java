@@ -31,7 +31,7 @@ public class CryptoHandler {
 
   public boolean validateAccountID(AccountID accountID) {
     boolean isValid = false;
-    EntityId entityId = EntityId.fromPojoAccount(accountID);
+    EntityId entityId = EntityId.fromPojoAccountId(accountID);
     if (map.containsKey(entityId)) {
       HederaAccount mapValue = map.get(entityId);
       if (mapValue != null) {
@@ -42,7 +42,7 @@ public class CryptoHandler {
   }
 
   public boolean isAccountSetForDelete(AccountID accountID) {
-    EntityId accountKey = EntityId.fromPojoAccount(accountID);
+    EntityId accountKey = EntityId.fromPojoAccountId(accountID);
     if (map.containsKey(accountKey)) {
       HederaAccount accountValue = map.get(accountKey);
       return accountValue.isDeleted();

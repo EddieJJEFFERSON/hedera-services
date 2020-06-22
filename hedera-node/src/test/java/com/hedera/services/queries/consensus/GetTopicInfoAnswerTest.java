@@ -96,7 +96,7 @@ class GetTopicInfoAnswerTest {
 				.get();
 		topic.setRunningHash(hash);
 		topic.setSequenceNumber(seqNo);
-		EntityId key = EntityId.fromPojoTopic(asTopic(target));
+		EntityId key = EntityId.fromPojoTopicId(asTopic(target));
 		given(topics.get(key)).willReturn(topic);
 		view = new StateView(topics, StateView.EMPTY_ACCOUNTS);
 		optionValidator = mock(OptionValidator.class);
@@ -238,7 +238,7 @@ class GetTopicInfoAnswerTest {
 		assertEquals(topic.getExpirationTimestamp().getSeconds(), info.getExpirationTime().getSeconds());
 		assertEquals(topic.getAutoRenewDurationSeconds(), info.getAutoRenewPeriod().getSeconds());
 		assertEquals(ByteString.copyFrom(topic.getRunningHash()), info.getRunningHash());
-		assertEquals(topic.getAutoRenewAccountId().getAccountNum(), info.getAutoRenewAccount().getAccountNum());
+		assertEquals(topic.getAutoRenewAccountId().getNum(), info.getAutoRenewAccount().getAccountNum());
 		assertEquals(topic.getSequenceNumber(), info.getSequenceNumber());
 		assertEquals(topic.getMemo(), info.getMemo());
 	}

@@ -27,18 +27,26 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.swirlds.common.constructable.ClassConstructorPair;
 import com.swirlds.common.constructable.ConstructableRegistry;
 import com.swirlds.common.constructable.ConstructableRegistryException;
+import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import com.swirlds.fcqueue.FCQueue;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_ACCOUNT_ID;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_CONTRACT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,6 +54,8 @@ import static com.hedera.test.utils.TxnUtils.withAdjustments;
 import static com.hedera.test.factories.scenarios.TxnHandlingScenario.COMPLEX_KEY_ACCOUNT_KT;
 import static com.hedera.test.utils.SerdeUtils.*;
 import static com.hedera.test.utils.IdUtils.*;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.BDDMockito.*;
 
 @RunWith(JUnitPlatform.class)
 public class DomainSerdesTest {
@@ -56,6 +66,143 @@ public class DomainSerdesTest {
 		/* Per Cody, this will be unnecessary at some point. */
 		ConstructableRegistry.registerConstructable(
 				new ClassConstructorPair(JTransactionRecord.class, JTransactionRecord::new));
+	}
+
+	@Test
+	public void readsExpectedForNonNullableSerializable() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+		// and:
+		var data = new HEntityId(1L, 2L, 3L);
+
+		given(in.readBoolean()).willReturn(true);
+		given(in.readSerializable()).willReturn(data);
+
+		// when:
+		var dataIn = subject.readNullableSerializable(in);
+
+		// then:
+		verify(in).readBoolean();
+		assertEquals(data, dataIn);
+	}
+
+	@Test
+	public void readsNullForNullableSerializable() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+		// and:
+		HEntityId data;
+
+		given(in.readBoolean()).willReturn(false);
+
+		// when:
+		data = subject.readNullableSerializable(in);
+
+		// then:
+		verify(in).readBoolean();
+		verifyNoMoreInteractions(in);
+		// and:
+		assertNull(data);
+	}
+
+	@Test
+	public void writesFalseForNullWritable() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+		// and:
+		var writer = mock(BiConsumer.class);
+
+		// when:
+		subject.writeNullable(null, out, (BiConsumer<? extends Object, DataOutputStream>)writer);
+
+		// then:
+		verify(out).writeBoolean(false);
+		verifyNoMoreInteractions(out);
+		verifyNoInteractions(writer);
+	}
+
+	@Test
+	public void readsNullForNullReadable() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+		// and:
+		var reader = mock(Function.class);
+
+		given(in.readBoolean()).willReturn(false);
+
+		// when:
+		Object data = subject.readNullable(in, reader);
+
+		// then:
+		verify(in).readBoolean();
+		verifyNoMoreInteractions(in);
+		// and:
+		assertNull(data);
+	}
+
+	@Test
+	public void readsExpectedForNonNullReadable() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+		// and:
+		var reader = (Function<DataInputStream, HEntityId>)mock(Function.class);
+		var data = new HEntityId(1L, 2L, 3L);
+
+		given(in.readBoolean()).willReturn(true);
+		given(reader.apply(in)).willReturn(data);
+
+		// when:
+		HEntityId dataIn = subject.readNullable(in, reader);
+
+		// then:
+		verify(in).readBoolean();
+		assertEquals(data, dataIn);
+	}
+
+	@Test
+	public void writesForNonNullWritable() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+		// and:
+		var writer = mock(BiConsumer.class);
+
+		// given:
+		var data = new HEntityId(1L, 2L, 3L);
+
+		// when:
+		subject.writeNullable(data, out, writer);
+
+		// then:
+		verify(out).writeBoolean(true);
+		verify(writer).accept(data, out);
+	}
+
+	@Test
+	public void writesFalseForNullSerializable() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+
+		// when:
+		subject.writeNullableSerializable(null, out);
+
+		// then:
+		verify(out).writeBoolean(false);
+		verifyNoMoreInteractions(out);
+	}
+
+	@Test
+	public void writesExpectedForNonNullSerializable() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+		// and:
+		var data = new HEntityId(1L, 2L, 3L);
+
+		// when:
+		subject.writeNullableSerializable(data, out);
+
+		// then:
+		verify(out).writeBoolean(true);
+		verify(out).writeSerializable(data, true);
 	}
 
 	@Test
@@ -78,12 +225,12 @@ public class DomainSerdesTest {
 	@Test
 	public void idSerdesWork() throws Exception {
 		// given:
-		JAccountID idIn = new JAccountID(1,2, 3);
+		HEntityId idIn = new HEntityId(1,2, 3);
 
 		// when:
 		byte[] repr = serOutcome(out -> subject.serializeId(idIn, out));
 		// and:
-		JAccountID idOut = deOutcome(in -> subject.deserializeId(in), repr);
+		HEntityId idOut = deOutcome(in -> subject.deserializeId(in), repr);
 
 		// then:
 		assertEquals(idIn, idOut);

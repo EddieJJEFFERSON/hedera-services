@@ -36,7 +36,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.*;
-import static com.hedera.services.legacy.core.jproto.JAccountID.convert;
+import static com.hedera.services.legacy.core.jproto.HEntityId.convert;
 import static com.hedera.services.legacy.core.jproto.JKey.mapKey;
 
 import java.util.function.Function;

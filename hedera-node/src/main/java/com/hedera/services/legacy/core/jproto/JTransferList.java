@@ -63,7 +63,7 @@ public class JTransferList implements FastCopyable {
     return accountAmounts
         .stream()
         .filter(a -> a.getAccountID() != null)
-        .map(a -> new JAccountAmount(JAccountID.convert(a.getAccountID()), a.getAmount()))
+        .map(a -> new JAccountAmount(HEntityId.convert(a.getAccountID()), a.getAmount()))
         .collect(Collectors.toList());
   }
 
@@ -76,9 +76,9 @@ public class JTransferList implements FastCopyable {
     AccountAmount.Builder builder = AccountAmount.newBuilder();
     if (jAccountAmount.getAccountID() != null) {
       AccountID accountID = RequestBuilder
-          .getAccountIdBuild(jAccountAmount.getAccountID().getAccountNum(),
-              jAccountAmount.getAccountID().getRealmNum(),
-              jAccountAmount.getAccountID().getShardNum());
+          .getAccountIdBuild(jAccountAmount.getAccountID().getNum(),
+              jAccountAmount.getAccountID().getRealm(),
+              jAccountAmount.getAccountID().getShard());
       builder.setAccountID(accountID);
     }
     return builder.setAmount(jAccountAmount.getAmount()).build();

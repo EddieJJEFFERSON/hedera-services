@@ -21,7 +21,7 @@ package com.hedera.services.context.domain.haccount;
  */
 
 import com.google.common.base.MoreObjects;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTransactionRecord;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
@@ -60,7 +60,7 @@ public class HederaAccount extends AbstractMerkleNode implements FCMValue, Merkl
 	boolean deleted;
 	boolean isSmartContract;
 	boolean receiverSigRequired;
-	JAccountID proxyAccount;
+	HEntityId proxyAccount;
 	FCQueue<JTransactionRecord> records;
 
 	public HederaAccount() {
@@ -77,7 +77,7 @@ public class HederaAccount extends AbstractMerkleNode implements FCMValue, Merkl
 		this.senderThreshold = that.senderThreshold;
 		this.receiverSigRequired = that.receiverSigRequired;
 		this.accountKeys = that.accountKeys;
-		this.proxyAccount = JAccountID.clone(that.getProxyAccount());
+		this.proxyAccount = that.getProxyAccount();
 		this.autoRenewPeriod = that.autoRenewPeriod;
 		this.deleted = that.deleted;
 		this.expirationTime = that.expirationTime;
@@ -300,11 +300,11 @@ public class HederaAccount extends AbstractMerkleNode implements FCMValue, Merkl
 		this.accountKeys = accountKeys;
 	}
 
-	public JAccountID getProxyAccount() {
+	public HEntityId getProxyAccount() {
 		return proxyAccount;
 	}
 
-	public void setProxyAccount(JAccountID proxyAccount) {
+	public void setProxyAccount(HEntityId proxyAccount) {
 		this.proxyAccount = proxyAccount;
 	}
 

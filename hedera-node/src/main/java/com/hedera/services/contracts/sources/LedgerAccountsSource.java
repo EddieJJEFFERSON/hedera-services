@@ -39,7 +39,7 @@ import org.ethereum.util.ALock;
 import static com.hedera.services.utils.EntityIdUtils.accountParsedFromSolidityAddress;
 import static com.hedera.services.utils.EntityIdUtils.asContract;
 import static com.hedera.services.utils.EntityIdUtils.asLiteralString;
-import static com.hedera.services.legacy.core.jproto.JAccountID.convert;
+import static com.hedera.services.legacy.core.jproto.HEntityId.convert;
 
 public class LedgerAccountsSource implements Source<byte[], AccountState> {
 	static Logger log = LogManager.getLogger(LedgerAccountsSource.class);
@@ -82,9 +82,9 @@ public class LedgerAccountsSource implements Source<byte[], AccountState> {
 			evmState.setAutoRenewPeriod(hederaAccount.getAutoRenewPeriod());
 			if (hederaAccount.getProxyAccount() != null) {
 				var proxy = hederaAccount.getProxyAccount();
-				evmState.setProxyAccountShard(proxy.getShardNum());
-				evmState.setProxyAccountRealm(proxy.getRealmNum());
-				evmState.setProxyAccountNum(proxy.getAccountNum());
+				evmState.setProxyAccountShard(proxy.getShard());
+				evmState.setProxyAccountRealm(proxy.getRealm());
+				evmState.setProxyAccountNum(proxy.getNum());
 			}
 			evmState.setSenderThreshold(hederaAccount.getSenderThreshold());
 			evmState.setReceiverThreshold(hederaAccount.getReceiverThreshold());

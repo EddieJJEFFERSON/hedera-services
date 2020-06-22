@@ -51,7 +51,7 @@ public class GetTopicInfoResourceUsage implements QueryResourceUsageEstimator {
 	@Override
 	public FeeData usageGivenType(Query query, StateView view, ResponseType responseType) {
 	    try {
-			Topic topic = view.topics().get(EntityId.fromPojoTopic(query.getConsensusGetTopicInfo().getTopicID()));
+			Topic topic = view.topics().get(EntityId.fromPojoTopicId(query.getConsensusGetTopicInfo().getTopicID()));
 			int bpr = BASIC_QUERY_RES_HEADER + getStateProofSize(responseType) +
 					BASIC_ACCTID_SIZE +  // topicID
 					getTopicInfoSize(topic);

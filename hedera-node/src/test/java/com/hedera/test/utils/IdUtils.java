@@ -48,7 +48,7 @@ public class IdUtils {
 	}
 
 	public static AccountID fromKey(EntityId mk) {
-		return asAccount(String.format("%d.%d.%d", mk.getShardNum(), mk.getRealmNum(), mk.getIdNum()));
+		return asAccount(String.format("%d.%d.%d", mk.getShard(), mk.getRealm(), mk.getNum()));
 	}
 
 	public static ContractID asContract(String v) {

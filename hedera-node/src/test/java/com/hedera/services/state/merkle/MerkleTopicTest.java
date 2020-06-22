@@ -1,12 +1,12 @@
 package com.hedera.services.state.merkle;
 
 import com.hedera.services.context.domain.serdes.TopicSerde;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.utils.MiscUtils;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.swirlds.common.io.SerializableDataInputStream;
 import org.junit.jupiter.api.AfterEach;
@@ -91,8 +91,8 @@ class MerkleTopicTest {
 						"memo=Second memo, " +
 						"expiry=2234567.1, " +
 						"deleted=false, " +
-						"adminKey=" + Topic.readable(adminKeys[1]) + ", " +
-						"submitKey=" + Topic.readable(submitKeys[1]) + ", " +
+						"adminKey=" + MiscUtils.describe(adminKeys[1]) + ", " +
+						"submitKey=" + MiscUtils.describe(submitKeys[1]) + ", " +
 						"runningHash=71bf381c886baf6ac5628662b3abde8d5a88091c6df1ddd20e60b080e8d3a6fb6cc32f3f3ebc609868054bdd2f71c7ba, " +
 						"sequenceNumber=1, " +
 						"autoRenewSecs=2234567, " +
@@ -104,8 +104,8 @@ class MerkleTopicTest {
 						"memo=Third memo, " +
 						"expiry=3234567.2, " +
 						"deleted=false, " +
-						"adminKey=" + Topic.readable(adminKeys[2]) + ", " +
-						"submitKey=" + Topic.readable(submitKeys[2]) + ", " +
+						"adminKey=" + MiscUtils.describe(adminKeys[2]) + ", " +
+						"submitKey=" + MiscUtils.describe(submitKeys[2]) + ", " +
 						"runningHash=763845692fe8df8ccac8d93658333073ee935ad351f28a2e5fc96cdbe682b0b62271eff9990b6a2aa988497d53b4d094, " +
 						"sequenceNumber=2, " +
 						"autoRenewSecs=3234567, " +
@@ -122,7 +122,7 @@ class MerkleTopicTest {
 				adminKeys[s],
 				submitKeys[s],
 				v,
-				new JAccountID(t, t * 2, t * 3),
+				new HEntityId(t, t * 2, t * 3),
 				new JTimestamp(v, s));
 		for (int i = 0; i < s; i++) {
 			topic.updateRunningHashAndSequenceNumber(

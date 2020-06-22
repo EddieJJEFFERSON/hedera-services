@@ -116,8 +116,8 @@ public class FreezeServiceImplTest {
     //Init FCMap; Add account 58
     accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
     EntityId mk = new EntityId();
-    mk.setIdNum(payerAccount);
-    mk.setRealmNum(0);
+    mk.setNum(payerAccount);
+    mk.setRealm(0);
 
     HederaAccount mv = new HederaAccount();
     mv.setBalance(10000000000000000l);

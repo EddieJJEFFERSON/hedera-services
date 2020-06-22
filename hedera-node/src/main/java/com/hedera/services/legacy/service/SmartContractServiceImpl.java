@@ -640,7 +640,7 @@ public class SmartContractServiceImpl
     List<TransactionRecord> txRecord = null;
     try {
       txRecord = JTransactionRecord.convert(
-          txHandler.getAllTransactionRecordFCM(EntityId.fromPojoContract(query.getContractID())));
+          txHandler.getAllTransactionRecordFCM(EntityId.fromPojoContractId(query.getContractID())));
     } catch (ConcurrentModificationException ex) {
       TransactionValidationUtils.constructGetAccountRecordsErrorResponse(responseObserver,
           ResponseCodeEnum.RECORD_NOT_FOUND,0);

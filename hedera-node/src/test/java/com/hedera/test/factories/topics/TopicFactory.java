@@ -24,7 +24,7 @@ import com.hedera.services.state.merkle.Topic;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.Timestamp;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JTimestamp;
 
@@ -52,7 +52,7 @@ public class TopicFactory {
 		autoRenewDuration.ifPresent(value::setAutoRenewDurationSeconds);
 		adminKey.ifPresent(k -> value.setAdminKey(uncheckedMap(k)));
 		submitKey.ifPresent(k -> value.setSubmitKey(uncheckedMap(k)));
-		autoRenewAccount.ifPresent(id -> value.setAutoRenewAccountId(JAccountID.convert(id)));
+		autoRenewAccount.ifPresent(id -> value.setAutoRenewAccountId(HEntityId.convert(id)));
 
 		return value;
 	}

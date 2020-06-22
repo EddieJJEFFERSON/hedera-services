@@ -39,8 +39,8 @@ import static com.hedera.test.utils.IdUtils.asAccount;
 class FCMapBackingAccountsTest {
 	private final AccountID a = asAccount("1.2.3");
 	private final AccountID b = asAccount("3.2.1");
-	private final EntityId aKey = EntityId.fromPojoAccount(a);
-	private final EntityId bKey = EntityId.fromPojoAccount(b);
+	private final EntityId aKey = EntityId.fromPojoAccountId(a);
+	private final EntityId bKey = EntityId.fromPojoAccountId(b);
 	private final HederaAccount aValue = MapValueFactory.newAccount().balance(123L).get();
 	private final HederaAccount bValue = MapValueFactory.newAccount().balance(122L).get();
 

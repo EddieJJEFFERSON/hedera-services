@@ -40,27 +40,27 @@ public class EntityId extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 	static final int MERKLE_VERSION = 1;
 	static final long RUNTIME_CONSTRUCTABLE_ID = 0xd5dd2ebaa0bde03L;
 
-	private long shardNum;
-	private long realmNum;
-	private long idNum;
+	private long shard;
+	private long realm;
+	private long num;
 
 	public EntityId() { }
 
-	public EntityId(long shardNum, long realmNum, long idNum) {
-		this.shardNum = shardNum;
-		this.realmNum = realmNum;
-		this.idNum = idNum;
+	public EntityId(long shard, long realm, long num) {
+		this.shard = shard;
+		this.realm = realm;
+		this.num = num;
 	}
 
-	public static EntityId fromPojoAccount(AccountID pojo) {
+	public static EntityId fromPojoAccountId(AccountID pojo) {
 		return new EntityId(pojo.getShardNum(), pojo.getRealmNum(), pojo.getAccountNum());
 	}
 
-	public static EntityId fromPojoTopic(TopicID pojo) {
+	public static EntityId fromPojoTopicId(TopicID pojo) {
 		return new EntityId(pojo.getShardNum(), pojo.getRealmNum(), pojo.getTopicNum());
 	}
 
-	public static EntityId fromPojoContract(ContractID pojo) {
+	public static EntityId fromPojoContractId(ContractID pojo) {
 		return new EntityId(pojo.getShardNum(), pojo.getRealmNum(), pojo.getContractNum());
 	}
 
@@ -73,9 +73,9 @@ public class EntityId extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 			in.readLong();
 			in.readLong();
 
-			id.realmNum = in.readLong();
-			id.shardNum = in.readLong();
-			id.idNum = in.readLong();
+			id.realm = in.readLong();
+			id.shard = in.readLong();
+			id.num = in.readLong();
 
 			return id;
 		}
@@ -94,22 +94,22 @@ public class EntityId extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 
 	@Override
 	public void deserialize(SerializableDataInputStream in, int version) throws IOException {
-		shardNum = in.readLong();
-		realmNum = in.readLong();
-		idNum = in.readLong();
+		shard = in.readLong();
+		realm = in.readLong();
+		num = in.readLong();
 	}
 
 	@Override
 	public void serialize(SerializableDataOutputStream out) throws IOException {
-		out.writeLong(shardNum);
-		out.writeLong(realmNum);
-		out.writeLong(idNum);
+		out.writeLong(shard);
+		out.writeLong(realm);
+		out.writeLong(num);
 	}
 
 	/* --- FastCopyable --- */
 	@Override
 	public EntityId copy() {
-		return new EntityId(shardNum, realmNum, idNum);
+		return new EntityId(shard, realm, num);
 	}
 
 	@Override
@@ -125,12 +125,12 @@ public class EntityId extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 		}
 
 		var that = (EntityId)o;
-		return shardNum == that.shardNum && realmNum == that.realmNum && idNum == that.idNum;
+		return shard == that.shard && realm == that.realm && num == that.num;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(shardNum, realmNum, idNum);
+		return Objects.hash(shard, realm, num);
 	}
 
 	@Override
@@ -167,36 +167,36 @@ public class EntityId extends AbstractMerkleNode implements FCMKey, MerkleLeaf {
 	}
 
 	/* --- Bean --- */
-	public long getShardNum() {
-		return shardNum;
+	public long getShard() {
+		return shard;
 	}
 
-	public void setShardNum(final long shardNum) {
-		this.shardNum = shardNum;
+	public void setShard(final long shard) {
+		this.shard = shard;
 	}
 
-	public long getRealmNum() {
-		return realmNum;
+	public long getRealm() {
+		return realm;
 	}
 
-	public void setRealmNum(final long realmNum) {
-		this.realmNum = realmNum;
+	public void setRealm(final long realm) {
+		this.realm = realm;
 	}
 
-	public long getIdNum() {
-		return idNum;
+	public long getNum() {
+		return num;
 	}
 
-	public void setIdNum(final long idNum) {
-		this.idNum = idNum;
+	public void setNum(final long num) {
+		this.num = num;
 	}
 
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
-				.add("shard", shardNum)
-				.add("realm", realmNum)
-				.add("entity", idNum)
+				.add("shard", shard)
+				.add("realm", realm)
+				.add("entity", num)
 				.toString();
 	}
 }

@@ -30,7 +30,7 @@ import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.hedera.services.legacy.unit.handler.SolidityAddress;
-import com.hedera.services.legacy.core.jproto.JAccountID;
+import com.hedera.services.legacy.core.jproto.HEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.proto.utils.KeyExpansion;
@@ -80,7 +80,7 @@ public class FCMapSerializationTest {
 				.fundsSentRecordThreshold(100)
 				.isReceiverSigRequired(true)
 				.key(JKey.mapKey(key))
-				.proxy(JAccountID.convert(proxyAccountId))
+				.proxy(HEntityId.convert(proxyAccountId))
 				.autoRenewPeriod(1800)
 				.isDeleted(false)
 				.expiry(1000)
@@ -103,12 +103,12 @@ public class FCMapSerializationTest {
 		Assert.assertArrayEquals(mapValue.getAccountKeys().serialize(),
 				deserilise.getAccountKeys().serialize());
 		Assert.assertEquals(mapValue.getAutoRenewPeriod(), deserilise.getAutoRenewPeriod());
-		Assert.assertEquals(mapValue.getProxyAccount().getAccountNum(),
-				deserilise.getProxyAccount().getAccountNum());
-		Assert.assertEquals(mapValue.getProxyAccount().getRealmNum(),
-				deserilise.getProxyAccount().getRealmNum());
-		Assert.assertEquals(mapValue.getProxyAccount().getShardNum(),
-				deserilise.getProxyAccount().getShardNum());
+		Assert.assertEquals(mapValue.getProxyAccount().getNum(),
+				deserilise.getProxyAccount().getNum());
+		Assert.assertEquals(mapValue.getProxyAccount().getRealm(),
+				deserilise.getProxyAccount().getRealm());
+		Assert.assertEquals(mapValue.getProxyAccount().getShard(),
+				deserilise.getProxyAccount().getShard());
 		Assert.assertEquals(mapValue.isDeleted(), deserilise.isDeleted());
 		Assert.assertEquals(mapValue.isSmartContract(), deserilise.isSmartContract());
 		Assert.assertEquals(mapValue.getMemo(), deserilise.getMemo());

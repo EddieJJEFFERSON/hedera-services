@@ -44,8 +44,8 @@ public class JTransactionReceiptTest {
     return TopicID.newBuilder().setShardNum(shard).setRealmNum(realm).setTopicNum(num).build();
   }
 
-  private JAccountID getTopicJAccountId(long shard, long realm, long num) {
-    return new JAccountID(shard, realm, num);
+  private HEntityId getTopicJAccountId(long shard, long realm, long num) {
+    return new HEntityId(shard, realm, num);
   }
 
   private byte[] getSha384Hash() {
@@ -106,7 +106,7 @@ public class JTransactionReceiptTest {
     final var receipt = TransactionReceipt.newBuilder().setTopicID(topicId).build();
     final var cut = JTransactionReceipt.convert(receipt);
 
-    assertAll(() -> assertEquals(JAccountID.convert(topicId), cut.getTopicID()),
+    assertAll(() -> assertEquals(HEntityId.ofNullableTopicId(topicId), cut.getTopicID()),
             () -> assertNull(cut.getAccountID()),
             () -> assertNull(cut.getFileID()),
             () -> assertNull(cut.getContractID()),
@@ -160,9 +160,9 @@ public class JTransactionReceiptTest {
     receipt.setTopicID(topicId);
     final var cut = JTransactionReceipt.convert(receipt);
 
-    assertAll(() -> assertEquals(topicId.getShardNum(), cut.getTopicID().getShardNum()),
-            () -> assertEquals(topicId.getRealmNum(), cut.getTopicID().getRealmNum()),
-            () -> assertEquals(topicId.getAccountNum(), cut.getTopicID().getTopicNum()),
+    assertAll(() -> assertEquals(topicId.getShard(), cut.getTopicID().getShardNum()),
+            () -> assertEquals(topicId.getRealm(), cut.getTopicID().getRealmNum()),
+            () -> assertEquals(topicId.getNum(), cut.getTopicID().getTopicNum()),
             () -> assertEquals(0L, cut.getTopicSequenceNumber()),
             () -> assertEquals(0, cut.getTopicRunningHash().size())
     );
@@ -312,7 +312,7 @@ public class JTransactionReceiptTest {
 
   @Test
   public void hcsConstructor() {
-    final var topicId = JAccountID.convert(TopicID.newBuilder().setTopicNum(1L).build());
+    final var topicId = HEntityId.ofNullableTopicId(TopicID.newBuilder().setTopicNum(1L).build());
     final var sequenceNumber = 2L;
     final var runningHash = new byte[3];
     final var cut = new JTransactionReceipt("SUCCESS", null, null, null, null,
