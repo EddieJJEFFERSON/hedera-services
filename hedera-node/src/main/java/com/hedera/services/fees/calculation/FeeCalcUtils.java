@@ -52,7 +52,7 @@ public class FeeCalcUtils {
 	public static Timestamp lookupAccountExpiry(EntityId key, FCMap<EntityId, HederaAccount> accounts) {
 		try {
 			HederaAccount account = accounts.get(key);
-			long expiration = account.getExpirationTime();
+			long expiration = account.getExpiry();
 			return Timestamp.newBuilder().setSeconds(expiration).build();
 		} catch (Exception e) {
 			log.debug("Ignoring expiry in fee calculation for {}", key, e);

@@ -62,7 +62,7 @@ public class GetAccountInfoResourceUsage implements QueryResourceUsageEstimator 
 			HederaAccount account = view.accounts().get(key);
 
 			return usageEstimator.getAccountInfoQueryFeeMatrices(
-					mapJKey(account.getAccountKeys()),
+					mapJKey(account.getKey()),
 					EMPTY_LIST,
 					type);
 		} catch (Exception illegal) {

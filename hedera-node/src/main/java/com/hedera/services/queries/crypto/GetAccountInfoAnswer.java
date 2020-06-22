@@ -77,10 +77,10 @@ public class GetAccountInfoAnswer implements AnswerService {
 				HederaAccount account = view.accounts().get(EntityId.fromPojoAccountId(id));
 				String solidityAddress = asSolidityAddressHex(id);
 				CryptoGetInfoResponse.AccountInfo.Builder info = CryptoGetInfoResponse.AccountInfo.newBuilder()
-						.setKey(asKeyUnchecked(account.getAccountKeys()))
-						.setExpirationTime(Timestamp.newBuilder().setSeconds(account.getExpirationTime()))
-						.setAutoRenewPeriod(Duration.newBuilder().setSeconds(account.getAutoRenewPeriod()))
-						.setProxyAccountID(asAccount(account.getProxyAccount()))
+						.setKey(asKeyUnchecked(account.getKey()))
+						.setExpirationTime(Timestamp.newBuilder().setSeconds(account.getExpiry()))
+						.setAutoRenewPeriod(Duration.newBuilder().setSeconds(account.getAutoRenewSecs()))
+						.setProxyAccountID(asAccount(account.getProxy()))
 						.setAccountID(op.getAccountID())
 						.setBalance(account.getBalance())
 						.setContractAccountID(solidityAddress)

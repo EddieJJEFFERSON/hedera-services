@@ -67,7 +67,7 @@ class ContractUpdateResourceUsageTest {
 		given(nonContractUpdateTxn.hasContractUpdateInstance()).willReturn(false);
 
 		account = mock(HederaAccount.class);
-		given(account.getExpirationTime()).willReturn(Long.MAX_VALUE);
+		given(account.getExpiry()).willReturn(Long.MAX_VALUE);
 		accounts = mock(FCMap.class);
 		given(accounts.get(accountKey)).willReturn(account);
 		view = mock(StateView.class);

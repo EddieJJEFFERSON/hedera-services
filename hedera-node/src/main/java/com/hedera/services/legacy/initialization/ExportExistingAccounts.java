@@ -52,11 +52,11 @@ public class ExportExistingAccounts {
             + currKey.getNum());
         mapValue = accountMap.get(currKey);
         cryptoAccount.put("initialBalance", mapValue.getBalance());
-        proxyAccountID = mapValue.getProxyAccount();
+        proxyAccountID = mapValue.getProxy();
         if (proxyAccountID != null) {
           cryptoAccount.put("proxyAccountNum", proxyAccountID.getNum());
           cryptoAccount.put("proxyRealmNum", proxyAccountID.getRealm());
-          cryptoAccount.put("proxyShardNum", mapValue.getProxyAccount());
+          cryptoAccount.put("proxyShardNum", mapValue.getProxy());
         } else {
           cryptoAccount.put("proxyAccountNum", 0);
           cryptoAccount.put("proxyRealmNum", 0);
@@ -65,11 +65,11 @@ public class ExportExistingAccounts {
         cryptoAccount.put("sendRecordThreshold", mapValue.getSenderThreshold());
         cryptoAccount.put("receiveRecordThreshold", mapValue.getReceiverThreshold());
         cryptoAccount.put("receiverSigRequired", mapValue.isReceiverSigRequired());
-        cryptoAccount.put("autoRenewPeriod", mapValue.getAutoRenewPeriod());
+        cryptoAccount.put("autoRenewPeriod", mapValue.getAutoRenewSecs());
         cryptoAccount.put("shardID", currKey.getShard());
         cryptoAccount.put("realmID", currKey.getRealm());
         cryptoAccount.put("accountNum", currKey.getNum());
-        String key = Hex.encodeHexString(SerializationUtils.serialize(mapValue.getAccountKeys()));
+        String key = Hex.encodeHexString(SerializationUtils.serialize(mapValue.getKey()));
         cryptoAccount.put("key", key);
       } catch (Exception e) {
         log.error("Exception occurred while fetching Accounts from Account FCMap", e);

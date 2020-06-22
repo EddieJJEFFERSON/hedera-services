@@ -71,7 +71,7 @@ class TxnAwareSoliditySigsVerifierTest {
 		given(contract.isReceiverSigRequired()).willReturn(true);
 		sigReqAccount = mock(HederaAccount.class);
 		given(sigReqAccount.isReceiverSigRequired()).willReturn(true);
-		given(sigReqAccount.getAccountKeys()).willReturn(expectedKey);
+		given(sigReqAccount.getKey()).willReturn(expectedKey);
 		noSigReqAccount = mock(HederaAccount.class);
 		given(noSigReqAccount.isReceiverSigRequired()).willReturn(false);
 

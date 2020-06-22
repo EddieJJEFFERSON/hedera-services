@@ -175,7 +175,7 @@ public class SmartContractRequestHandlerStorageTest {
     feeCollAccountId = RequestBuilder.getAccountIdBuild(feeCollAccount, 0l, 0l);
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
-    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
@@ -310,8 +310,8 @@ public class SmartContractRequestHandlerStorageTest {
     mk.setShard(contractId.getShardNum());
     HederaAccount mv = fcMap.get(mk);
     Assert.assertNotNull(mv);
-    Assert.assertNotNull(mv.getAccountKeys());
-    Assert.assertNotNull(mv.getAccountKeys());
+    Assert.assertNotNull(mv.getKey());
+    Assert.assertNotNull(mv.getKey());
 
     String bytesPath = String.format("/%d/s%d", contractId.getRealmNum(), contractId.getContractNum());
     Assert.assertTrue(storageWrapper.fileExists(bytesPath));

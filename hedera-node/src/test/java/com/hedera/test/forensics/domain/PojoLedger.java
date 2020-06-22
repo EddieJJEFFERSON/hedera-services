@@ -41,7 +41,7 @@ public class PojoLedger {
 	public static PojoLedger fromDisk(String dumpLoc) throws Exception {
 		try (SerializableDataInputStream fin = new SerializableDataInputStream(Files.newInputStream(Path.of(dumpLoc)))) {
 			FCMap<EntityId, HederaAccount> fcm =
-					new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+					new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
 			fcm.copyFrom(fin);
 			fcm.copyFromExtra(fin);
 			return from(fcm);

@@ -99,8 +99,8 @@ public class HederaAccountPropertyTest {
 				.isReceiverSigRequired(origIsReceiverSigReq)
 				.customizing(new HederaAccount());
 		account.setBalance(origBalance);
-		account.getRecords().offer(origRecords.get(0));
-		account.getRecords().offer(origRecords.get(1));
+		account.records().offer(origRecords.get(0));
+		account.records().offer(origRecords.get(1));
 
 		// when:
 		IS_DELETED.setter().accept(account, newIsDeleted);

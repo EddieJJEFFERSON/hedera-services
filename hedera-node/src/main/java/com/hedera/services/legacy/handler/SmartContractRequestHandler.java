@@ -417,11 +417,11 @@ public class SmartContractRequestHandler {
 
 	private void setParentPropertiesForChildrenContracts(AccountID parent, List<ContractID> children) {
 		HederaAccount parentAccount = ledger.get(parent);
-		HederaAccountCustomizer customizer = new HederaAccountCustomizer().key(parentAccount.getAccountKeys())
+		HederaAccountCustomizer customizer = new HederaAccountCustomizer().key(parentAccount.getKey())
 				.memo(parentAccount.getMemo())
-				.expiry(parentAccount.getExpirationTime())
-				.autoRenewPeriod(parentAccount.getAutoRenewPeriod())
-				.proxy(parentAccount.getProxyAccount())
+				.expiry(parentAccount.getExpiry())
+				.autoRenewPeriod(parentAccount.getAutoRenewSecs())
+				.proxy(parentAccount.getProxy())
 				.fundsSentRecordThreshold(parentAccount.getSenderThreshold())
 				.fundsReceivedRecordThreshold(parentAccount.getReceiverThreshold());
 		for (ContractID child : children) {
@@ -622,14 +622,14 @@ public class SmartContractRequestHandler {
 						.setBalance(contract.getBalance())
 						.setMemo(contract.getMemo())
 						.setAccountID(id)
-						.setAutoRenewPeriod(Duration.newBuilder().setSeconds(contract.getAutoRenewPeriod()))
-						.setExpirationTime(Timestamp.newBuilder().setSeconds(contract.getExpirationTime()))
+						.setAutoRenewPeriod(Duration.newBuilder().setSeconds(contract.getAutoRenewSecs()))
+						.setExpirationTime(Timestamp.newBuilder().setSeconds(contract.getExpiry()))
 						.setContractAccountID(contractEthAddress);
 				var address = asSolidityAddress(cid);
 				long bytesUsed = lengthIfPresent(storageView.get(address)) + lengthIfPresent(bytecodeView.get(address));
 				builder.setStorage(bytesUsed);
 
-				JKey key = contract.getAccountKeys();
+				JKey key = contract.getKey();
 				if (key != null) {
 					try {
 						builder.setAdminKey(convertJKey(key, 1));
@@ -666,14 +666,14 @@ public class SmartContractRequestHandler {
 				HederaAccount contract = ledger.get(id);
 				if (contract != null) {
 					boolean memoProvided = op.getMemo().length() > 0;
-					boolean adminKeyExist = Optional.ofNullable(contract.getAccountKeys())
+					boolean adminKeyExist = Optional.ofNullable(contract.getKey())
 							.map(key -> !key.hasContractID())
 							.orElse(false);
 					if (!adminKeyExist &&
 							(op.hasProxyAccountID() ||
 									op.hasAutoRenewPeriod() || op.hasFileID() || op.hasAdminKey() || memoProvided)) {
 						receipt = getTransactionReceipt(MODIFYING_IMMUTABLE_CONTRACT, exchange.activeRates());
-					} else if (op.hasExpirationTime() && contract.getExpirationTime() > op.getExpirationTime().getSeconds()) {
+					} else if (op.hasExpirationTime() && contract.getExpiry() > op.getExpirationTime().getSeconds()) {
 						receipt = getTransactionReceipt(EXPIRATION_REDUCTION_NOT_ALLOWED, exchange.activeRates());
 					} else {
 						HederaAccountCustomizer customizer = new HederaAccountCustomizer();

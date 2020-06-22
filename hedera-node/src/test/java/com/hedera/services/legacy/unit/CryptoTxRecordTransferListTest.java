@@ -92,7 +92,7 @@ public class CryptoTxRecordTransferListTest {
 		nodeAccount = 3l;
 		payerAccountId = RequestBuilder.getAccountIdBuild(payerAccount, 0l, 0l);
 		nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
-		fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+		fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
 		feeAccount = RequestBuilder.getAccountIdBuild(98l, 0l, 0l);
 		accountAmountsList = new LinkedList<>();
 		hederaFunc = HederaFunctionality.CryptoTransfer;
@@ -241,7 +241,7 @@ public class CryptoTxRecordTransferListTest {
 		HederaAccount mv = new HederaAccount();
 		mv.setBalance(balance);
 		JKey jkey = JKey.mapKey(key);
-		mv.setAccountKeys(jkey);
+		mv.setKey(jkey);
 		fcMap.put(mk, mv);
 		ComplexKeyManager.setAccountKey(payerAccount, key);
 	}

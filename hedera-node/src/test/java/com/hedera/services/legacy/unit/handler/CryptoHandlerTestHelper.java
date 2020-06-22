@@ -420,7 +420,7 @@ class AccountOperations {
 	static boolean isValid(AccountID account, FCMap<EntityId, HederaAccount> ledger) {
 		return Optional
 				.ofNullable(ledger.get(EntityId.fromPojoAccountId(account)))
-				.map(a -> !a.getAccountKeys().hasContractID())
+				.map(a -> !a.getKey().hasContractID())
 				.orElse(false);
 	}
 

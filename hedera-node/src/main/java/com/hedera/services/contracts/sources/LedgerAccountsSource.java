@@ -79,9 +79,9 @@ public class LedgerAccountsSource implements Source<byte[], AccountState> {
 			evmState.setShardId(id.getShardNum());
 			evmState.setRealmId(id.getRealmNum());
 			evmState.setAccountNum(id.getAccountNum());
-			evmState.setAutoRenewPeriod(hederaAccount.getAutoRenewPeriod());
-			if (hederaAccount.getProxyAccount() != null) {
-				var proxy = hederaAccount.getProxyAccount();
+			evmState.setAutoRenewPeriod(hederaAccount.getAutoRenewSecs());
+			if (hederaAccount.getProxy() != null) {
+				var proxy = hederaAccount.getProxy();
 				evmState.setProxyAccountShard(proxy.getShard());
 				evmState.setProxyAccountRealm(proxy.getRealm());
 				evmState.setProxyAccountNum(proxy.getNum());
@@ -90,7 +90,7 @@ public class LedgerAccountsSource implements Source<byte[], AccountState> {
 			evmState.setReceiverThreshold(hederaAccount.getReceiverThreshold());
 			evmState.setReceiverSigRequired(hederaAccount.isReceiverSigRequired());
 			evmState.setDeleted(hederaAccount.isDeleted());
-			evmState.setExpirationTime(hederaAccount.getExpirationTime());
+			evmState.setExpirationTime(hederaAccount.getExpiry());
 			evmState.setSmartContract(hederaAccount.isSmartContract());
 
 			return evmState;

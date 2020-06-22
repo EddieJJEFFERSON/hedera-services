@@ -55,7 +55,7 @@ public class CryptoUpdateResourceUsage implements TxnResourceUsageEstimator {
 		try {
 			EntityId id = EntityId.fromPojoAccountId(txn.getCryptoUpdateAccount().getAccountIDToUpdate());
 			Timestamp expiry = lookupAccountExpiry(id, view.accounts());
-			Key key = mapJKey(view.accounts().get(id).getAccountKeys());
+			Key key = mapJKey(view.accounts().get(id).getKey());
 			return usageEstimator.getCryptoUpdateTxFeeMatrices(txn, sigUsage, expiry, key);
 		} catch (Exception e) {
 			log.debug("Unable to deduce CryptoUpdate usage for {}, using defaults", txn.getTransactionID(), e);

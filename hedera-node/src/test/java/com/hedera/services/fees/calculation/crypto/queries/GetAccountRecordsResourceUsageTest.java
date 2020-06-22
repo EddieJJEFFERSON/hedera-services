@@ -64,8 +64,8 @@ class GetAccountRecordsResourceUsageTest {
 	@BeforeEach
 	private void setup() throws Throwable {
 		aValue = MapValueFactory.newAccount().get();
-		aValue.getRecords().offer(recordOne());
-		aValue.getRecords().offer(recordTwo());
+		aValue.records().offer(recordOne());
+		aValue.records().offer(recordTwo());
 		usageEstimator = mock(CryptoFeeBuilder.class);
 		accounts = mock(FCMap.class);
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);

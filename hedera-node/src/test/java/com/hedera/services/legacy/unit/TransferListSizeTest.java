@@ -122,7 +122,7 @@ public class TransferListSizeTest {
     nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
     feeCollAccountId = RequestBuilder.getAccountIdBuild(feeCollAccount, 0l, 0l);
 
-    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     createAccount(payerAccountId, 1_000_000_000L);
     createAccount(nodeAccountId, 10_000L);
     createAccount(feeCollAccountId, 10_000L);
@@ -309,7 +309,7 @@ public class TransferListSizeTest {
     Key accountKey = ComplexKeyManager
         .genComplexKey(ComplexKeyManager.SUPPORTE_KEY_TYPES.single.name());
     JKey jkey = JKey.convertKey(accountKey, 1);
-    mv.setAccountKeys(jkey);
+    mv.setKey(jkey);
     fcMap.put(mk, mv);
     ComplexKeyManager.setAccountKey(payerAccount, accountKey);
   }

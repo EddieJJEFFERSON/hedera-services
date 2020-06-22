@@ -365,7 +365,7 @@ public class TransactionHandler {
         if (returnCode == OK) {
           try {
             SignedTxnAccessor accessor = new SignedTxnAccessor(transaction);
-            JKey payerKey = accounts.get(EntityId.fromPojoAccountId(payerAccount)).getAccountKeys();
+            JKey payerKey = accounts.get(EntityId.fromPojoAccountId(payerAccount)).getKey();
             Timestamp at = trBody.getTransactionID().getTransactionValidStart();
             FeeObject txnFee = fees.estimateFee(accessor, payerKey, stateView.get(), at);
             fee = txnFee.getNetworkFee() + txnFee.getNodeFee() + txnFee.getServiceFee();

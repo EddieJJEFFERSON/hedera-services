@@ -73,7 +73,7 @@ class TopicCreateTransitionLogicTest {
 	private OptionValidator validator;
 	private TopicCreateTransitionLogic subject;
 	private FCMap<EntityId, HederaAccount> accounts =
-			new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+			new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
 	private FCMap<EntityId, Topic> topics =
 			new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 	private EntityIdSource entityIdSource;

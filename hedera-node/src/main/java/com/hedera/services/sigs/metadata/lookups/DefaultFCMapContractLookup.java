@@ -59,12 +59,12 @@ public class DefaultFCMapContractLookup implements ContractSigMetaLookup {
 		HederaAccount contract = accounts.get(EntityId.fromPojoContractId(id));
 		if (contract == null || contract.isDeleted() || !contract.isSmartContract()) {
 			throw new InvalidContractIDException("Invalid contract!", id);
-		} else if (contract.getAccountKeys() == null) {
+		} else if (contract.getKey() == null) {
 			throw new AdminKeyNotExistException("Contract should never be referenced by a txn (missing key)!", id);
-		} else if (contract.getAccountKeys() instanceof JContractIDKey) {
+		} else if (contract.getKey() instanceof JContractIDKey) {
 			throw new AdminKeyNotExistException("Contract should never be referenced by a txn (no admin key)!", id);
 		} else {
-			return new ContractSigningMetadata(contract.getAccountKeys());
+			return new ContractSigningMetadata(contract.getKey());
 		}
 	}
 }

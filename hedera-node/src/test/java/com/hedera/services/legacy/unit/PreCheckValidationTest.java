@@ -105,7 +105,7 @@ class PreCheckValidationTest {
   private MockStorageWrapper storageWrapper = new MockStorageWrapper();
   private RecordCache recordCache = new RecordCache(CacheBuilder.newBuilder().build());
   private FCMap<EntityId, HederaAccount> accountFCMap =
-      new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+      new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
   FCMap<EntityId, Topic> topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
   private AccountID nodeAccount = AccountID.newBuilder().setAccountNum(3).setRealmNum(0).setShardNum(0).build();
   private AccountID payerAccount = AccountID.newBuilder().setAccountNum(300).setRealmNum(0).setShardNum(0).build();

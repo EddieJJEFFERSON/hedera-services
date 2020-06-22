@@ -47,12 +47,12 @@ public class MapValueFactory {
 	public HederaAccount get() {
 		HederaAccount value = new HederaAccount();
 		memo.ifPresent(s -> value.setMemo(s));
-		proxy.ifPresent(p -> value.setProxyAccount(HEntityId.convert(p)));
+		proxy.ifPresent(p -> value.setProxy(HEntityId.convert(p)));
 		balance.ifPresent(b -> { try { value.setBalance(b); } catch (Exception ignore) {} });
 		deleted.ifPresent(b -> value.setDeleted(b));
-		accountKeys.ifPresent(k -> value.setAccountKeys(k));
-		expirationTime.ifPresent(l -> value.setExpirationTime(l));
-		autoRenewPeriod.ifPresent(d -> value.setAutoRenewPeriod(d));
+		accountKeys.ifPresent(k -> value.setKey(k));
+		expirationTime.ifPresent(l -> value.setExpiry(l));
+		autoRenewPeriod.ifPresent(d -> value.setAutoRenewSecs(d));
 		senderThreshold.ifPresent(l -> value.setSenderThreshold(l));
 		isSmartContract.ifPresent(b -> value.setSmartContract(b));
 		receiverThreshold.ifPresent(l -> value.setReceiverThreshold(l));

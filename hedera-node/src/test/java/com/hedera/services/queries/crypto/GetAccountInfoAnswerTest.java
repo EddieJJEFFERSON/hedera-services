@@ -143,11 +143,11 @@ class GetAccountInfoAnswerTest {
 		assertEquals(payerAccount.getBalance(), info.getBalance());
 		assertEquals(payerAccount.getReceiverThreshold(), info.getGenerateReceiveRecordThreshold());
 		assertEquals(payerAccount.getSenderThreshold(), info.getGenerateSendRecordThreshold());
-		assertEquals(payerAccount.getAutoRenewPeriod(), info.getAutoRenewPeriod().getSeconds());
-		assertEquals(payerAccount.getProxyAccount(), HEntityId.convert(info.getProxyAccountID()));
-		assertEquals(JKey.mapJKey(payerAccount.getAccountKeys()), info.getKey());
+		assertEquals(payerAccount.getAutoRenewSecs(), info.getAutoRenewPeriod().getSeconds());
+		assertEquals(payerAccount.getProxy(), HEntityId.convert(info.getProxyAccountID()));
+		assertEquals(JKey.mapJKey(payerAccount.getKey()), info.getKey());
 		assertEquals(payerAccount.isReceiverSigRequired(), info.getReceiverSigRequired());
-		assertEquals(payerAccount.getExpirationTime(), info.getExpirationTime().getSeconds());
+		assertEquals(payerAccount.getExpiry(), info.getExpirationTime().getSeconds());
 	}
 
 	@Test

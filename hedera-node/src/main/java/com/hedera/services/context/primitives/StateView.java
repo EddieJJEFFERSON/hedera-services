@@ -54,7 +54,7 @@ public class StateView {
 	public static final FCMap<EntityId, Topic> EMPTY_TOPICS =
 			new FCMap<>(new EntityId.Provider(), new Topic.Provider());
 	public static final FCMap<EntityId, HederaAccount> EMPTY_ACCOUNTS =
-			new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+			new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
 	public static final FCMap<BlobMeta, OptionalBlob> EMPTY_STORAGE =
 			new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
 	public static final StateView EMPTY_VIEW = new StateView(EMPTY_TOPICS, EMPTY_ACCOUNTS);

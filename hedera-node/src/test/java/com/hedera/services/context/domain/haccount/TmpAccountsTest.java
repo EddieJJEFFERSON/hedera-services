@@ -48,10 +48,9 @@ class TmpAccountsTest {
 	@Test
 	public void readFcMap() throws Exception {
 		// given:
-		FCMap<EntityId, HederaAccount> subject = null;
-//				new FCMap<>(new EntityId.Provider(), HederaAccount::deserialize);
+		FCMap<EntityId, HederaAccount> subject = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
 		// and:
-		var in = new SerializableDataInputStream(Files.newInputStream(Paths.get("testTopics.fcm")));
+		var in = new SerializableDataInputStream(Files.newInputStream(Paths.get("testAccounts.fcm")));
 
 		// when:
 		subject.copyFrom(in);
@@ -111,7 +110,7 @@ class TmpAccountsTest {
 				.autoRenewPeriod(666L * v)
 				.customizing(new HederaAccount());
 		account.setBalance(888L * v);
-		account.resetRecordsToContain(records.get(s));
+		MerkleAccountTest.offerRecordsInOrder(account, records.get(s));
 		return account;
 	}
 }

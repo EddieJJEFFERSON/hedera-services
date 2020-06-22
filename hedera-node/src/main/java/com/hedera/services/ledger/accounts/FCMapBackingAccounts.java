@@ -25,6 +25,8 @@ import com.hedera.services.state.merkle.EntityId;
 import com.hedera.services.context.domain.haccount.HederaAccount;
 import com.swirlds.fcmap.FCMap;
 
+import static com.hedera.services.state.merkle.EntityId.fromPojoAccountId;
+
 public class FCMapBackingAccounts implements BackingAccounts<AccountID, HederaAccount> {
 	private final FCMap<EntityId, HederaAccount> delegate;
 
@@ -34,19 +36,19 @@ public class FCMapBackingAccounts implements BackingAccounts<AccountID, HederaAc
 
 	@Override
 	public HederaAccount getRef(AccountID id) {
-		return delegate.get(EntityId.fromPojoAccountId(id));
+		return delegate.get(fromPojoAccountId(id));
 	}
 
 	@Override
 	public HederaAccount getCopy(AccountID id) {
-		HederaAccount ref = delegate.get(EntityId.fromPojoAccountId(id));
+		HederaAccount ref = delegate.get(fromPojoAccountId(id));
 
 		return (ref == null) ? null : new HederaAccount(ref);
 	}
 
 	@Override
 	public void replace(AccountID id, HederaAccount account) {
-		EntityId delegateId = EntityId.fromPojoAccountId(id);
+		EntityId delegateId = fromPojoAccountId(id);
 		if (!delegate.containsKey(delegateId)) {
 			delegate.put(delegateId, account);
 		} else {
@@ -56,11 +58,11 @@ public class FCMapBackingAccounts implements BackingAccounts<AccountID, HederaAc
 
 	@Override
 	public boolean contains(AccountID id) {
-		return delegate.containsKey(EntityId.fromPojoAccountId(id));
+		return delegate.containsKey(fromPojoAccountId(id));
 	}
 
 	@Override
 	public void remove(AccountID id) {
-		delegate.remove(EntityId.fromPojoAccountId(id));
+		delegate.remove(fromPojoAccountId(id));
 	}
 }

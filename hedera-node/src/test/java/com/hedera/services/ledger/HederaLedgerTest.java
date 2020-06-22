@@ -127,7 +127,7 @@ public class HederaLedgerTest {
 	}
 
 	private void setupWithLiveFcBackedLedger() {
-		backingMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+		backingMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
 		backingAccounts = new FCMapBackingAccounts(backingMap);
 		HederaAccount genesisAccount = new HederaAccount();
 		try {

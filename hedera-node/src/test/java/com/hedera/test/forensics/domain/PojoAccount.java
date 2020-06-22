@@ -76,20 +76,20 @@ public class PojoAccount {
 		pojo.setId(asAccountString(fromKey(mk)));
 		pojo.setBalance(value.getBalance());
 		pojo.setSmartContract(value.isSmartContract());
-		pojo.setKeys(value.getAccountKeys().toString());
-		pojo.setNumRecords(value.getRecords().size());
+		pojo.setKeys(value.getKey().toString());
+		pojo.setNumRecords(value.records().size());
 		if (pojo.getNumRecords() > 0) {
-			pojo.setRecords(value.getRecords().stream().map(PojoRecord::from).collect(toList()));
+			pojo.setRecords(value.records().stream().map(PojoRecord::from).collect(toList()));
 		}
-		pojo.setExpiry(value.getExpirationTime());
-		pojo.setAutoRenewPeriod(value.getAutoRenewPeriod());
+		pojo.setExpiry(value.getExpiry());
+		pojo.setAutoRenewPeriod(value.getAutoRenewSecs());
 		pojo.setReceiveThreshold(value.getReceiverThreshold());
 		pojo.setSendThreshold(value.getReceiverThreshold());
 		pojo.setMemo(value.getMemo());
 		pojo.setReceiverSigRequired(value.isReceiverSigRequired());
 		pojo.setDeleted(value.isDeleted());
-		if (value.getProxyAccount() != null) {
-			pojo.setProxyId(asString(value.getProxyAccount()));
+		if (value.getProxy() != null) {
+			pojo.setProxyId(asString(value.getProxy()));
 		}
 		return pojo;
 	}

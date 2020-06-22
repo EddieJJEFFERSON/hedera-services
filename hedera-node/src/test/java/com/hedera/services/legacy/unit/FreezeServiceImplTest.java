@@ -114,7 +114,7 @@ public class FreezeServiceImplTest {
             .thenReturn(true);
 
     //Init FCMap; Add account 58
-    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     EntityId mk = new EntityId();
     mk.setNum(payerAccount);
     mk.setRealm(0);
@@ -124,7 +124,7 @@ public class FreezeServiceImplTest {
 
     pubKey2privKeyMap = new HashMap<>();
     key = genSingleEd25519Key(pubKey2privKeyMap);
-    mv.setAccountKeys(JKey.mapKey(key));
+    mv.setKey(JKey.mapKey(key));
     accountFCMap.put(mk, mv);
 
     receiptCache = new RecordCache(CacheBuilder.newBuilder().build());

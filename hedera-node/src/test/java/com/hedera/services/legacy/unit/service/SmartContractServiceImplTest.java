@@ -191,7 +191,7 @@ public class SmartContractServiceImplTest {
     receiverAccountId = RequestBuilder.getAccountIdBuild(8888l, 0l, 0l);
     storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
     // Init FCMap & Put Balances
-    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
     EntityId mk = new EntityId();
     mk.setNum(payerAccount);

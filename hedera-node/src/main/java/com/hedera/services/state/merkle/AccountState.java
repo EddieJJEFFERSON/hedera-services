@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.hedera.services.context.properties.StandardizedPropertySources.MAX_MEMO_UTF8_BYTES;
+import static com.hedera.services.legacy.core.jproto.JKey.equalUpToDecodability;
 
 public class AccountState extends AbstractMerkleNode implements MerkleLeaf {
 	private static final Logger log = LogManager.getLogger(AccountState.class);
@@ -169,8 +170,7 @@ public class AccountState extends AbstractMerkleNode implements MerkleLeaf {
 
 		var that = (AccountState) o;
 
-		return Objects.equals(this.key, that.key) &&
-				this.expiry == that.expiry &&
+		return this.expiry == that.expiry &&
 				this.balance == that.balance &&
 				this.autoRenewSecs == that.autoRenewSecs &&
 				this.senderThreshold == that.senderThreshold &&
@@ -179,7 +179,8 @@ public class AccountState extends AbstractMerkleNode implements MerkleLeaf {
 				this.deleted == that.deleted &&
 				this.smartContract == that.smartContract &&
 				this.receiverSigRequired == that.receiverSigRequired &&
-				Objects.equals(this.proxy, that.proxy);
+				Objects.equals(this.proxy, that.proxy) &&
+				equalUpToDecodability(this.key, that.key);
 	}
 
 	@Override
@@ -216,31 +217,31 @@ public class AccountState extends AbstractMerkleNode implements MerkleLeaf {
 				.toString();
 	}
 
-	public JKey getKey() {
+	public JKey key() {
 		return key;
 	}
 
-	public long getExpiry() {
+	public long expiry() {
 		return expiry;
 	}
 
-	public long getBalance() {
+	public long balance() {
 		return balance;
 	}
 
-	public long getAutoRenewSecs() {
+	public long autoRenewSecs() {
 		return autoRenewSecs;
 	}
 
-	public long getSenderThreshold() {
+	public long senderThreshold() {
 		return senderThreshold;
 	}
 
-	public long getReceiverThreshold() {
+	public long receiverThreshold() {
 		return receiverThreshold;
 	}
 
-	public String getMemo() {
+	public String memo() {
 		return memo;
 	}
 
@@ -256,7 +257,51 @@ public class AccountState extends AbstractMerkleNode implements MerkleLeaf {
 		return receiverSigRequired;
 	}
 
-	public HEntityId getProxy() {
+	public HEntityId proxy() {
 		return proxy;
+	}
+
+	public void setKey(JKey key) {
+		this.key = key;
+	}
+
+	public void setExpiry(long expiry) {
+		this.expiry = expiry;
+	}
+
+	public void setBalance(long balance) {
+		this.balance = balance;
+	}
+
+	public void setAutoRenewSecs(long autoRenewSecs) {
+		this.autoRenewSecs = autoRenewSecs;
+	}
+
+	public void setSenderThreshold(long senderThreshold) {
+		this.senderThreshold = senderThreshold;
+	}
+
+	public void setReceiverThreshold(long receiverThreshold) {
+		this.receiverThreshold = receiverThreshold;
+	}
+
+	public void setMemo(String memo) {
+		this.memo = memo;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	public void setSmartContract(boolean smartContract) {
+		this.smartContract = smartContract;
+	}
+
+	public void setReceiverSigRequired(boolean receiverSigRequired) {
+		this.receiverSigRequired = receiverSigRequired;
+	}
+
+	public void setProxy(HEntityId proxy) {
+		this.proxy = proxy;
 	}
 }

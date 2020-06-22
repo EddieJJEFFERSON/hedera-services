@@ -80,8 +80,8 @@ class GetAccountRecordsAnswerTest {
 				.autoRenewPeriod(1_000_000L)
 				.expirationTime(9_999_999L)
 				.get();
-		payerAccount.getRecords().offer(recordOne());
-		payerAccount.getRecords().offer(recordTwo());
+		payerAccount.records().offer(recordOne());
+		payerAccount.records().offer(recordTwo());
 
 		accounts = mock(FCMap.class);
 		given(accounts.get(EntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);

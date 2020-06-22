@@ -65,7 +65,7 @@ public class RepoNewCacheTest {
   @Ignore
   public void test() {
     FCMap<EntityId, HederaAccount> accountMap =
-            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+            new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     FCMap<BlobMeta, OptionalBlob> storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
 
@@ -166,7 +166,7 @@ public class RepoNewCacheTest {
   @Test
   public void rollbackTest() {
     FCMap<EntityId, HederaAccount> accountMap =
-            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+            new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     FCMap<BlobMeta, OptionalBlob> storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
 

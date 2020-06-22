@@ -78,7 +78,7 @@ public class HederaKeyTraversal {
 	 */
 	public static int numSimpleKeys(HederaAccount account) {
 		try {
-			return numSimpleKeys(account.getAccountKeys());
+			return numSimpleKeys(account.getKey());
 		} catch (Exception ignore) {
 			log.warn(ignore.getMessage());
 			return 0;

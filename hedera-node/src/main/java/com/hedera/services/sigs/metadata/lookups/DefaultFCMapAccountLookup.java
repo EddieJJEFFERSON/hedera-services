@@ -53,6 +53,6 @@ public class DefaultFCMapAccountLookup implements AccountSigMetaLookup {
 		if (account == null) {
 			throw new InvalidAccountIDException("Invalid account!", id);
 		}
-		return new AccountSigningMetadata(account.getAccountKeys(), account.isReceiverSigRequired());
+		return new AccountSigningMetadata(account.getKey(), account.isReceiverSigRequired());
 	}
 }

@@ -54,7 +54,7 @@ class FeeCalcUtilsTest {
 		FCMap<EntityId, HederaAccount> accounts = mock(FCMap.class);
 		Timestamp expected = Timestamp.newBuilder().setSeconds(Long.MAX_VALUE).build();
 
-		given(account.getExpirationTime()).willReturn(Long.MAX_VALUE);
+		given(account.getExpiry()).willReturn(Long.MAX_VALUE);
 		given(accounts.get(key)).willReturn(account);
 
 		// when:

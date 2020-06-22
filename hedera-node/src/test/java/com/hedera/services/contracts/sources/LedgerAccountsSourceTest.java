@@ -112,9 +112,9 @@ class LedgerAccountsSourceTest {
 		boolean smartContract = true;
 		boolean receiverSigRequired = true;
 		HederaAccount account = mock(HederaAccount.class);
-		given(account.getAutoRenewPeriod()).willReturn(autoRenew);
-		given(account.getExpirationTime()).willReturn(expiry);
-		given(account.getProxyAccount()).willReturn(HEntityId.convert(IdUtils.asAccount("1.2.3")));
+		given(account.getAutoRenewSecs()).willReturn(autoRenew);
+		given(account.getExpiry()).willReturn(expiry);
+		given(account.getProxy()).willReturn(HEntityId.convert(IdUtils.asAccount("1.2.3")));
 		given(account.getSenderThreshold()).willReturn(sendThreshold);
 		given(account.getReceiverThreshold()).willReturn(receiveThreshold);
 		given(account.isReceiverSigRequired()).willReturn(receiverSigRequired);

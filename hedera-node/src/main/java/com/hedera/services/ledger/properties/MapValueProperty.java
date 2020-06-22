@@ -113,34 +113,34 @@ public enum MapValueProperty implements BeanProperty<HederaAccount> {
 	AUTO_RENEW_PERIOD {
 		@Override
 		public BiConsumer<HederaAccount, Object> setter() {
-			return (a, v) -> a.setAutoRenewPeriod((long)v);
+			return (a, v) -> a.setAutoRenewSecs((long)v);
 		}
 
 		@Override
 		public Function<HederaAccount, Object> getter() {
-			return HederaAccount::getAutoRenewPeriod;
+			return HederaAccount::getAutoRenewSecs;
 		}
 	},
 	EXPIRY {
 		@Override
 		public BiConsumer<HederaAccount, Object> setter() {
-			return (a, v) -> a.setExpirationTime((long)v);
+			return (a, v) -> a.setExpiry((long)v);
 		}
 
 		@Override
 		public Function<HederaAccount, Object> getter() {
-			return HederaAccount::getExpirationTime;
+			return HederaAccount::getExpiry;
 		}
 	},
 	KEY {
 		@Override
 		public BiConsumer<HederaAccount, Object> setter() {
-			return (a, k) -> a.setAccountKeys((JKey)k);
+			return (a, k) -> a.setKey((JKey)k);
 		}
 
 		@Override
 		public Function<HederaAccount, Object> getter() {
-			return HederaAccount::getAccountKeys;
+			return HederaAccount::getKey;
 		}
 	},
 	MEMO {
@@ -157,12 +157,12 @@ public enum MapValueProperty implements BeanProperty<HederaAccount> {
 	PROXY {
 		@Override
 		public BiConsumer<HederaAccount, Object> setter() {
-			return (a, p) -> a.setProxyAccount((HEntityId)p);
+			return (a, p) -> a.setProxy((HEntityId)p);
 		}
 
 		@Override
 		public Function<HederaAccount, Object> getter() {
-			return HederaAccount::getProxyAccount;
+			return HederaAccount::getProxy;
 		}
 	},
 	TRANSACTION_RECORDS {
@@ -173,7 +173,7 @@ public enum MapValueProperty implements BeanProperty<HederaAccount> {
 
 		@Override
 		public Function<HederaAccount, Object> getter() {
-			return a -> a.getRecords().copy(true);
+			return a -> a.records().copy(true);
 		}
 	};
 

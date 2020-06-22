@@ -181,7 +181,7 @@ public class FeeDataLookups {
 				EntityId accountIDEntityId = EntityId.fromPojoAccountId(txBody.getTransactionID().getAccountID());
 				Timestamp expirationTimeStamp = FeeCalcUtils.lookupAccountExpiry(accountIDEntityId, accountFCMap);
 				HederaAccount account = accountFCMap.get(accountIDEntityId);
-				Key existingKey = JKey.mapJKey(account.getAccountKeys());
+				Key existingKey = JKey.mapJKey(account.getKey());
 				feeMatrices = getCryptoUpdateTransactionFeeMatrices(txBody, expirationTimeStamp, sigValObj, existingKey);
 			} else if (txBody.hasContractCreateInstance()) {
 				feeMatrices = getSmartContractCreateTransactionFeeMatrices(txBody, sigValObj);

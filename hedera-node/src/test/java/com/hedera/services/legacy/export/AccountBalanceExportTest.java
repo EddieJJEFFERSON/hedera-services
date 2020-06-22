@@ -90,7 +90,7 @@ public class AccountBalanceExportTest {
 
   FCMap<EntityId, HederaAccount> getAccountMapForTest() throws Exception {
     FCMap<EntityId, HederaAccount> fcMap =
-            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+            new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     for (long[] account : accounts) {
       EntityId mk = new EntityId();
       mk.setShard(account[0]);
@@ -222,7 +222,7 @@ public class AccountBalanceExportTest {
 
   FCMap<EntityId, HederaAccount> getAccountMapWithInvalidTotalBalanceForTest() throws Exception {
     FCMap<EntityId, HederaAccount> fcMap =
-            new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+            new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
     for (long[] account : accounts) {
       EntityId mk = new EntityId();
       mk.setShard(account[0]);

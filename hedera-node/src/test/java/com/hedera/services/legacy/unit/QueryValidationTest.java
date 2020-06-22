@@ -75,7 +75,7 @@ class QueryValidationTest {
 
   long payerAccountInitialBalance = 100000;
   private RecordCache recordCache;
-  private FCMap<EntityId, HederaAccount> map = new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize);
+  private FCMap<EntityId, HederaAccount> map = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
   private FCMap<BlobMeta, OptionalBlob> storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
   ;
   private AccountID nodeAccount =

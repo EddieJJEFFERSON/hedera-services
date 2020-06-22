@@ -75,7 +75,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 
 	NodeId nodeId = ID_WITH_INACTIVE_CONTEXT;
 
-	/* Order of v1 Merkle tree children */
+	/* Order of v1 Merkle node children */
 	static final int ADDRESS_BOOK_CHILD_INDEX = 0;
 	static final int NETWORK_CTX_CHILD_INDEX = 1;
 	static final int TOPICS_CHILD_INDEX = 2;
@@ -129,7 +129,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 			setChild(NETWORK_CTX_CHILD_INDEX, networkCtx);
 			setChild(TOPICS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), new Topic.Provider()));
 			setChild(STORAGE_CHILD_INDEX, new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider()));
-			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), HederaAccount::legacyDeserialize));
+			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER));
 		}
 
 		log.info("Initializing context of Services node {} with platform and address book...", nodeId);

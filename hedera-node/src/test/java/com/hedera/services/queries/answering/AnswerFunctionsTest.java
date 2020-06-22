@@ -82,8 +82,8 @@ class AnswerFunctionsTest {
 	@BeforeEach
 	private void setup() {
 		payerAccount = MapValueFactory.newAccount().get();
-		payerAccount.getRecords().offer(recordOne());
-		payerAccount.getRecords().offer(targetRecord);
+		payerAccount.records().offer(recordOne());
+		payerAccount.records().offer(targetRecord);
 
 		accounts = mock(FCMap.class);
 		given(accounts.get(EntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);
