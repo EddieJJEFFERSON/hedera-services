@@ -27,9 +27,9 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.legacy.core.jproto.HEntityId;
+import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.common.constructable.ClassConstructorPair;
 import com.swirlds.common.constructable.ConstructableRegistry;
 import com.swirlds.common.constructable.ConstructableRegistryException;
@@ -65,7 +65,7 @@ public class DomainSerdesTest {
 	public static void setupAll() throws ConstructableRegistryException {
 		/* Per Cody, this will be unnecessary at some point. */
 		ConstructableRegistry.registerConstructable(
-				new ClassConstructorPair(JTransactionRecord.class, JTransactionRecord::new));
+				new ClassConstructorPair(ExpirableTxnRecord.class, ExpirableTxnRecord::new));
 	}
 
 	@Test
@@ -73,7 +73,7 @@ public class DomainSerdesTest {
 		// setup:
 		var in = mock(SerializableDataInputStream.class);
 		// and:
-		var data = new HEntityId(1L, 2L, 3L);
+		var data = new EntityId(1L, 2L, 3L);
 
 		given(in.readBoolean()).willReturn(true);
 		given(in.readSerializable()).willReturn(data);
@@ -91,7 +91,7 @@ public class DomainSerdesTest {
 		// setup:
 		var in = mock(SerializableDataInputStream.class);
 		// and:
-		HEntityId data;
+		EntityId data;
 
 		given(in.readBoolean()).willReturn(false);
 
@@ -113,7 +113,7 @@ public class DomainSerdesTest {
 		var writer = mock(BiConsumer.class);
 
 		// when:
-		subject.writeNullable(null, out, (BiConsumer<? extends Object, DataOutputStream>)writer);
+		subject.writeNullable(null, out, (BiConsumer<? extends Object, SerializableDataOutputStream>)writer);
 
 		// then:
 		verify(out).writeBoolean(false);
@@ -145,14 +145,14 @@ public class DomainSerdesTest {
 		// setup:
 		var in = mock(SerializableDataInputStream.class);
 		// and:
-		var reader = (Function<DataInputStream, HEntityId>)mock(Function.class);
-		var data = new HEntityId(1L, 2L, 3L);
+		var reader = (Function<SerializableDataInputStream, EntityId>)mock(Function.class);
+		var data = new EntityId(1L, 2L, 3L);
 
 		given(in.readBoolean()).willReturn(true);
 		given(reader.apply(in)).willReturn(data);
 
 		// when:
-		HEntityId dataIn = subject.readNullable(in, reader);
+		EntityId dataIn = subject.readNullable(in, reader);
 
 		// then:
 		verify(in).readBoolean();
@@ -167,7 +167,7 @@ public class DomainSerdesTest {
 		var writer = mock(BiConsumer.class);
 
 		// given:
-		var data = new HEntityId(1L, 2L, 3L);
+		var data = new EntityId(1L, 2L, 3L);
 
 		// when:
 		subject.writeNullable(data, out, writer);
@@ -195,7 +195,7 @@ public class DomainSerdesTest {
 		// setup:
 		var out = mock(SerializableDataOutputStream.class);
 		// and:
-		var data = new HEntityId(1L, 2L, 3L);
+		var data = new EntityId(1L, 2L, 3L);
 
 		// when:
 		subject.writeNullableSerializable(data, out);
@@ -208,14 +208,14 @@ public class DomainSerdesTest {
 	@Test
 	public void recordsSerdesWork() throws Exception {
 		// given:
-		FCQueue<JTransactionRecord> recordsIn = new FCQueue<>(JTransactionRecord::deserialize);
+		FCQueue<ExpirableTxnRecord> recordsIn = new FCQueue<>(ExpirableTxnRecord::deserialize);
 		recordsIn.offer(recordOne());
 		recordsIn.offer(recordTwo());
 
 		// when:
 		byte[] repr = serOutcome(out -> subject.serializeRecords(recordsIn, out));
 		// and:
-		FCQueue<JTransactionRecord> recordsOut = new FCQueue<>(JTransactionRecord::deserialize);
+		FCQueue<ExpirableTxnRecord> recordsOut = new FCQueue<>(ExpirableTxnRecord::deserialize);
 		deOutcome(in -> { subject.deserializeIntoRecords(in, recordsOut); return recordsOut; }, repr);
 
 		// then:
@@ -225,12 +225,12 @@ public class DomainSerdesTest {
 	@Test
 	public void idSerdesWork() throws Exception {
 		// given:
-		HEntityId idIn = new HEntityId(1,2, 3);
+		EntityId idIn = new EntityId(1,2, 3);
 
 		// when:
 		byte[] repr = serOutcome(out -> subject.serializeId(idIn, out));
 		// and:
-		HEntityId idOut = deOutcome(in -> subject.deserializeId(in), repr);
+		EntityId idOut = deOutcome(in -> subject.deserializeId(in), repr);
 
 		// then:
 		assertEquals(idIn, idOut);
@@ -251,7 +251,7 @@ public class DomainSerdesTest {
 	}
 
 
-	public static JTransactionRecord recordOne() {
+	public static ExpirableTxnRecord recordOne() {
 		TransactionRecord record = TransactionRecord.newBuilder()
 				.setReceipt(TransactionReceipt.newBuilder()
 						.setStatus(INVALID_ACCOUNT_ID)
@@ -272,12 +272,11 @@ public class DomainSerdesTest {
 						.addLogInfo(ContractLoginfo.newBuilder()
 								.setData(ByteString.copyFrom("Nonsense!".getBytes()))))
 				.build();
-		JTransactionRecord jRecord = JTransactionRecord.convert(record);
-		jRecord.setVersionToSerializeContractFunctionResult(2l);
+		ExpirableTxnRecord jRecord = ExpirableTxnRecord.fromGprc(record);
 		return jRecord;
 	}
 
-	public static JTransactionRecord recordTwo() {
+	public static ExpirableTxnRecord recordTwo() {
 		TransactionRecord record = TransactionRecord.newBuilder()
 				.setReceipt(TransactionReceipt.newBuilder()
 						.setStatus(INVALID_CONTRACT_ID)
@@ -298,8 +297,7 @@ public class DomainSerdesTest {
 						.addLogInfo(ContractLoginfo.newBuilder()
 								.setData(ByteString.copyFrom("Nonsensical!".getBytes()))))
 				.build();
-		JTransactionRecord jRecord = JTransactionRecord.convert(record);
-		jRecord.setVersionToSerializeContractFunctionResult(2l);
+		ExpirableTxnRecord jRecord = ExpirableTxnRecord.fromGprc(record);
 		return jRecord;
 	}
 }

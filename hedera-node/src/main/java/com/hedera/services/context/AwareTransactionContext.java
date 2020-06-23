@@ -21,8 +21,8 @@ package com.hedera.services.context;
  */
 
 import com.google.protobuf.ByteString;
-import com.hedera.services.state.merkle.Topic;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.MerkleTopic;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.hedera.services.utils.MiscUtils;
 import com.hedera.services.utils.PlatformTxnAccessor;
 import com.hederahashgraph.api.proto.java.*;
@@ -102,7 +102,7 @@ public class AwareTransactionContext implements TransactionContext {
 	@Override
 	public JKey activePayerKey() {
 		return isPayerSigKnownActive
-				? ctx.accounts().get(EntityId.fromPojoAccountId(accessor.getPayer())).getKey()
+				? ctx.accounts().get(MerkleEntityId.fromPojoAccountId(accessor.getPayer())).getKey()
 				: EMPTY_HEDERA_KEY;
 	}
 
@@ -225,7 +225,7 @@ public class AwareTransactionContext implements TransactionContext {
 		receiptConfig = receipt -> receipt
 				.setTopicRunningHash(ByteString.copyFrom(topicRunningHash))
 				.setTopicSequenceNumber(sequenceNumber)
-				.setTopicRunningHashVersion(Topic.RUNNING_HASH_VERSION);
+				.setTopicRunningHashVersion(MerkleTopic.RUNNING_HASH_VERSION);
 	}
 
 	@Override

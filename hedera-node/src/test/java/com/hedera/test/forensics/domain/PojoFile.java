@@ -22,8 +22,8 @@ package com.hedera.test.forensics.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 
 import java.util.Map;
 
@@ -41,11 +41,11 @@ public class PojoFile {
 	private String blobHash;
 	private boolean blobDeleted;
 
-	public static PojoFile fromEntry(Map.Entry<BlobMeta, OptionalBlob> e) {
+	public static PojoFile fromEntry(Map.Entry<MerkleBlobMeta, MerkleOptionalBlob> e) {
 		return from(e.getKey(), e.getValue());
 	}
 
-	public static PojoFile from(BlobMeta sk, OptionalBlob value) {
+	public static PojoFile from(MerkleBlobMeta sk, MerkleOptionalBlob value) {
 		var pojo = new PojoFile();
 		pojo.setPath(sk.getPath());
 		pojo.setBlobHash(value.getDelegate().getHash().toString());

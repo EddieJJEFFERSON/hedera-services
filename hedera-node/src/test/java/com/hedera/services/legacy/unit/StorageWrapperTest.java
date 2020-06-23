@@ -21,8 +21,8 @@ package com.hedera.services.legacy.unit;
  */
 
 import com.hedera.services.legacy.handler.FCStorageWrapper;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.legacy.exception.StorageKeyNotFoundException;
 
 import java.time.Instant;
@@ -39,7 +39,7 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitPlatform.class)
 @TestInstance(Lifecycle.PER_CLASS)
 class StorageWrapperTest {
-  private FCMap<BlobMeta, OptionalBlob> storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
+  private FCMap<MerkleBlobMeta, MerkleOptionalBlob> storageMap = new FCMap<>(new MerkleBlobMeta.Provider(), new MerkleOptionalBlob.Provider());
   private static final String TEST_CREATE_FILE_PATH = "/0/a1234/";
   private static final String TEST_EXPIRATION_AFTER_CREATE_FILE_PATH = "/0/a1235/";
   private static final String TEST_CREATE_DELETE_FILE_PATH = "/0/a1236/";

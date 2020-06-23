@@ -1,13 +1,15 @@
 package com.hedera.services.context.domain.haccount;
 
 import com.hedera.services.ledger.accounts.HederaAccountCustomizer;
-import com.hedera.services.legacy.core.jproto.HEntityId;
+import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
 import com.hedera.services.legacy.core.jproto.JThresholdKey;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.merkle.MerkleAccountTest;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.Test;
@@ -48,7 +50,7 @@ class TmpAccountsTest {
 	@Test
 	public void readFcMap() throws Exception {
 		// given:
-		FCMap<EntityId, HederaAccount> subject = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
+		FCMap<MerkleEntityId, MerkleAccount> subject = new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
 		// and:
 		var in = new SerializableDataInputStream(Files.newInputStream(Paths.get("testAccounts.fcm")));
 
@@ -73,9 +75,9 @@ class TmpAccountsTest {
 		}
 	}
 
-	private EntityId idFrom(long s) {
+	private MerkleEntityId idFrom(long s) {
 		long t = s + 1;
-		return new EntityId(t, 2 * t, 3 * t);
+		return new MerkleEntityId(t, 2 * t, 3 * t);
 	}
 
 	String[] memos = new String[] {
@@ -90,15 +92,15 @@ class TmpAccountsTest {
 					new JKeyList(List.of(new JEd25519Key("ABCDEFGHIJKLMNOPQRSTUVWXYZ543210".getBytes()))),
 					1)
 	};
-	List<List<JTransactionRecord>> records = List.of(
+	List<List<ExpirableTxnRecord>> records = List.of(
 			Collections.emptyList(),
 			List.of(recordOne()),
 			List.of(recordOne(), recordTwo()));
 
-	private HederaAccount accountFrom(int s) throws Exception {
+	public MerkleAccount accountFrom(int s) throws Exception {
 		long v = s + 1;
-		HederaAccount account = new HederaAccountCustomizer()
-				.proxy(new HEntityId(v,2 * v, 3 * v))
+		MerkleAccount account = new HederaAccountCustomizer()
+				.proxy(new EntityId(v,2 * v, 3 * v))
 				.key(keys[s])
 				.memo(memos[s])
 				.isSmartContract(s % 2 != 0)
@@ -108,7 +110,7 @@ class TmpAccountsTest {
 				.fundsReceivedRecordThreshold(v * 5_432L)
 				.expiry(1_234_567_890L + v)
 				.autoRenewPeriod(666L * v)
-				.customizing(new HederaAccount());
+				.customizing(new MerkleAccount());
 		account.setBalance(888L * v);
 		MerkleAccountTest.offerRecordsInOrder(account, records.get(s));
 		return account;

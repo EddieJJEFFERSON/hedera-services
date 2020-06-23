@@ -28,7 +28,7 @@ import com.hedera.services.config.EntityNumbers;
 import com.hedera.services.config.FileNumbers;
 import com.hedera.services.context.domain.trackers.ConsensusStatusCounts;
 import com.hedera.services.context.domain.trackers.IssEventInfo;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.context.properties.PropertySanitizer;
 import com.hedera.services.context.properties.StandardizedPropertySources;
@@ -209,10 +209,10 @@ import com.hedera.services.legacy.services.state.initialization.DefaultSystemAcc
 import com.hedera.services.state.migration.StateMigrations;
 import com.hedera.services.utils.SleepingPause;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.legacy.services.state.validation.DefaultLedgerValidator;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
 import com.hedera.services.legacy.services.utils.DefaultAccountsExporter;
@@ -347,9 +347,9 @@ public class ServicesContext {
 	private ValidatingCallbackInterceptor apiPermissionsReloading;
 	private ValidatingCallbackInterceptor applicationPropertiesReloading;
 	private Supplier<ServicesRepositoryRoot> newPureRepo;
-	private AtomicReference<FCMap<EntityId, Topic>> queryableTopics;
-	private AtomicReference<FCMap<EntityId, HederaAccount>> queryableAccounts;
-	private AtomicReference<FCMap<BlobMeta, OptionalBlob>> queryableStorage;
+	private AtomicReference<FCMap<MerkleEntityId, MerkleTopic>> queryableTopics;
+	private AtomicReference<FCMap<MerkleEntityId, MerkleAccount>> queryableAccounts;
+	private AtomicReference<FCMap<MerkleBlobMeta, MerkleOptionalBlob>> queryableStorage;
 
 	/* Context-free infrastructure. */
 	private static Pause pause;
@@ -395,7 +395,7 @@ public class ServicesContext {
 
 	public Map<String, byte[]> blobStore() {
 		if (blobStore == null) {
-			blobStore = new FcBlobsBytesStore(OptionalBlob::new, storage());
+			blobStore = new FcBlobsBytesStore(MerkleOptionalBlob::new, storage());
 		}
 		return blobStore;
 	}
@@ -814,9 +814,9 @@ public class ServicesContext {
 
 	public HederaLedger ledger() {
 		if (ledger == null) {
-			TransactionalLedger<AccountID, MapValueProperty, HederaAccount> delegate = new TransactionalLedger<>(
+			TransactionalLedger<AccountID, MapValueProperty, MerkleAccount> delegate = new TransactionalLedger<>(
 					MapValueProperty.class,
-					HederaAccount::new,
+					MerkleAccount::new,
 					new FCMapBackingAccounts(accounts()),
 					new ChangeSummaryManager<>()
 			);
@@ -1049,9 +1049,9 @@ public class ServicesContext {
 
 	public Supplier<ServicesRepositoryRoot> newPureRepo() {
 		if (newPureRepo == null) {
-			TransactionalLedger<AccountID, MapValueProperty, HederaAccount> pureDelegate = new TransactionalLedger<>(
+			TransactionalLedger<AccountID, MapValueProperty, MerkleAccount> pureDelegate = new TransactionalLedger<>(
 					MapValueProperty.class,
-					HederaAccount::new,
+					MerkleAccount::new,
 					new FCMapBackingAccounts(accounts()),
 					new ChangeSummaryManager<>());
 			HederaLedger pureLedger = new HederaLedger(
@@ -1147,21 +1147,21 @@ public class ServicesContext {
 		return address;
 	}
 
-	public AtomicReference<FCMap<BlobMeta, OptionalBlob>>	queryableStorage() {
+	public AtomicReference<FCMap<MerkleBlobMeta, MerkleOptionalBlob>>	queryableStorage() {
 		if (queryableStorage == null) {
 			queryableStorage = new AtomicReference<>(storage());
 		}
 		return queryableStorage;
 	}
 
-	public AtomicReference<FCMap<EntityId, HederaAccount>> queryableAccounts() {
+	public AtomicReference<FCMap<MerkleEntityId, MerkleAccount>> queryableAccounts() {
 		if (queryableAccounts == null) {
 			queryableAccounts = new AtomicReference<>(accounts());
 		}
 		return queryableAccounts;
 	}
 
-	public AtomicReference<FCMap<EntityId, Topic>> queryableTopics() {
+	public AtomicReference<FCMap<MerkleEntityId, MerkleTopic>> queryableTopics() {
 		if (queryableTopics == null) {
 			queryableTopics = new AtomicReference<>(topics());
 		}
@@ -1253,15 +1253,15 @@ public class ServicesContext {
 		return state.networkCtx().midnightRates();
 	}
 
-	public FCMap<EntityId, HederaAccount> accounts() {
+	public FCMap<MerkleEntityId, MerkleAccount> accounts() {
 		return state.accounts();
 	}
 
-	public FCMap<EntityId, Topic> topics() {
+	public FCMap<MerkleEntityId, MerkleTopic> topics() {
 		return state.topics();
 	}
 
-	public FCMap<BlobMeta, OptionalBlob> storage() {
+	public FCMap<MerkleBlobMeta, MerkleOptionalBlob> storage() {
 		return state.storage();
 	}
 }

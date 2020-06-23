@@ -21,7 +21,7 @@ package com.hedera.services.legacy.handler;
  */
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.context.domain.security.PermissionedAccountsRange;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.fees.FeeCalculator;
@@ -54,10 +54,10 @@ import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.fee.FeeBuilder;
 import com.hederahashgraph.fee.FeeObject;
 import com.hedera.services.legacy.config.PropertiesLoader;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
 import com.hedera.services.legacy.core.jproto.JKey;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.hedera.services.legacy.exception.InvalidAccountIDException;
 import com.hedera.services.legacy.exception.KeyPrefixMismatchException;
 import com.hedera.services.legacy.exception.KeySignatureCountMismatchException;
@@ -114,7 +114,7 @@ public class TransactionHandler {
   private static final Logger log = LogManager.getLogger(TransactionHandler.class);
   private RecordCache recordCache;
   private PrecheckVerifier precheckVerifier;
-  private FCMap<EntityId, HederaAccount> accounts;
+  private FCMap<MerkleEntityId, MerkleAccount> accounts;
   private FunctionalityThrottling throttling;
   private AccountID nodeAccount;
   private TransactionThrottling txnThrottling;
@@ -136,7 +136,7 @@ public class TransactionHandler {
 
   public TransactionHandler(
           RecordCache recordCache,
-          FCMap<EntityId, HederaAccount> accounts,
+          FCMap<MerkleEntityId, MerkleAccount> accounts,
           AccountID nodeAccount,
           PrecheckVerifier precheckVerifier,
           UsagePricesProvider usagePrices,
@@ -163,7 +163,7 @@ public class TransactionHandler {
   public TransactionHandler(
           RecordCache recordCache,
           PrecheckVerifier verifier,
-          FCMap<EntityId, HederaAccount> accounts,
+          FCMap<MerkleEntityId, MerkleAccount> accounts,
           AccountID nodeAccount
   ) {
     this(recordCache, verifier, accounts, nodeAccount,
@@ -174,7 +174,7 @@ public class TransactionHandler {
   public TransactionHandler(
           RecordCache recordCache,
           PrecheckVerifier precheckVerifier,
-          FCMap<EntityId, HederaAccount> accounts,
+          FCMap<MerkleEntityId, MerkleAccount> accounts,
           AccountID nodeAccount,
           TransactionThrottling txnThrottling,
           UsagePricesProvider usagePrices,
@@ -239,8 +239,8 @@ public class TransactionHandler {
   }
 
   public boolean isAccountExist(AccountID acctId) {
-    EntityId entityId = new EntityId(acctId.getShardNum(), acctId.getRealmNum(), acctId.getAccountNum());
-    return accounts.get(entityId) != null;
+    MerkleEntityId merkleEntityId = new MerkleEntityId(acctId.getShardNum(), acctId.getRealmNum(), acctId.getAccountNum());
+    return accounts.get(merkleEntityId) != null;
   }
 
   public void addReceiptEntry(TransactionID txnId) {
@@ -348,8 +348,8 @@ public class TransactionHandler {
     if (trBody.getTransactionID().hasAccountID()) {
       AccountID payerAccount = trBody.getTransactionID().getAccountID();
       if (isAccountExist(payerAccount)) {
-        Long payerAccountBalance = Optional.ofNullable(accounts.get(EntityId.fromPojoAccountId(payerAccount)))
-                .map(HederaAccount::getBalance)
+        Long payerAccountBalance = Optional.ofNullable(accounts.get(MerkleEntityId.fromPojoAccountId(payerAccount)))
+                .map(MerkleAccount::getBalance)
                 .orElse(null);
         long suppliedFee = trBody.getTransactionFee();
         long payerChangeDuringTxn = !trBody.hasCryptoTransfer() ? 0L :
@@ -365,7 +365,7 @@ public class TransactionHandler {
         if (returnCode == OK) {
           try {
             SignedTxnAccessor accessor = new SignedTxnAccessor(transaction);
-            JKey payerKey = accounts.get(EntityId.fromPojoAccountId(payerAccount)).getKey();
+            JKey payerKey = accounts.get(MerkleEntityId.fromPojoAccountId(payerAccount)).getKey();
             Timestamp at = trBody.getTransactionID().getTransactionValidStart();
             FeeObject txnFee = fees.estimateFee(accessor, payerKey, stateView.get(), at);
             fee = txnFee.getNetworkFee() + txnFee.getNodeFee() + txnFee.getServiceFee();
@@ -581,9 +581,9 @@ public class TransactionHandler {
   }
 
   @SuppressWarnings("unchecked")
-  public List<JTransactionRecord> getAllTransactionRecordFCM(EntityId entityId) {
+  public List<ExpirableTxnRecord> getAllTransactionRecordFCM(MerkleEntityId merkleEntityId) {
     try {
-      HederaAccount account = accounts.get(entityId);
+      MerkleAccount account = accounts.get(merkleEntityId);
       if (account != null) {
         return account.recordList();
       } else {
@@ -627,15 +627,15 @@ public class TransactionHandler {
    * @param accountMap
    * @return
    */
-  public static ResponseCodeEnum validateAccountIDAndTotalBalInMap(FCMap<EntityId, HederaAccount> accountMap) {
+  public static ResponseCodeEnum validateAccountIDAndTotalBalInMap(FCMap<MerkleEntityId, MerkleAccount> accountMap) {
     boolean result = true;
-    EntityId entityId = null;
+    MerkleEntityId merkleEntityId = null;
     long totalBalance =  0;
     ResponseCodeEnum response = OK;
-    for (Map.Entry<EntityId, HederaAccount> account : accountMap.entrySet()) {
-      entityId = account.getKey();
-      result = validateAccountID(entityId);
-      HederaAccount currMv = account.getValue();
+    for (Map.Entry<MerkleEntityId, MerkleAccount> account : accountMap.entrySet()) {
+      merkleEntityId = account.getKey();
+      result = validateAccountID(merkleEntityId);
+      MerkleAccount currMv = account.getValue();
       totalBalance += currMv.getBalance();
       if (!result) {
     	response = ResponseCodeEnum.INVALID_ACCOUNT_ID;
@@ -650,8 +650,8 @@ public class TransactionHandler {
     return response;
   }
 
-  public static boolean validateAccountID(EntityId entityId) {
-    return validateAccountID(entityId.getNum(), entityId.getRealm(), entityId.getShard());
+  public static boolean validateAccountID(MerkleEntityId merkleEntityId) {
+    return validateAccountID(merkleEntityId.getNum(), merkleEntityId.getRealm(), merkleEntityId.getShard());
   }
 
   public static boolean validateAccountID(long accountNum, long realmNum, long shardNum) {

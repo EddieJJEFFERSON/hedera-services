@@ -21,34 +21,34 @@ package com.hedera.services.ledger.accounts;
  */
 
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.swirlds.fcmap.FCMap;
 
-import static com.hedera.services.state.merkle.EntityId.fromPojoAccountId;
+import static com.hedera.services.state.merkle.MerkleEntityId.fromPojoAccountId;
 
-public class FCMapBackingAccounts implements BackingAccounts<AccountID, HederaAccount> {
-	private final FCMap<EntityId, HederaAccount> delegate;
+public class FCMapBackingAccounts implements BackingAccounts<AccountID, MerkleAccount> {
+	private final FCMap<MerkleEntityId, MerkleAccount> delegate;
 
-	public FCMapBackingAccounts(FCMap<EntityId, HederaAccount> delegate) {
+	public FCMapBackingAccounts(FCMap<MerkleEntityId, MerkleAccount> delegate) {
 		this.delegate = delegate;
 	}
 
 	@Override
-	public HederaAccount getRef(AccountID id) {
+	public MerkleAccount getRef(AccountID id) {
 		return delegate.get(fromPojoAccountId(id));
 	}
 
 	@Override
-	public HederaAccount getCopy(AccountID id) {
-		HederaAccount ref = delegate.get(fromPojoAccountId(id));
+	public MerkleAccount getCopy(AccountID id) {
+		MerkleAccount ref = delegate.get(fromPojoAccountId(id));
 
-		return (ref == null) ? null : new HederaAccount(ref);
+		return (ref == null) ? null : new MerkleAccount(ref);
 	}
 
 	@Override
-	public void replace(AccountID id, HederaAccount account) {
-		EntityId delegateId = fromPojoAccountId(id);
+	public void replace(AccountID id, MerkleAccount account) {
+		MerkleEntityId delegateId = fromPojoAccountId(id);
 		if (!delegate.containsKey(delegateId)) {
 			delegate.put(delegateId, account);
 		} else {

@@ -31,8 +31,8 @@ import com.hederahashgraph.api.proto.java.HederaFunctionality;
 import com.hederahashgraph.api.proto.java.Query;
 import com.hederahashgraph.api.proto.java.Response;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.swirlds.fcmap.FCMap;
 
 import static com.hederahashgraph.api.proto.java.HederaFunctionality.CryptoGetAccountBalance;
@@ -52,7 +52,7 @@ public class GetAccountBalanceAnswer implements AnswerService {
 
 	@Override
 	public ResponseCodeEnum checkValidity(Query query, StateView view) {
-		FCMap<EntityId, HederaAccount> accounts = view.accounts();
+		FCMap<MerkleEntityId, MerkleAccount> accounts = view.accounts();
 		CryptoGetAccountBalanceQuery op = query.getCryptogetAccountBalance();
 		return validityOf(op, accounts);
 	}
@@ -69,7 +69,7 @@ public class GetAccountBalanceAnswer implements AnswerService {
 
 	@Override
 	public Response responseGiven(Query query, StateView view, ResponseCodeEnum validity, long cost) {
-		FCMap<EntityId, HederaAccount> accounts = view.accounts();
+		FCMap<MerkleEntityId, MerkleAccount> accounts = view.accounts();
 		CryptoGetAccountBalanceQuery op = query.getCryptogetAccountBalance();
 
 		AccountID id = targetOf(op);
@@ -78,7 +78,7 @@ public class GetAccountBalanceAnswer implements AnswerService {
 				.setAccountID(id);
 
 		if (validity == OK) {
-			EntityId key = EntityId.fromPojoAccountId(id);
+			MerkleEntityId key = MerkleEntityId.fromPojoAccountId(id);
 			opAnswer.setBalance(accounts.get(key).getBalance());
 		}
 
@@ -98,7 +98,7 @@ public class GetAccountBalanceAnswer implements AnswerService {
 
 	private ResponseCodeEnum validityOf(
 			CryptoGetAccountBalanceQuery op,
-			FCMap<EntityId, HederaAccount> accounts
+			FCMap<MerkleEntityId, MerkleAccount> accounts
 	) {
 		if (op.hasContractID()) {
 			return optionValidator.queryableContractStatus(op.getContractID(), accounts);

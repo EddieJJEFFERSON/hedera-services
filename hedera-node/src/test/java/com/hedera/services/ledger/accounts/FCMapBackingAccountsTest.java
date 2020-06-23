@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.test.factories.accounts.MapValueFactory;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,10 +39,10 @@ import static com.hedera.test.utils.IdUtils.asAccount;
 class FCMapBackingAccountsTest {
 	private final AccountID a = asAccount("1.2.3");
 	private final AccountID b = asAccount("3.2.1");
-	private final EntityId aKey = EntityId.fromPojoAccountId(a);
-	private final EntityId bKey = EntityId.fromPojoAccountId(b);
-	private final HederaAccount aValue = MapValueFactory.newAccount().balance(123L).get();
-	private final HederaAccount bValue = MapValueFactory.newAccount().balance(122L).get();
+	private final MerkleEntityId aKey = MerkleEntityId.fromPojoAccountId(a);
+	private final MerkleEntityId bKey = MerkleEntityId.fromPojoAccountId(b);
+	private final MerkleAccount aValue = MapValueFactory.newAccount().balance(123L).get();
+	private final MerkleAccount bValue = MapValueFactory.newAccount().balance(122L).get();
 
 	private FCMap map;
 	private FCMapBackingAccounts subject;
@@ -84,7 +84,7 @@ class FCMapBackingAccountsTest {
 		given(map.get(aKey)).willReturn(aValue);
 
 		// when:
-		HederaAccount v = subject.getRef(a);
+		MerkleAccount v = subject.getRef(a);
 
 		// then:
 		assertTrue(aValue == v);
@@ -95,7 +95,7 @@ class FCMapBackingAccountsTest {
 		given(map.get(aKey)).willReturn(aValue);
 
 		// when:
-		HederaAccount v = subject.getCopy(a);
+		MerkleAccount v = subject.getCopy(a);
 
 		// then:
 		assertFalse(aValue == v);

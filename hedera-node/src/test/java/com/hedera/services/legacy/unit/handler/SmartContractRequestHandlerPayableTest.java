@@ -57,11 +57,11 @@ import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.state.submerkle.SequenceNumber;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
 import com.hedera.services.state.submerkle.ExchangeRates;
@@ -127,11 +127,11 @@ public class SmartContractRequestHandlerPayableTest {
   private static final long contractSequenceNumber = 334L;
   SmartContractRequestHandler smartHandler;
   FileServiceHandler fsHandler;
-  FCMap<EntityId, HederaAccount> fcMap = null;
-  private FCMap<BlobMeta, OptionalBlob> storageMap;
+  FCMap<MerkleEntityId, MerkleAccount> fcMap = null;
+  private FCMap<MerkleBlobMeta, MerkleOptionalBlob> storageMap;
   ServicesRepositoryRoot repository;
 
-  EntityId payerEntityId; // fcMap key for payer account
+  MerkleEntityId payerMerkleEntityId; // fcMap key for payer account
   byte[] payerKeyBytes = null; // Repository key for payer account
   AccountID payerAccountId;
   AccountID nodeAccountId;
@@ -145,9 +145,9 @@ public class SmartContractRequestHandlerPayableTest {
 
   private ServicesRepositoryRoot getLocalRepositoryInstance() {
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
-    TransactionalLedger<AccountID, MapValueProperty, HederaAccount> delegate = new TransactionalLedger<>(
+    TransactionalLedger<AccountID, MapValueProperty, MerkleAccount> delegate = new TransactionalLedger<>(
             MapValueProperty.class,
-            () -> new HederaAccount(),
+            () -> new MerkleAccount(),
             new FCMapBackingAccounts(fcMap),
             new ChangeSummaryManager<>());
     ledger = new HederaLedger(
@@ -169,8 +169,8 @@ public class SmartContractRequestHandlerPayableTest {
     contractFileId = RequestBuilder.getFileIdBuild(contractFileNumber, 0L, 0L);
 
     //Init FCMap
-    fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
-    storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
+    fcMap = new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
+    storageMap = new FCMap<>(new MerkleBlobMeta.Provider(), new MerkleOptionalBlob.Provider());
     // Create accounts
     createAccount(payerAccountId, INITIAL_BALANCE);
     createAccount(nodeAccountId, INITIAL_BALANCE);
@@ -216,10 +216,10 @@ public class SmartContractRequestHandlerPayableTest {
     } catch (DecoderException e) {
       Assert.fail("Failure building solidity key for payer account");
     }
-    payerEntityId = new EntityId();
-    payerEntityId.setNum(payerAccount);
-    payerEntityId.setRealm(0);
-    payerEntityId.setShard(0);
+    payerMerkleEntityId = new MerkleEntityId();
+    payerMerkleEntityId.setNum(payerAccount);
+    payerMerkleEntityId.setRealm(0);
+    payerMerkleEntityId.setShard(0);
   }
 
   @Test
@@ -665,12 +665,12 @@ public class SmartContractRequestHandlerPayableTest {
   }
 
   private long getBalance(AccountID accountId) {
-    EntityId mk = new EntityId();
+    MerkleEntityId mk = new MerkleEntityId();
     mk.setNum(accountId.getAccountNum());
     mk.setRealm(0);
     mk.setShard(0);
 
-    HederaAccount mv = fcMap.get(mk);
+    MerkleAccount mv = fcMap.get(mk);
     if (mv == null) {
       return 0;
     } else {
@@ -679,12 +679,12 @@ public class SmartContractRequestHandlerPayableTest {
   }
 
   private long getBalance(ContractID contractId) {
-    EntityId mk = new EntityId();
+    MerkleEntityId mk = new MerkleEntityId();
     mk.setNum(contractId.getContractNum());
     mk.setRealm(0);
     mk.setShard(0);
 
-    HederaAccount mv = fcMap.get(mk);
+    MerkleAccount mv = fcMap.get(mk);
     if (mv == null) {
       return 0;
     } else {
@@ -694,7 +694,7 @@ public class SmartContractRequestHandlerPayableTest {
 
   private long getTotalBalance() {
     long total = 0L;
-    for (HederaAccount val : fcMap.values()) {
+    for (MerkleAccount val : fcMap.values()) {
       total += val.getBalance();
     }
     return total;
@@ -716,10 +716,10 @@ public class SmartContractRequestHandlerPayableTest {
 
   private void createAccount(AccountID payerAccount, long balance)
           throws NegativeAccountBalanceException {
-    EntityId mk = new EntityId();
+    MerkleEntityId mk = new MerkleEntityId();
     mk.setNum(payerAccount.getAccountNum());
     mk.setRealm(0);
-    HederaAccount mv = new HederaAccount();
+    MerkleAccount mv = new MerkleAccount();
     mv.setBalance(balance);
     fcMap.put(mk, mv);
   }
@@ -797,11 +797,11 @@ public class SmartContractRequestHandlerPayableTest {
   }
 
   private void checkContractArtifactsExist(ContractID contractId) {
-    EntityId mk = new EntityId();
+    MerkleEntityId mk = new MerkleEntityId();
     mk.setNum(contractId.getContractNum());
     mk.setRealm(contractId.getRealmNum());
     mk.setShard(contractId.getShardNum());
-    HederaAccount mv = fcMap.get(mk);
+    MerkleAccount mv = fcMap.get(mk);
     Assert.assertNotNull(mv);
     Assert.assertNotNull(mv.getKey());
     Assert.assertNotNull(mv.getKey());

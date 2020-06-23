@@ -20,11 +20,11 @@ package com.hedera.services.context.domain.serdes;
  * ‍
  */
 
-import com.hedera.services.legacy.core.jproto.HEntityId;
+import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeySerializer;
-import com.hedera.services.legacy.core.jproto.JTimestamp;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.state.submerkle.RichInstant;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.common.io.SelfSerializable;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
@@ -52,7 +52,7 @@ public class DomainSerdes {
 	public <T> void writeNullable(
 			T data,
 			SerializableDataOutputStream out,
-			BiConsumer<T, DataOutputStream> writer
+			BiConsumer<T, SerializableDataOutputStream> writer
 	) throws IOException {
 		if (data == null) {
 			out.writeBoolean(false);
@@ -64,7 +64,7 @@ public class DomainSerdes {
 
 	public <T> T readNullable(
 			SerializableDataInputStream in,
-			Function<DataInputStream, T> reader
+			Function<SerializableDataInputStream, T> reader
 	) throws IOException {
 		return in.readBoolean() ? reader.apply(in) : null;
 	}
@@ -88,36 +88,34 @@ public class DomainSerdes {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void serializeId(HEntityId id, DataOutputStream _out) throws IOException {
+	public void serializeId(EntityId id, DataOutputStream _out) throws IOException {
 		var out = (SerializableDataOutputStream) _out;
 		out.writeSerializable(id, true);
 	}
 
-	public JTimestamp deserializeTimestamp(DataInputStream in) throws IOException {
-		return JTimestamp.deserialize(in);
+	public RichInstant deserializeTimestamp(DataInputStream in) throws IOException {
+		return RichInstant.from((SerializableDataInputStream)in);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void serializeTimestamp(JTimestamp ts, DataOutputStream out) throws IOException {
-		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
-		ts.copyTo(fcOut);
-		ts.copyToExtra(fcOut);
+	public void serializeTimestamp(RichInstant ts, DataOutputStream out) throws IOException {
+		ts.serialize((SerializableDataOutputStream)out);
 	}
 
-	public HEntityId deserializeId(DataInputStream _in) throws IOException {
+	public EntityId deserializeId(DataInputStream _in) throws IOException {
 		var in = (SerializableDataInputStream)_in;
 		return in.readSerializable();
 	}
 
 	@SuppressWarnings("unchecked")
-	public void serializeRecords(FCQueue<JTransactionRecord> records, DataOutputStream out) throws IOException {
+	public void serializeRecords(FCQueue<ExpirableTxnRecord> records, DataOutputStream out) throws IOException {
 		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
 		records.copyTo(fcOut);
 		records.copyToExtra(fcOut);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void deserializeIntoRecords(DataInputStream in, FCQueue<JTransactionRecord> to) throws IOException {
+	public void deserializeIntoRecords(DataInputStream in, FCQueue<ExpirableTxnRecord> to) throws IOException {
 		SerializableDataInputStream fcIn = (SerializableDataInputStream)in;
 		to.copyFrom(fcIn);
 		to.copyFromExtra(fcIn);

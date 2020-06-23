@@ -24,8 +24,9 @@ import com.hedera.services.ServicesState;
 import com.hedera.services.config.AccountNumbers;
 import com.hedera.services.config.EntityNumbers;
 import com.hedera.services.config.FileNumbers;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.merkle.MerkleNetworkContext;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.context.domain.trackers.ConsensusStatusCounts;
 import com.hedera.services.context.domain.trackers.IssEventInfo;
 import com.hedera.services.context.primitives.StateView;
@@ -51,9 +52,9 @@ import com.hedera.services.grpc.controllers.FileController;
 import com.hedera.services.grpc.controllers.NetworkController;
 import com.hedera.services.ledger.HederaLedger;
 import com.hedera.services.ledger.ids.SeqNoEntityIdSource;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.queries.answering.ServiceAnswerFlow;
 import com.hedera.services.queries.consensus.HcsAnswers;
 import com.hedera.services.queries.validation.QueryFeeCheck;
@@ -132,14 +133,14 @@ public class ServicesContextTest {
 	Platform platform;
 	SequenceNumber seqNo;
 	ExchangeRates midnightRates;
-	NetworkContext networkCtx;
+	MerkleNetworkContext networkCtx;
 	ServicesState state;
 	Cryptography crypto;
 	PropertySource properties;
 	PropertySources propertySources;
-	FCMap<EntityId, Topic> topics;
-	FCMap<EntityId, HederaAccount> accounts;
-	FCMap<BlobMeta, OptionalBlob> storage;
+	FCMap<MerkleEntityId, MerkleTopic> topics;
+	FCMap<MerkleEntityId, MerkleAccount> accounts;
+	FCMap<MerkleBlobMeta, MerkleOptionalBlob> storage;
 
 	@BeforeEach
 	void setup() {
@@ -148,7 +149,7 @@ public class ServicesContextTest {
 		accounts = mock(FCMap.class);
 		seqNo = mock(SequenceNumber.class);
 		midnightRates = mock(ExchangeRates.class);
-		networkCtx = new NetworkContext(consensusTimeOfLastHandledTxn, seqNo, midnightRates);
+		networkCtx = new MerkleNetworkContext(consensusTimeOfLastHandledTxn, seqNo, midnightRates);
 		state = mock(ServicesState.class);
 		given(state.networkCtx()).willReturn(networkCtx);
 		given(state.accounts()).willReturn(accounts);

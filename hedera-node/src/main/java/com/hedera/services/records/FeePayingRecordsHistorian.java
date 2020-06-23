@@ -36,9 +36,9 @@ import com.hederahashgraph.api.proto.java.AccountAmount;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.fcmap.FCMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,7 +52,6 @@ import java.util.function.Predicate;
 
 import static com.hedera.services.fees.charging.ItemizableFeeCharging.THRESHOLD_RECORD_FEE;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.SUCCESS;
-import static com.hedera.services.legacy.core.jproto.JTransactionRecord.convert;
 import static java.lang.Math.min;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toSet;
@@ -66,7 +65,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	private static final Logger log = LogManager.getLogger(FeePayingRecordsHistorian.class);
 
 	private HederaLedger ledger;
-	private JTransactionRecord lastCreatedRecord;
+	private ExpirableTxnRecord lastCreatedRecord;
 	private Set<AccountID> accountsWithExpiringRecords;
 
 	private final RecordCache recordCache;
@@ -74,7 +73,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	private final PropertySource properties;
 	private final TransactionContext txnCtx;
 	private final ItemizableFeeCharging feeCharging;
-	private final FCMap<EntityId, HederaAccount> accounts;
+	private final FCMap<MerkleEntityId, MerkleAccount> accounts;
 	private final Predicate<TransactionContext> isScopedRecordQueryable;
 	private final BlockingQueue<EarliestRecordExpiry> expirations;
 
@@ -84,7 +83,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 			PropertySource properties,
 			TransactionContext txnCtx,
 			ItemizableFeeCharging feeCharging,
-			FCMap<EntityId, HederaAccount> accounts,
+			FCMap<MerkleEntityId, MerkleAccount> accounts,
 			Predicate<TransactionContext> isScopedRecordQueryable,
 			BlockingQueue<EarliestRecordExpiry> expirations
 	) {
@@ -101,7 +100,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	}
 
 	@Override
-	public Optional<JTransactionRecord> lastCreatedRecord() {
+	public Optional<ExpirableTxnRecord> lastCreatedRecord() {
 		return Optional.ofNullable(lastCreatedRecord);
 	}
 
@@ -167,7 +166,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 
 	@Override
 	public void reviewExistingRecords(long consensusTimeOfLastHandledTxn) {
-		for (Map.Entry<EntityId, HederaAccount> entry : accounts.entrySet()) {
+		for (Map.Entry<MerkleEntityId, MerkleAccount> entry : accounts.entrySet()) {
 			if (entry.getValue().expiryOfEarliestRecord() > -1L) {
 				EarliestRecordExpiry ere = asEre(entry);
 				expirations.offer(ere);
@@ -176,9 +175,9 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 		}
 	}
 
-	private EarliestRecordExpiry asEre(Map.Entry<EntityId, HederaAccount> entry) {
-		EntityId key = entry.getKey();
-		HederaAccount account = entry.getValue();
+	private EarliestRecordExpiry asEre(Map.Entry<MerkleEntityId, MerkleAccount> entry) {
+		MerkleEntityId key = entry.getKey();
+		MerkleAccount account = entry.getValue();
 
 		EarliestRecordExpiry ere = new EarliestRecordExpiry(
 				account.expiryOfEarliestRecord(),
@@ -224,14 +223,14 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 				.collect(toSet());
 	}
 
-	private void addToEachAccount(Set<AccountID> ids, JTransactionRecord jRecord) {
+	private void addToEachAccount(Set<AccountID> ids, ExpirableTxnRecord jRecord) {
 		ids.forEach(id -> addToAccount(id, jRecord));
 	}
 
 	/* We can take for granted that records are added in monotonic
 	increasing order of expiry, since account records expire a
 	fixed distance from the ever-advancing consensus time. */
-	private void addToAccount(AccountID id, JTransactionRecord jRecord) {
+	private void addToAccount(AccountID id, ExpirableTxnRecord jRecord) {
 		ledger.addRecord(id, jRecord);
 		if (!accountsWithExpiringRecords.contains(id)) {
 			expirations.offer(new EarliestRecordExpiry(jRecord.getExpirationTime(), id));
@@ -239,14 +238,14 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 		}
 	}
 
-	private JTransactionRecord asJRecord(TransactionRecord record, long expiry) {
-		JTransactionRecord jRecord = convert(record);
+	private ExpirableTxnRecord asJRecord(TransactionRecord record, long expiry) {
+		ExpirableTxnRecord jRecord = ExpirableTxnRecord.fromGprc(record);
 		jRecord.setExpirationTime(expiry);
 		return jRecord;
 	}
 
 	private boolean isCallableContract(AccountID id) {
-		return Optional.ofNullable(accounts.get(EntityId.fromPojoAccountId(id)))
+		return Optional.ofNullable(accounts.get(MerkleEntityId.fromPojoAccountId(id)))
 				.map(v -> v.isSmartContract() && !v.isDeleted())
 				.orElse(false);
 	}

@@ -21,15 +21,15 @@ package com.hedera.services;
  */
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.hedera.services.context.NetworkContext;
+import com.hedera.services.state.merkle.MerkleNetworkContext;
 import com.hedera.services.context.ServicesContext;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.context.properties.StandardizedPropertySources;
 import com.hedera.services.legacy.config.PropertiesLoader;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.utils.JvmSystemExits;
@@ -57,7 +57,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.hedera.services.context.NetworkContext.UNKNOWN_CONSENSUS_TIME;
+import static com.hedera.services.state.merkle.MerkleNetworkContext.UNKNOWN_CONSENSUS_TIME;
 import static com.hedera.services.context.SingletonContextsManager.CONTEXTS;
 import static com.hedera.services.legacy.logic.ApplicationConstants.HEDERA_START_SEQUENCE;
 import static com.hedera.services.sigs.HederaToPlatformSigOps.expandIn;
@@ -122,14 +122,14 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 		setChild(ADDRESS_BOOK_CHILD_INDEX, addressBook);
 
 		if (getNumberOfChildren() < NUM_V1_CHILDREN) {
-			var networkCtx = new NetworkContext(
+			var networkCtx = new MerkleNetworkContext(
 					UNKNOWN_CONSENSUS_TIME,
 					new SequenceNumber(HEDERA_START_SEQUENCE),
 					new ExchangeRates());
 			setChild(NETWORK_CTX_CHILD_INDEX, networkCtx);
-			setChild(TOPICS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), new Topic.Provider()));
-			setChild(STORAGE_CHILD_INDEX, new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider()));
-			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER));
+			setChild(TOPICS_CHILD_INDEX, new FCMap<>(new MerkleEntityId.Provider(), new MerkleTopic.Provider()));
+			setChild(STORAGE_CHILD_INDEX, new FCMap<>(new MerkleBlobMeta.Provider(), new MerkleOptionalBlob.Provider()));
+			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER));
 		}
 
 		log.info("Initializing context of Services node {} with platform and address book...", nodeId);
@@ -205,6 +205,8 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 		accounts().copyFrom(in);
 		storage().copyFrom(in);
 		in.readBoolean();
+		in.readLong();
+		in.readLong();
 		networkCtx().midnightRates().deserialize(in);
 		if (in.readBoolean()) {
 			networkCtx().setConsensusTimeOfLastHandledTxn(in.readInstant());
@@ -248,19 +250,19 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 		return accountParsedFromString(memo);
 	}
 
-	public FCMap<EntityId, HederaAccount> accounts() {
+	public FCMap<MerkleEntityId, MerkleAccount> accounts() {
 		return getChild(ACCOUNTS_CHILD_INDEX);
 	}
 
-	public FCMap<BlobMeta, OptionalBlob> storage() {
+	public FCMap<MerkleBlobMeta, MerkleOptionalBlob> storage() {
 		return getChild(STORAGE_CHILD_INDEX);
 	}
 
-	public FCMap<EntityId, Topic> topics() {
+	public FCMap<MerkleEntityId, MerkleTopic> topics() {
 		return getChild(TOPICS_CHILD_INDEX);
 	}
 
-	public NetworkContext networkCtx() {
+	public MerkleNetworkContext networkCtx() {
 		return getChild(NETWORK_CTX_CHILD_INDEX);
 	}
 

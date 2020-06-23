@@ -28,9 +28,6 @@ import com.swirlds.common.io.SerializableDataOutputStream;
 import java.io.IOException;
 
 public class ExchangeRates {
-	static final long OBSOLETE_VERSION = 1L;
-	static final long OBSOLETE_OBJECT_ID = 10000121L;
-
 	private int currentHbarEquiv;
 	private int currentCentEquiv;
 	private long currentExpiry;
@@ -109,9 +106,6 @@ public class ExchangeRates {
 	}
 
 	public void serialize(SerializableDataOutputStream out) throws IOException {
-		out.writeLong(OBSOLETE_VERSION);
-		out.writeLong(OBSOLETE_OBJECT_ID);
-
 		out.writeInt(currentHbarEquiv);
 		out.writeInt(currentCentEquiv);
 		out.writeLong(currentExpiry);
@@ -121,9 +115,6 @@ public class ExchangeRates {
 	}
 
 	public void deserialize(SerializableDataInputStream in) throws IOException {
-		in.readLong();
-		in.readLong();
-
 		currentHbarEquiv = in.readInt();
 		currentCentEquiv = in.readInt();
 		currentExpiry = in.readLong();

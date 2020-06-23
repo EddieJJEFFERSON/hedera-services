@@ -21,6 +21,8 @@ package com.hedera.services.legacy.core.jproto;
  */
 
 import com.hedera.services.legacy.logic.ApplicationConstants;
+import com.hedera.services.state.submerkle.EntityId;
+import com.hedera.services.state.submerkle.RichInstant;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionID;
@@ -48,13 +50,13 @@ public class JTransactionID implements FastCopyable, Serializable {
 	private static final Logger log = LogManager.getLogger(JTransactionID.class);
 	private static final long LEGACY_VERSION_1 = 1;
 	private static final long CURRENT_VERSION = 2;
-	private HEntityId payerAccount;
-	private JTimestamp startTime;
+	private EntityId payerAccount;
+	private RichInstant startTime;
 
 	public JTransactionID() {
 	}
 
-	public JTransactionID(final HEntityId payerAccount, final JTimestamp startTime) {
+	public JTransactionID(final EntityId payerAccount, final RichInstant startTime) {
 		this.payerAccount = payerAccount;
 		this.startTime = startTime;
 	}
@@ -64,19 +66,19 @@ public class JTransactionID implements FastCopyable, Serializable {
 		this.startTime = other.startTime;
 	}
 
-	public HEntityId getPayerAccount() {
+	public EntityId getPayerAccount() {
 		return payerAccount;
 	}
 
-	public void setPayerAccount(final HEntityId payerAccount) {
+	public void setPayerAccount(final EntityId payerAccount) {
 		this.payerAccount = payerAccount;
 	}
 
-	public JTimestamp getStartTime() {
+	public RichInstant getStartTime() {
 		return startTime;
 	}
 
-	public void setStartTime(final JTimestamp startTime) {
+	public void setStartTime(final RichInstant startTime) {
 		this.startTime = startTime;
 	}
 
@@ -99,9 +101,7 @@ public class JTransactionID implements FastCopyable, Serializable {
 
 		if (this.startTime != null) {
 			outStream.writeBoolean(true);
-			this.startTime.copyTo(outStream);
-			this.startTime.copyToExtra(outStream);
-
+			this.startTime.serialize(outStream);
 		} else {
 			outStream.writeBoolean(false);
 		}
@@ -139,12 +139,12 @@ public class JTransactionID implements FastCopyable, Serializable {
 		}
 
 		if (inStream.readChar() == ApplicationConstants.P) {
-			transactionID.payerAccount = HEntityId.legacyProvider(inStream);
+			transactionID.payerAccount = EntityId.LEGACY_PROVIDER.deserialize(inStream);
 		}
 
 		final boolean startTimePresent = inStream.readBoolean();
 		if (startTimePresent) {
-			transactionID.startTime = JTimestamp.deserialize(inStream);
+			transactionID.startTime = RichInstant.LEGACY_PROVIDER.deserialize(inStream);
 		}
 
 
@@ -191,25 +191,25 @@ public class JTransactionID implements FastCopyable, Serializable {
 	}
 
 	public static JTransactionID convert(final TransactionID transactionID) {
-		JTimestamp jTimestamp = transactionID.hasTransactionValidStart() ?
-				JTimestamp.convert(transactionID.getTransactionValidStart()) : null;
-		HEntityId payerAccount = transactionID.hasAccountID() ?
-				HEntityId.convert(transactionID.getAccountID()) : null;
-		return new JTransactionID(payerAccount, jTimestamp);
+		RichInstant richInstant = transactionID.hasTransactionValidStart() ?
+				RichInstant.fromGrpc(transactionID.getTransactionValidStart()) : null;
+		EntityId payerAccount = transactionID.hasAccountID() ?
+				EntityId.ofNullableAccountId(transactionID.getAccountID()) : null;
+		return new JTransactionID(payerAccount, richInstant);
 	}
 
 	public static TransactionID convert(final JTransactionID transactionID) {
 	    Builder builder = TransactionID.newBuilder();
         if(transactionID.getPayerAccount() != null) {
           AccountID payerAccountID = RequestBuilder.getAccountIdBuild(
-                transactionID.getPayerAccount().getNum(),
-                transactionID.getPayerAccount().getRealm(),
-                transactionID.getPayerAccount().getShard());
+                transactionID.getPayerAccount().num(),
+                transactionID.getPayerAccount().realm(),
+                transactionID.getPayerAccount().shard());
           builder.setAccountID(payerAccountID);
         }
         
         if(transactionID.getStartTime() != null) {
-          Timestamp startTime = JTimestamp.convert(transactionID.getStartTime());
+          Timestamp startTime = transactionID.getStartTime().toGrpc();
           builder.setTransactionValidStart(startTime);
         }
         

@@ -20,8 +20,8 @@ package com.hedera.services.files.store;
  * ‍
  */
 
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.swirlds.fcmap.FCMap;
 
 import java.util.AbstractMap;
@@ -32,19 +32,19 @@ import java.util.function.Function;
 import static java.util.stream.Collectors.toSet;
 
 public class FcBlobsBytesStore extends AbstractMap<String, byte[]> {
-        private final Function<byte[], OptionalBlob> blobFactory;
-        private final FCMap<BlobMeta, OptionalBlob> pathedBlobs;
+        private final Function<byte[], MerkleOptionalBlob> blobFactory;
+        private final FCMap<MerkleBlobMeta, MerkleOptionalBlob> pathedBlobs;
 
         public FcBlobsBytesStore(
-                        Function<byte[], OptionalBlob> blobFactory,
-                        FCMap<BlobMeta, OptionalBlob> pathedBlobs
+                        Function<byte[], MerkleOptionalBlob> blobFactory,
+                        FCMap<MerkleBlobMeta, MerkleOptionalBlob> pathedBlobs
         ) {
                 this.blobFactory = blobFactory;
                 this.pathedBlobs = pathedBlobs;
         }
 
-        private BlobMeta at(Object key) {
-                return new BlobMeta((String)key);
+        private MerkleBlobMeta at(Object key) {
+                return new MerkleBlobMeta((String)key);
         }
 
         @Override
@@ -55,7 +55,7 @@ public class FcBlobsBytesStore extends AbstractMap<String, byte[]> {
         @Override
         public byte[] remove(Object path) {
                 return Optional.ofNullable(pathedBlobs.remove(at(path)))
-                                .map(OptionalBlob::getData)
+                                .map(MerkleOptionalBlob::getData)
                                 .orElse(null);
         }
 
@@ -83,7 +83,7 @@ public class FcBlobsBytesStore extends AbstractMap<String, byte[]> {
         @Override
         public byte[] get(Object path) {
                 return Optional.ofNullable(pathedBlobs.get(at(path)))
-                                .map(OptionalBlob::getData)
+                                .map(MerkleOptionalBlob::getData)
                                 .orElse(null);
         }
 

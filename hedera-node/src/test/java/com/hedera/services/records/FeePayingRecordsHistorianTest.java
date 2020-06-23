@@ -36,11 +36,11 @@ import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hederahashgraph.api.proto.java.TransferList;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.JTimestamp;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.legacy.core.jproto.JTransactionID;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.fcmap.FCMap;
 import com.swirlds.fcqueue.FCQueue;
 import org.junit.jupiter.api.Test;
@@ -70,7 +70,6 @@ import static com.hedera.test.utils.IdUtils.asAccount;
 import static com.hedera.test.utils.IdUtils.asContract;
 import static com.hedera.services.ledger.properties.MapValueProperty.*;
 import static com.hedera.test.utils.TxnUtils.withAdjustments;
-import static com.hedera.services.legacy.core.jproto.JTransactionRecord.convert;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -96,7 +95,7 @@ public class FeePayingRecordsHistorianTest {
 	final private long aSendThresh = 999L;
 	final private long aReceiveThresh = 1_001L;
 	final private EarliestRecordExpiry aERE = new EarliestRecordExpiry(nows - 100L, a);
-	final private EntityId aKey = EntityId.fromPojoAccountId(a);
+	final private MerkleEntityId aKey = MerkleEntityId.fromPojoAccountId(a);
 	final private List<Long> bExps = List.of(expiry - 55L);
 	final private List<Long> bCons = List.of(lastCons - cacheTtl - 1);
 	final private List<TransactionID> bIds = List.of(txnIdB);
@@ -104,12 +103,12 @@ public class FeePayingRecordsHistorianTest {
 	final private long bSendThresh = 2_000L;
 	final private long bReceiveThresh = 201L;
 	final private EarliestRecordExpiry bERE = new EarliestRecordExpiry(nows - 55L, b);
-	final private EntityId bKey = EntityId.fromPojoAccountId(b);
+	final private MerkleEntityId bKey = MerkleEntityId.fromPojoAccountId(b);
 	final private List<Long> cExps = List.of();
 	final private long cBalance = recordFee + 1L;
 	final private long cSendThresh = 3_000L;
 	final private long cReceiveThresh = 301L;
-	final private EntityId cKey = EntityId.fromPojoAccountId(c);
+	final private MerkleEntityId cKey = MerkleEntityId.fromPojoAccountId(c);
 	final private EarliestRecordExpiry cERE = new EarliestRecordExpiry(nows + 50L, c);
 	final private List<Long> dExps = List.of();
 	final private long dBalance = recordFee + 1L;
@@ -131,15 +130,15 @@ public class FeePayingRecordsHistorianTest {
 			.setTransferList(initialTransfers)
 			.setMemo("This is different!")
 			.build();
-	final private JTransactionRecord jFinalRecord = convert(finalRecord);
+	final private ExpirableTxnRecord jFinalRecord = ExpirableTxnRecord.fromGprc(finalRecord);
 	{
 		jFinalRecord.setExpirationTime(expiry);
 	}
 
-	private HederaAccount aValue;
-	private HederaAccount bValue;
-	private HederaAccount cValue;
-	private HederaAccount dValue;
+	private MerkleAccount aValue;
+	private MerkleAccount bValue;
+	private MerkleAccount cValue;
+	private MerkleAccount dValue;
 	private RecordCache recordCache;
 	private HederaLedger ledger;
 	private FeeCalculator fees;
@@ -147,7 +146,7 @@ public class FeePayingRecordsHistorianTest {
 	private PropertySource properties;
 	private TransactionContext txnCtx;
 	private ItemizableFeeCharging itemizableFeeCharging;
-	private FCMap<EntityId, HederaAccount> accounts;
+	private FCMap<MerkleEntityId, MerkleAccount> accounts;
 	private BlockingQueue<EarliestRecordExpiry> expirations;
 
 	private FeePayingRecordsHistorian subject;
@@ -360,9 +359,9 @@ public class FeePayingRecordsHistorianTest {
 
 		given(txnCtx.accessor()).willReturn(accessor);
 
-		HederaAccount v = new HederaAccount();
+		MerkleAccount v = new MerkleAccount();
 		IS_SMART_CONTRACT.setter().accept(v, false);
-		given(accounts.get(EntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
+		given(accounts.get(MerkleEntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
 	}
 
 	private void addSetupForCallToDeletedContract() {
@@ -377,10 +376,10 @@ public class FeePayingRecordsHistorianTest {
 
 		given(txnCtx.accessor()).willReturn(accessor);
 
-		HederaAccount v = new HederaAccount();
+		MerkleAccount v = new MerkleAccount();
 		IS_SMART_CONTRACT.setter().accept(v, true);
 		IS_DELETED.setter().accept(v, true);
-		given(accounts.get(EntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
+		given(accounts.get(MerkleEntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
 	}
 
 	private void addSetupForValidContractCall() {
@@ -397,9 +396,9 @@ public class FeePayingRecordsHistorianTest {
 
 		given(txnCtx.accessor()).willReturn(accessor);
 
-		HederaAccount v = new HederaAccount();
+		MerkleAccount v = new MerkleAccount();
 		IS_SMART_CONTRACT.setter().accept(v, true);
-		given(accounts.get(EntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
+		given(accounts.get(MerkleEntityId.fromPojoAccountId(asAccount(contract)))).willReturn(v);
 	}
 
 	private void addSetupForValidContractCreate() {
@@ -511,7 +510,7 @@ public class FeePayingRecordsHistorianTest {
 		subject.setLedger(ledger);
 	}
 
-	private HederaAccount add(
+	private MerkleAccount add(
 			AccountID id,
 			long balance,
 			long sendThreshold,
@@ -520,8 +519,8 @@ public class FeePayingRecordsHistorianTest {
 			List<Long> consensusTimes,
 			List<TransactionID> txnIds
 	) {
-		EntityId key = EntityId.fromPojoAccountId(id);
-		HederaAccount value = new HederaAccount();
+		MerkleEntityId key = MerkleEntityId.fromPojoAccountId(id);
+		MerkleAccount value = new MerkleAccount();
 		given(ledger.getBalance(id)).willReturn(balance);
 		given(ledger.fundsSentRecordThreshold(id)).willReturn(sendThreshold);
 		given(ledger.fundsReceivedRecordThreshold(id)).willReturn(receiveThreshold);
@@ -530,11 +529,11 @@ public class FeePayingRecordsHistorianTest {
 		TRANSACTION_RECORDS.setter().accept(
 				value,
 				asFcq(IntStream.range(0, expiries.size()).mapToObj(i -> {
-					JTransactionRecord record = new JTransactionRecord(
+					ExpirableTxnRecord record = new ExpirableTxnRecord(
 						null,
 						new byte[0],
 						JTransactionID.convert(txnIds.get(i)),
-						JTimestamp.convert(Timestamp.newBuilder().setSeconds(consensusTimes.get(i)).build()),
+						RichInstant.fromGrpc(Timestamp.newBuilder().setSeconds(consensusTimes.get(i)).build()),
 						"",
 						0L,
 						null,
@@ -547,9 +546,9 @@ public class FeePayingRecordsHistorianTest {
 		return value;
 	}
 
-	private FCQueue<JTransactionRecord> asFcq(LinkedList<JTransactionRecord> ll) {
-		FCQueue<JTransactionRecord> fcq = new FCQueue<>(JTransactionRecord::deserialize);
-		for (JTransactionRecord record : ll) {
+	private FCQueue<ExpirableTxnRecord> asFcq(LinkedList<ExpirableTxnRecord> ll) {
+		FCQueue<ExpirableTxnRecord> fcq = new FCQueue<>(ExpirableTxnRecord::deserialize);
+		for (ExpirableTxnRecord record : ll) {
 			fcq.offer(record);
 		}
 		return fcq;

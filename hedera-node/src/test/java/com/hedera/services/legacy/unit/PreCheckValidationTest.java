@@ -21,7 +21,7 @@ package com.hedera.services.legacy.unit;
  */
 
 import com.google.common.cache.CacheBuilder;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.legacy.config.PropertiesLoader;
 import com.hedera.services.legacy.handler.TransactionHandler;
@@ -54,10 +54,10 @@ import com.hederahashgraph.builder.TransactionSigner;
 import com.hederahashgraph.fee.FeeBuilder;
 import com.hederahashgraph.fee.SigValueObj;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.hedera.services.state.submerkle.ExchangeRates;
 import com.hedera.services.legacy.proto.utils.CommonUtils;
 
@@ -104,9 +104,9 @@ class PreCheckValidationTest {
   long payerAccountInitialBalance = 1000000000;
   private MockStorageWrapper storageWrapper = new MockStorageWrapper();
   private RecordCache recordCache = new RecordCache(CacheBuilder.newBuilder().build());
-  private FCMap<EntityId, HederaAccount> accountFCMap =
-      new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
-  FCMap<EntityId, Topic> topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
+  private FCMap<MerkleEntityId, MerkleAccount> accountFCMap =
+      new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
+  FCMap<MerkleEntityId, MerkleTopic> topicFCMap = new FCMap<>(new MerkleEntityId.Provider(), new MerkleTopic.Provider());
   private AccountID nodeAccount = AccountID.newBuilder().setAccountNum(3).setRealmNum(0).setShardNum(0).build();
   private AccountID payerAccount = AccountID.newBuilder().setAccountNum(300).setRealmNum(0).setShardNum(0).build();
   private KeyPair payerKeyGenerated = new KeyPairGenerator().generateKeyPair();
@@ -414,7 +414,7 @@ class PreCheckValidationTest {
     TransactionReceipt txReceipt = RequestBuilder.getTransactionReceipt(OK);
     TransactionRecord transactionRecord =
         TransactionRecord.newBuilder().setReceipt(txReceipt).build();
-    localRecordCache.setPostConsensus(trId, JTransactionRecord.convert(transactionRecord));
+    localRecordCache.setPostConsensus(trId, ExpirableTxnRecord.fromGprc(transactionRecord));
     PrecheckVerifier precheckVerifier = mock(PrecheckVerifier.class);
     given(precheckVerifier.hasNecessarySignatures(any())).willReturn(true);
     TransactionHandler localTransactionHandler = new TransactionHandler(localRecordCache, accountFCMap,

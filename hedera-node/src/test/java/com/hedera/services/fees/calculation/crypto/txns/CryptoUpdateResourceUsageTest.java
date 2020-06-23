@@ -23,7 +23,7 @@ package com.hedera.services.fees.calculation.crypto.txns;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.protobuf.ByteString;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.context.primitives.StateView;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.CryptoUpdateTransactionBody;
@@ -33,7 +33,7 @@ import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.fee.CryptoFeeBuilder;
 import com.hederahashgraph.fee.SigValueObj;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,12 +48,12 @@ import static com.hedera.test.utils.IdUtils.*;
 @RunWith(JUnitPlatform.class)
 class CryptoUpdateResourceUsageTest {
 	Key currKey = Key.newBuilder().setEd25519(ByteString.copyFrom("NONSENSE".getBytes())).build();
-	EntityId accountKey = new EntityId(0, 0, 1234);
+	MerkleEntityId accountKey = new MerkleEntityId(0, 0, 1234);
 	AccountID target = asAccount("0.0.1234");
 	Timestamp expiry = Timestamp.newBuilder().setSeconds(Long.MAX_VALUE).build();
 	StateView view;
-	HederaAccount account;
-	FCMap<EntityId, HederaAccount> accounts;
+	MerkleAccount account;
+	FCMap<MerkleEntityId, MerkleAccount> accounts;
 
 	private SigValueObj sigUsage;
 	private CryptoFeeBuilder usageEstimator;
@@ -73,7 +73,7 @@ class CryptoUpdateResourceUsageTest {
 		nonCryptoUpdateTxn = mock(TransactionBody.class);
 		given(nonCryptoUpdateTxn.hasCryptoUpdateAccount()).willReturn(false);
 
-		account = mock(HederaAccount.class);
+		account = mock(MerkleAccount.class);
 		given(account.getKey()).willReturn(JKey.mapKey(currKey));
 		given(account.getExpiry()).willReturn(Long.MAX_VALUE);
 		accounts = mock(FCMap.class);

@@ -20,9 +20,9 @@ package com.hedera.services.legacy.initialization;
  * ‍
  */
 
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.HEntityId;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.submerkle.EntityId;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,13 +39,13 @@ public class ExportExistingAccounts {
   private static final Logger log = LogManager.getLogger(ExportExistingAccounts.class);
   
   @SuppressWarnings("unchecked")
-  private static JSONArray getAccountsasJson(FCMap<EntityId, HederaAccount> accountMap) {
+  private static JSONArray getAccountsasJson(FCMap<MerkleEntityId, MerkleAccount> accountMap) {
 
     JSONArray accountObjArr = new JSONArray();
     JSONObject cryptoAccount = null;
-    HederaAccount mapValue = null;
-    HEntityId proxyAccountID = null;
-    for (EntityId currKey : accountMap.keySet()) {
+    MerkleAccount mapValue = null;
+    EntityId proxyAccountID = null;
+    for (MerkleEntityId currKey : accountMap.keySet()) {
       try {
         cryptoAccount = new JSONObject();
         log.info("retrieving account info from path :: Solidity Address in getAccountDetails "
@@ -54,8 +54,8 @@ public class ExportExistingAccounts {
         cryptoAccount.put("initialBalance", mapValue.getBalance());
         proxyAccountID = mapValue.getProxy();
         if (proxyAccountID != null) {
-          cryptoAccount.put("proxyAccountNum", proxyAccountID.getNum());
-          cryptoAccount.put("proxyRealmNum", proxyAccountID.getRealm());
+          cryptoAccount.put("proxyAccountNum", proxyAccountID.num());
+          cryptoAccount.put("proxyRealmNum", proxyAccountID.realm());
           cryptoAccount.put("proxyShardNum", mapValue.getProxy());
         } else {
           cryptoAccount.put("proxyAccountNum", 0);
@@ -83,7 +83,7 @@ public class ExportExistingAccounts {
    * This method is invoked during start up and executed based upon the configuration settings. It
    * exports all the existing accounts in the JSON format and write it in a file
    */
-  public static void exportAccounts(String exportAccountPath, FCMap<EntityId, HederaAccount> accountMap)
+  public static void exportAccounts(String exportAccountPath, FCMap<MerkleEntityId, MerkleAccount> accountMap)
       throws IOException {
     JSONArray accountList = getAccountsasJson(accountMap);
     try (FileWriter file = new FileWriter(exportAccountPath)) {

@@ -22,18 +22,18 @@ package com.hedera.services.legacy.unit.handler;
 
 import com.hedera.services.context.primitives.StateView;
 import com.hederahashgraph.api.proto.java.AccountID;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.swirlds.fcmap.FCMap;
 
 public class CryptoHandler {
-  private FCMap<EntityId, HederaAccount> map = StateView.EMPTY_ACCOUNTS;
+  private FCMap<MerkleEntityId, MerkleAccount> map = StateView.EMPTY_ACCOUNTS;
 
   public boolean validateAccountID(AccountID accountID) {
     boolean isValid = false;
-    EntityId entityId = EntityId.fromPojoAccountId(accountID);
-    if (map.containsKey(entityId)) {
-      HederaAccount mapValue = map.get(entityId);
+    MerkleEntityId merkleEntityId = MerkleEntityId.fromPojoAccountId(accountID);
+    if (map.containsKey(merkleEntityId)) {
+      MerkleAccount mapValue = map.get(merkleEntityId);
       if (mapValue != null) {
         isValid = !mapValue.isSmartContract();
       }
@@ -42,9 +42,9 @@ public class CryptoHandler {
   }
 
   public boolean isAccountSetForDelete(AccountID accountID) {
-    EntityId accountKey = EntityId.fromPojoAccountId(accountID);
+    MerkleEntityId accountKey = MerkleEntityId.fromPojoAccountId(accountID);
     if (map.containsKey(accountKey)) {
-      HederaAccount accountValue = map.get(accountKey);
+      MerkleAccount accountValue = map.get(accountKey);
       return accountValue.isDeleted();
     }
     return false;

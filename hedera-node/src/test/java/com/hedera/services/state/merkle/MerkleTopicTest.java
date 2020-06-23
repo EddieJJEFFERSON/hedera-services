@@ -1,11 +1,11 @@
 package com.hedera.services.state.merkle;
 
 import com.hedera.services.context.domain.serdes.TopicSerde;
-import com.hedera.services.legacy.core.jproto.HEntityId;
+import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
-import com.hedera.services.legacy.core.jproto.JTimestamp;
+import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.utils.MiscUtils;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.swirlds.common.io.SerializableDataInputStream;
@@ -52,29 +52,29 @@ class MerkleTopicTest {
 		var serde = mock(TopicSerde.class);
 		var in = mock(SerializableDataInputStream.class);
 		// and:
-		Topic.serde = serde;
+		MerkleTopic.serde = serde;
 
 		given(in.readShort()).willReturn((short)0).willReturn((short)1);
 
 		// when:
-		var topic = (Topic)(new Topic.Provider().deserialize(in));
+		var topic = (MerkleTopic)(new MerkleTopic.Provider().deserialize(in));
 
 		// then:
 		assertNotNull(topic);
 		verify(in, times(2)).readShort();
-		verify(serde).deserializeV1(argThat(in::equals), any(Topic.class));
+		verify(serde).deserializeV1(argThat(in::equals), any(MerkleTopic.class));
 	}
 
 	@AfterEach
 	public void cleanup() {
-		Topic.serde = new TopicSerde();
+		MerkleTopic.serde = new TopicSerde();
 	}
 
 	@Test
 	public void toStringWorks() throws IOException, NoSuchAlgorithmException {
 		// expect:
 		assertEquals(
-				"Topic{"
+				"MerkleTopic{"
 						+ "memo=First memo, "
 						+ "expiry=1234567.0, "
 						+ "deleted=false, "
@@ -87,7 +87,7 @@ class MerkleTopicTest {
 				topicFrom(0).toString());
 		// and:
 		assertEquals(
-				"Topic{" +
+				"MerkleTopic{" +
 						"memo=Second memo, " +
 						"expiry=2234567.1, " +
 						"deleted=false, " +
@@ -100,7 +100,7 @@ class MerkleTopicTest {
 				topicFrom(1).toString());
 		// and:
 		assertEquals(
-				"Topic{" +
+				"MerkleTopic{" +
 						"memo=Third memo, " +
 						"expiry=3234567.2, " +
 						"deleted=false, " +
@@ -113,17 +113,17 @@ class MerkleTopicTest {
 				topicFrom(2).toString());
 	}
 
-	private Topic topicFrom(int s) throws IOException, NoSuchAlgorithmException {
+	private MerkleTopic topicFrom(int s) throws IOException, NoSuchAlgorithmException {
 		long v = 1_234_567L + s * 1_000_000L;
 		long t = s + 1;
 		TopicID id = TopicID.newBuilder().setTopicNum(s).build();
-		var topic = new Topic(
+		var topic = new MerkleTopic(
 				memos[s],
 				adminKeys[s],
 				submitKeys[s],
 				v,
-				new HEntityId(t, t * 2, t * 3),
-				new JTimestamp(v, s));
+				new EntityId(t, t * 2, t * 3),
+				new RichInstant(v, s));
 		for (int i = 0; i < s; i++) {
 			topic.updateRunningHashAndSequenceNumber(
 					"Hello world!".getBytes(),

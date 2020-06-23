@@ -20,6 +20,7 @@ package com.hedera.services.legacy.core.jproto;
  * ‍
  */
 
+import com.hedera.services.state.submerkle.EntityId;
 import com.swirlds.common.FastCopyable;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
@@ -34,27 +35,27 @@ public class JAccountAmount implements FastCopyable {
   private static final Logger log = LogManager.getLogger(JAccountAmount.class);
   private static final long LEGACY_VERSION_1 = 1;
   private static final long CURRENT_VERSION = 2;
-  private HEntityId accountID;
+  private EntityId accountID;
   private long amount;
 
   public JAccountAmount() {
   }
 
-  public JAccountAmount(final HEntityId accountID, final long amount) {
+  public JAccountAmount(final EntityId accountID, final long amount) {
     this.accountID = accountID;
     this.amount = amount;
   }
 
   public JAccountAmount(final JAccountAmount other) {
-    this.accountID = (HEntityId) other.accountID.copy();
+    this.accountID = (EntityId) other.accountID.copy();
     this.amount = other.amount;
   }
 
-  public HEntityId getAccountID() {
+  public EntityId getAccountID() {
     return accountID;
   }
 
-  public void setAccountID(final HEntityId accountID) {
+  public void setAccountID(final EntityId accountID) {
     this.accountID = accountID;
   }
 
@@ -126,7 +127,7 @@ public class JAccountAmount implements FastCopyable {
       throw new IllegalStateException("Illegal JObjectType was read from the stream");
     }
 
-    accountAmount.accountID = HEntityId.legacyProvider((SerializableDataInputStream)inStream);
+    accountAmount.accountID = EntityId.LEGACY_PROVIDER.deserialize(inStream);
     accountAmount.amount = inStream.readLong();
   }
 

@@ -20,7 +20,7 @@ package com.hedera.services.queries.answering;
  * ‍
  */
 
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.records.RecordCache;
 import com.hedera.test.factories.accounts.MapValueFactory;
@@ -30,8 +30,8 @@ import com.hederahashgraph.api.proto.java.TransactionGetRecordQuery;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.*;
 import static com.hedera.test.utils.IdUtils.*;
-import static com.hedera.services.legacy.core.jproto.JTransactionRecord.convert;
 import static com.hedera.services.context.domain.serdes.DomainSerdesTest.recordOne;
 
 @RunWith(JUnitPlatform.class)
@@ -68,14 +67,14 @@ class AnswerFunctionsTest {
 			.setTransactionValidStart(Timestamp.newBuilder().setSeconds(4_321L))
 			.build();
 
-	private JTransactionRecord targetRecord = constructTargetRecord();
-	private TransactionRecord cachedTargetRecord = JTransactionRecord.convert(targetRecord);
-	private HederaAccount payerAccount;
+	private ExpirableTxnRecord targetRecord = constructTargetRecord();
+	private TransactionRecord cachedTargetRecord = ExpirableTxnRecord.toGrpc(targetRecord);
+	private MerkleAccount payerAccount;
 	private String target = payer;
 	private long fee = 1_234L;
 	private StateView view;
 	private RecordCache recordCache;
-	private FCMap<EntityId, HederaAccount> accounts;
+	private FCMap<MerkleEntityId, MerkleAccount> accounts;
 
 	private AnswerFunctions subject;
 
@@ -86,7 +85,7 @@ class AnswerFunctionsTest {
 		payerAccount.records().offer(targetRecord);
 
 		accounts = mock(FCMap.class);
-		given(accounts.get(EntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);
+		given(accounts.get(MerkleEntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);
 
 		recordCache = mock(RecordCache.class);
@@ -152,7 +151,7 @@ class AnswerFunctionsTest {
 		verify(accounts, never()).get(any());
 	}
 
-	JTransactionRecord constructTargetRecord() {
+	ExpirableTxnRecord constructTargetRecord() {
 		TransactionRecord record = TransactionRecord.newBuilder()
 				.setReceipt(TransactionReceipt.newBuilder().setStatus(ACCOUNT_REPEATED_IN_ACCOUNT_AMOUNTS))
 				.setTransactionID(targetTxnId)
@@ -165,7 +164,7 @@ class AnswerFunctionsTest {
 						asAccount("0.0.1001"), 2L,
 						asAccount("0.0.1002"), 2L))
 				.build();
-		return JTransactionRecord.convert(record);
+		return ExpirableTxnRecord.fromGprc(record);
 	}
 
 	Query getRecordQuery(TransactionID txnId) {

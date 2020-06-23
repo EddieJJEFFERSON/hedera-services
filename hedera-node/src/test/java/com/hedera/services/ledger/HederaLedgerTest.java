@@ -38,11 +38,11 @@ import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.Key;
 import com.hederahashgraph.api.proto.java.TransferList;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.hedera.services.legacy.core.jproto.JContractIDKey;
 import com.hedera.services.legacy.core.jproto.JKey;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.common.crypto.CryptoFactory;
 import com.swirlds.fcmap.FCMap;
 import com.swirlds.fcqueue.FCQueue;
@@ -85,13 +85,13 @@ public class HederaLedgerTest {
 	final AccountID genesis = AccountID.newBuilder().setAccountNum(2).build();
 
 	FCMapBackingAccounts backingAccounts;
-	FCMap<EntityId, HederaAccount> backingMap;
+	FCMap<MerkleEntityId, MerkleAccount> backingMap;
 
 	HederaLedger subject;
 	EntityIdSource ids;
 	AccountRecordsHistorian historian;
 	ScopedDuplicateClassifier duplicateClassifier = mock(ScopedDuplicateClassifier.class);
-	TransactionalLedger<AccountID, MapValueProperty, HederaAccount> ledger;
+	TransactionalLedger<AccountID, MapValueProperty, MerkleAccount> ledger;
 
 	@BeforeEach
 	private void setupWithMockLedger() {
@@ -120,16 +120,16 @@ public class HederaLedgerTest {
 	private void setupWithLiveLedger() {
 		ledger = new TransactionalLedger<>(
 				MapValueProperty.class,
-				() -> new HederaAccount(),
+				() -> new MerkleAccount(),
 				new HashMapBackingAccounts(),
 				new ChangeSummaryManager<>());
 		subject = new HederaLedger(ids, historian, duplicateClassifier, ledger);
 	}
 
 	private void setupWithLiveFcBackedLedger() {
-		backingMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
+		backingMap = new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
 		backingAccounts = new FCMapBackingAccounts(backingMap);
-		HederaAccount genesisAccount = new HederaAccount();
+		MerkleAccount genesisAccount = new MerkleAccount();
 		try {
 			genesisAccount.setBalance(50_000_000_000L);
 			new HederaAccountCustomizer()
@@ -139,7 +139,7 @@ public class HederaLedgerTest {
 		backingAccounts.replace(genesis, genesisAccount);
 		ledger = new TransactionalLedger<>(
 				MapValueProperty.class,
-				() -> new HederaAccount(),
+				() -> new MerkleAccount(),
 				backingAccounts,
 				new ChangeSummaryManager<>());
 		subject = new HederaLedger(ids, historian, duplicateClassifier, ledger);
@@ -261,7 +261,7 @@ public class HederaLedgerTest {
 	@Test
 	public void delegatesGet() {
 		// setup:
-		HederaAccount fakeGenesis = new HederaAccount();
+		MerkleAccount fakeGenesis = new MerkleAccount();
 
 		given(ledger.get(genesis)).willReturn(fakeGenesis);
 
@@ -532,7 +532,7 @@ public class HederaLedgerTest {
 	@Test
 	public void purgesExpiredRecords() {
 		// setup:
-		FCQueue<JTransactionRecord> records = asJTxnRecords(50L, 100L, 200L, 311L, 500L);
+		FCQueue<ExpirableTxnRecord> records = asJTxnRecords(50L, 100L, 200L, 311L, 500L);
 		addRecords(misc, records);
 
 		// when:
@@ -548,9 +548,9 @@ public class HederaLedgerTest {
 		// and:
 		assertTrue(captor.getValue() == records);
 		assertThat(
-				((FCQueue<JTransactionRecord>)captor.getValue())
+				((FCQueue<ExpirableTxnRecord>)captor.getValue())
 						.stream()
-						.map(JTransactionRecord::getExpirationTime)
+						.map(ExpirableTxnRecord::getExpirationTime)
 						.collect(Collectors.toList()),
 				contains(311L, 500L));
 	}
@@ -558,7 +558,7 @@ public class HederaLedgerTest {
 	@Test
 	public void returnsMinusOneIfAllRecordsPurged() {
 		// setup:
-		FCQueue<JTransactionRecord> records = asJTxnRecords(50L, 100L, 200L, 311L, 500L);
+		FCQueue<ExpirableTxnRecord> records = asJTxnRecords(50L, 100L, 200L, 311L, 500L);
 		addRecords(misc, records);
 		HederaLedger.LedgerTxnEvictionStats.INSTANCE.reset();
 
@@ -574,7 +574,7 @@ public class HederaLedgerTest {
 				captor.capture());
 		// and:
 		assertTrue(captor.getValue() == records);
-		assertTrue(((FCQueue<JTransactionRecord>)captor.getValue()).isEmpty());
+		assertTrue(((FCQueue<ExpirableTxnRecord>)captor.getValue()).isEmpty());
 		// and:
 		assertEquals(5, HederaLedger.LedgerTxnEvictionStats.INSTANCE.recordsPurged());
 		assertEquals(1, HederaLedger.LedgerTxnEvictionStats.INSTANCE.accountsTouched());
@@ -583,10 +583,10 @@ public class HederaLedgerTest {
 	@Test
 	public void addsNewRecordLast() {
 		// setup:
-		FCQueue<JTransactionRecord> records = asJTxnRecords(100L, 50L, 200L, 311L);
+		FCQueue<ExpirableTxnRecord> records = asJTxnRecords(100L, 50L, 200L, 311L);
 		addRecords(misc, records);
 		// and:
-		JTransactionRecord newRecord = asJTxnRecords(1L).peek();
+		ExpirableTxnRecord newRecord = asJTxnRecords(1L).peek();
 
 		// when:
 		long newEarliestExpiry = subject.addRecord(misc, newRecord);
@@ -601,9 +601,9 @@ public class HederaLedgerTest {
 		// and:
 		assertTrue(captor.getValue() == records);
 		assertThat(
-				((FCQueue<JTransactionRecord>)captor.getValue())
+				((FCQueue<ExpirableTxnRecord>)captor.getValue())
 						.stream()
-						.map(JTransactionRecord::getExpirationTime)
+						.map(ExpirableTxnRecord::getExpirationTime)
 						.collect(Collectors.toList()),
 				contains(100L, 50L, 200L, 311L, 1L));
 	}
@@ -853,13 +853,13 @@ public class HederaLedgerTest {
 		when(ledger.get(id, BALANCE)).thenReturn(0L);
 		when(ledger.get(id, IS_DELETED)).thenReturn(true);
 	}
-	private void addRecords(AccountID id, FCQueue<JTransactionRecord> records) {
+	private void addRecords(AccountID id, FCQueue<ExpirableTxnRecord> records) {
 		when(ledger.get(id, TRANSACTION_RECORDS)).thenReturn(records);
 	}
-	FCQueue<JTransactionRecord> asJTxnRecords(long... expiries) {
-		FCQueue<JTransactionRecord> records = new FCQueue<>(JTransactionRecord::deserialize);
+	FCQueue<ExpirableTxnRecord> asJTxnRecords(long... expiries) {
+		FCQueue<ExpirableTxnRecord> records = new FCQueue<>(ExpirableTxnRecord::deserialize);
 		for (int i = 0; i < expiries.length; i++) {
-			JTransactionRecord record = new JTransactionRecord();
+			ExpirableTxnRecord record = new ExpirableTxnRecord();
 			record.setExpirationTime(expiries[i]);
 			records.offer(record);
 		}

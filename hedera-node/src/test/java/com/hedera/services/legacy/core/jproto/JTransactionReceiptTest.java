@@ -22,6 +22,7 @@ package com.hedera.services.legacy.core.jproto;
 
 import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
+import com.hedera.services.state.submerkle.EntityId;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.swirlds.common.io.SerializableDataInputStream;
@@ -44,8 +45,8 @@ public class JTransactionReceiptTest {
     return TopicID.newBuilder().setShardNum(shard).setRealmNum(realm).setTopicNum(num).build();
   }
 
-  private HEntityId getTopicJAccountId(long shard, long realm, long num) {
-    return new HEntityId(shard, realm, num);
+  private EntityId getTopicJAccountId(long shard, long realm, long num) {
+    return new EntityId(shard, realm, num);
   }
 
   private byte[] getSha384Hash() {
@@ -106,7 +107,7 @@ public class JTransactionReceiptTest {
     final var receipt = TransactionReceipt.newBuilder().setTopicID(topicId).build();
     final var cut = JTransactionReceipt.convert(receipt);
 
-    assertAll(() -> assertEquals(HEntityId.ofNullableTopicId(topicId), cut.getTopicID()),
+    assertAll(() -> assertEquals(EntityId.ofNullableTopicId(topicId), cut.getTopicID()),
             () -> assertNull(cut.getAccountID()),
             () -> assertNull(cut.getFileID()),
             () -> assertNull(cut.getContractID()),
@@ -160,9 +161,9 @@ public class JTransactionReceiptTest {
     receipt.setTopicID(topicId);
     final var cut = JTransactionReceipt.convert(receipt);
 
-    assertAll(() -> assertEquals(topicId.getShard(), cut.getTopicID().getShardNum()),
-            () -> assertEquals(topicId.getRealm(), cut.getTopicID().getRealmNum()),
-            () -> assertEquals(topicId.getNum(), cut.getTopicID().getTopicNum()),
+    assertAll(() -> assertEquals(topicId.shard(), cut.getTopicID().getShardNum()),
+            () -> assertEquals(topicId.realm(), cut.getTopicID().getRealmNum()),
+            () -> assertEquals(topicId.num(), cut.getTopicID().getTopicNum()),
             () -> assertEquals(0L, cut.getTopicSequenceNumber()),
             () -> assertEquals(0, cut.getTopicRunningHash().size())
     );
@@ -312,7 +313,7 @@ public class JTransactionReceiptTest {
 
   @Test
   public void hcsConstructor() {
-    final var topicId = HEntityId.ofNullableTopicId(TopicID.newBuilder().setTopicNum(1L).build());
+    final var topicId = EntityId.ofNullableTopicId(TopicID.newBuilder().setTopicNum(1L).build());
     final var sequenceNumber = 2L;
     final var runningHash = new byte[3];
     final var cut = new JTransactionReceipt("SUCCESS", null, null, null, null,

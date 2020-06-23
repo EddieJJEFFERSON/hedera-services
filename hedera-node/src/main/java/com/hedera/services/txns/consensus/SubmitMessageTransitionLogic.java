@@ -21,12 +21,12 @@ package com.hedera.services.txns.consensus;
  */
 
 import com.hedera.services.context.TransactionContext;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.txns.TransitionLogic;
 import com.hedera.services.txns.validation.OptionValidator;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TransactionBody;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.swirlds.fcmap.FCMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,11 +41,11 @@ public class SubmitMessageTransitionLogic implements TransitionLogic {
 
 	private static final Function<TransactionBody, ResponseCodeEnum> SYNTAX_RUBBER_STAMP = ignore -> OK;
 
-	private final FCMap<EntityId, Topic> topics;
+	private final FCMap<MerkleEntityId, MerkleTopic> topics;
 	private final OptionValidator validator;
 	private final TransactionContext transactionContext;
 
-	public SubmitMessageTransitionLogic(FCMap<EntityId, Topic> topics, OptionValidator validator,
+	public SubmitMessageTransitionLogic(FCMap<MerkleEntityId, MerkleTopic> topics, OptionValidator validator,
 										TransactionContext transactionContext) {
 		this.topics = topics;
 		this.validator = validator;
@@ -69,10 +69,10 @@ public class SubmitMessageTransitionLogic implements TransitionLogic {
 			return;
 		}
 
-		var topicMapKey = EntityId.fromPojoTopicId(topicId);
+		var topicMapKey = MerkleEntityId.fromPojoTopicId(topicId);
 		var topic = topics.get(topicMapKey);
 		try {
-			var updatedTopic = new Topic(topic);
+			var updatedTopic = new MerkleTopic(topic);
 			updatedTopic.updateRunningHashAndSequenceNumber(op.getMessage().toByteArray(), topicId,
 					transactionContext.consensusTime());
 

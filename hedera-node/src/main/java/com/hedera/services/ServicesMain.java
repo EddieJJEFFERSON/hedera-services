@@ -21,14 +21,14 @@ package com.hedera.services;
  */
 
 import com.hedera.services.context.ServicesContext;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.context.properties.Profile;
 import com.hedera.services.utils.JvmSystemExits;
 import com.hedera.services.utils.SystemExits;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.legacy.exception.InvalidTotalAccountBalanceException;
 import com.hedera.services.legacy.services.state.initialization.DefaultSystemAccountsCreator;
 import com.swirlds.common.NodeId;
@@ -355,9 +355,9 @@ public class ServicesMain implements SwirldMain {
 	public static void dumpFcms(
 			long nodeId,
 			long round,
-			FCMap<EntityId, HederaAccount> accounts,
-			FCMap<BlobMeta, OptionalBlob> storage,
-			FCMap<EntityId, Topic> topics
+			FCMap<MerkleEntityId, MerkleAccount> accounts,
+			FCMap<MerkleBlobMeta, MerkleOptionalBlob> storage,
+			FCMap<MerkleEntityId, MerkleTopic> topics
 	) throws IOException {
 		var accountsFout = foutSupplier.apply(
 				String.format(FC_DUMP_LOC_TPL,

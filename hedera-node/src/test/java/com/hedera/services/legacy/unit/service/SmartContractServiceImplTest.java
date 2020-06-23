@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.ByteString;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.fees.HbarCentExchange;
 import com.hedera.services.ledger.HederaLedger;
@@ -75,12 +75,12 @@ import com.hederahashgraph.api.proto.java.TransactionResponse;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
 import com.hedera.services.legacy.TestHelper;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.legacy.unit.PropertyLoaderTest;
 import com.hedera.services.legacy.unit.handler.SolidityAddress;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.legacy.handler.TransactionHandler;
 import com.hedera.services.contracts.sources.LedgerAccountsSource;
 import com.hedera.services.legacy.unit.handler.StoragePersistenceImpl;
@@ -147,9 +147,9 @@ public class SmartContractServiceImplTest {
   long feeAccount;
   long DAY_SEC = 24 * 60 * 60;
   long DEFAULT_CONTRACT_OP_GAS = 1000000l;
-  FCMap<EntityId, HederaAccount> accountFCMap = null;
-  FCMap<EntityId, Topic> topicFCMap = null;
-  private FCMap<BlobMeta, OptionalBlob> storageMap;
+  FCMap<MerkleEntityId, MerkleAccount> accountFCMap = null;
+  FCMap<MerkleEntityId, MerkleTopic> topicFCMap = null;
+  private FCMap<MerkleBlobMeta, MerkleOptionalBlob> storageMap;
   ServicesRepositoryRoot repository;
   SmartContractServiceImpl smartContractImpl = null;
   TransactionHandler transactionHandler = null;
@@ -189,24 +189,24 @@ public class SmartContractServiceImplTest {
     System.out.println("Node Account:" + nodeAccountId);
     senderAccountId = RequestBuilder.getAccountIdBuild(9999l, 0l, 0l);
     receiverAccountId = RequestBuilder.getAccountIdBuild(8888l, 0l, 0l);
-    storageMap = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
+    storageMap = new FCMap<>(new MerkleBlobMeta.Provider(), new MerkleOptionalBlob.Provider());
     // Init FCMap & Put Balances
-    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
-    topicFCMap = new FCMap<>(new EntityId.Provider(), new Topic.Provider());
-    EntityId mk = new EntityId();
+    accountFCMap = new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
+    topicFCMap = new FCMap<>(new MerkleEntityId.Provider(), new MerkleTopic.Provider());
+    MerkleEntityId mk = new MerkleEntityId();
     mk.setNum(payerAccount);
     mk.setRealm(0);
 
-    HederaAccount mv = new HederaAccount();
+    MerkleAccount mv = new MerkleAccount();
     mv.setBalance(500000000000l);
     accountFCMap.put(mk, mv);
     SolidityAddress solAddress = new SolidityAddress(tempSolidityId);
-    EntityId solEntityId = new EntityId(0l, 0l, 9999l);
+    MerkleEntityId solMerkleEntityId = new MerkleEntityId(0l, 0l, 9999l);
 
     DbSource<byte[]> repDBFile = StorageSourceFactory.from(storageMap);
-    TransactionalLedger<AccountID, MapValueProperty, HederaAccount> delegate = new TransactionalLedger<>(
+    TransactionalLedger<AccountID, MapValueProperty, MerkleAccount> delegate = new TransactionalLedger<>(
             MapValueProperty.class,
-            () -> new HederaAccount(),
+            () -> new MerkleAccount(),
             new FCMapBackingAccounts(accountFCMap),
             new ChangeSummaryManager<>());
     HederaLedger ledger = new HederaLedger(

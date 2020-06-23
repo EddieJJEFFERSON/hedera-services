@@ -26,7 +26,7 @@ import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.ContractID;
 import com.hederahashgraph.api.proto.java.FileID;
 import com.hederahashgraph.api.proto.java.TopicID;
-import com.hedera.services.legacy.core.jproto.HEntityId;
+import com.hedera.services.state.submerkle.EntityId;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
@@ -109,14 +109,14 @@ public class EntityIdUtils {
 				.build();
 	}
 
-	public static AccountID asAccount(HEntityId jId) {
+	public static AccountID asAccount(EntityId jId) {
 		return Optional
 				.ofNullable(jId)
 				.map(id ->
 						AccountID.newBuilder()
-								.setRealmNum(id.getRealm())
-								.setShardNum(id.getShard())
-								.setAccountNum(id.getNum())
+								.setRealmNum(id.realm())
+								.setShardNum(id.shard())
+								.setAccountNum(id.num())
 								.build())
 				.orElse(AccountID.getDefaultInstance());
 	}

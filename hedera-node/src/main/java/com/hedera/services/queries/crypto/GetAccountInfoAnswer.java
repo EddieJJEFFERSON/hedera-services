@@ -20,9 +20,9 @@ package com.hedera.services.queries.crypto;
  * ‍
  */
 
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.context.primitives.StateView;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.hedera.services.queries.AnswerService;
 import com.hedera.services.txns.validation.OptionValidator;
 import com.hedera.services.utils.SignedTxnAccessor;
@@ -74,7 +74,7 @@ public class GetAccountInfoAnswer implements AnswerService {
 				response.setHeader(costAnswerHeader(OK, cost));
 			} else {
 				AccountID id = op.getAccountID();
-				HederaAccount account = view.accounts().get(EntityId.fromPojoAccountId(id));
+				MerkleAccount account = view.accounts().get(MerkleEntityId.fromPojoAccountId(id));
 				String solidityAddress = asSolidityAddressHex(id);
 				CryptoGetInfoResponse.AccountInfo.Builder info = CryptoGetInfoResponse.AccountInfo.newBuilder()
 						.setKey(asKeyUnchecked(account.getKey()))

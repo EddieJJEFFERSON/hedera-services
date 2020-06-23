@@ -22,8 +22,8 @@ package com.hedera.services.legacy.export;
 
 import com.hedera.services.ServicesState;
 import com.hedera.services.legacy.core.ExportAccountObject;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.legacy.exception.InvalidTotalAccountBalanceException;
 import com.hedera.services.legacy.stream.RecordStream;
 import com.hedera.services.legacy.config.PropertiesLoader;
@@ -120,7 +120,7 @@ public class AccountBalanceExport {
   public String exportAccountsBalanceCSVFormat(ServicesState servicesState, Instant consensusTimestamp) throws InvalidTotalAccountBalanceException {
     // get the export path from Properties
     log.debug("exportAccountsBalanceCSVFormat called. {}", consensusTimestamp);
-    FCMap<EntityId, HederaAccount> accountMap = servicesState.accounts();
+    FCMap<MerkleEntityId, MerkleAccount> accountMap = servicesState.accounts();
     String nodeAccountID = readableId(servicesState.getNodeAccountId());
 
     if (!accountBalanceExportDir.endsWith(File.separator)) {
@@ -143,9 +143,9 @@ public class AccountBalanceExport {
     }
     long totalBalance = 0L;
 
-    for (Map.Entry<EntityId, HederaAccount> item : accountMap.entrySet()) {
-      EntityId currKey = item.getKey();
-      HederaAccount currMv = item.getValue();
+    for (Map.Entry<MerkleEntityId, MerkleAccount> item : accountMap.entrySet()) {
+      MerkleEntityId currKey = item.getKey();
+      MerkleAccount currMv = item.getValue();
       totalBalance += currMv.getBalance();
       exAccObj = new ExportAccountObject(
               currKey.getShard(), currKey.getRealm(), currKey.getNum(), currMv.getBalance());
@@ -204,11 +204,11 @@ public class AccountBalanceExport {
 
   /**
    * method to get accountID string
-   * @param entityId
+   * @param merkleEntityId
    * @return
    */
-  private static String getAccountIDString(EntityId entityId) {
-    return entityId.getShard() + "." + entityId.getRealm() + "." + entityId.getNum();
+  private static String getAccountIDString(MerkleEntityId merkleEntityId) {
+    return merkleEntityId.getShard() + "." + merkleEntityId.getRealm() + "." + merkleEntityId.getNum();
   }
 
   /**

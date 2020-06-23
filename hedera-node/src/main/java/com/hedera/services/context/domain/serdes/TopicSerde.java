@@ -1,6 +1,6 @@
 package com.hedera.services.context.domain.serdes;
 
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.commons.codec.binary.StringUtils;
@@ -12,7 +12,7 @@ public class TopicSerde {
 
 	public static int MAX_MEMO_BYTES = 4_096;
 
-	public void deserializeV1(SerializableDataInputStream in, Topic to) throws IOException {
+	public void deserializeV1(SerializableDataInputStream in, MerkleTopic to) throws IOException {
 		to.setMemo(null);
 		if (in.readBoolean()) {
 			var bytes = in.readByteArray(MAX_MEMO_BYTES);
@@ -28,53 +28,53 @@ public class TopicSerde {
 		to.setExpirationTimestamp(in.readBoolean() ? serdes.deserializeTimestamp(in) : null);
 		to.setDeleted(in.readBoolean());
 		to.setSequenceNumber(in.readLong());
-		to.setRunningHash(in.readBoolean() ? in.readByteArray(Topic.RUNNING_HASH_BYTE_ARRAY_SIZE) : null);
+		to.setRunningHash(in.readBoolean() ? in.readByteArray(MerkleTopic.RUNNING_HASH_BYTE_ARRAY_SIZE) : null);
 	}
 
-	public void serializeCurrentVersion(Topic topic, SerializableDataOutputStream out) throws IOException {
-		if (topic.hasMemo()) {
+	public void serializeCurrentVersion(MerkleTopic merkleTopic, SerializableDataOutputStream out) throws IOException {
+		if (merkleTopic.hasMemo()) {
 			out.writeBoolean(true);
-			out.writeBytes(topic.getMemo());
+			out.writeBytes(merkleTopic.getMemo());
 		} else {
 			out.writeBoolean(false);
 		}
 
-		if (topic.hasAdminKey()) {
+		if (merkleTopic.hasAdminKey()) {
 			out.writeBoolean(true);
-			serdes.serializeKey(topic.getAdminKey(), out);
+			serdes.serializeKey(merkleTopic.getAdminKey(), out);
 		} else {
 			out.writeBoolean(false);
 		}
 
-		if (topic.hasSubmitKey()) {
+		if (merkleTopic.hasSubmitKey()) {
 			out.writeBoolean(true);
-			serdes.serializeKey(topic.getSubmitKey(), out);
+			serdes.serializeKey(merkleTopic.getSubmitKey(), out);
 		} else {
 			out.writeBoolean(false);
 		}
 
-		out.writeLong(topic.getAutoRenewDurationSeconds());
+		out.writeLong(merkleTopic.getAutoRenewDurationSeconds());
 
-		if (topic.hasAutoRenewAccountId()) {
+		if (merkleTopic.hasAutoRenewAccountId()) {
 			out.writeBoolean(true);
-			serdes.serializeId(topic.getAutoRenewAccountId(), out);
+			serdes.serializeId(merkleTopic.getAutoRenewAccountId(), out);
 		} else {
 			out.writeBoolean(false);
 		}
 
-		if (topic.hasExpirationTimestamp()) {
+		if (merkleTopic.hasExpirationTimestamp()) {
 			out.writeBoolean(true);
-			serdes.serializeTimestamp(topic.getExpirationTimestamp(), out);
+			serdes.serializeTimestamp(merkleTopic.getExpirationTimestamp(), out);
 		} else {
 			out.writeBoolean(false);
 		}
 
-		out.writeBoolean(topic.isDeleted());
-		out.writeLong(topic.getSequenceNumber());
+		out.writeBoolean(merkleTopic.isDeleted());
+		out.writeLong(merkleTopic.getSequenceNumber());
 
-		if (topic.hasRunningHash()) {
+		if (merkleTopic.hasRunningHash()) {
 			out.writeBoolean(true);
-			out.writeByteArray(topic.getRunningHash());
+			out.writeByteArray(merkleTopic.getRunningHash());
 		} else {
 			out.writeBoolean(false);
 		}

@@ -34,8 +34,8 @@ import com.hederahashgraph.api.proto.java.TransferList;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hedera.services.legacy.exception.InvalidAccountIDException;
 import com.hedera.services.legacy.services.stats.HederaNodeStats;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.legacy.exception.InsufficientBalanceException;
 import com.hedera.services.legacy.exception.InvalidTransactionException;
 import com.hedera.services.legacy.exception.NegativeAccountBalanceException;
@@ -56,17 +56,17 @@ import static java.util.stream.Collectors.joining;
 
 public class CryptoHandlerTestHelper extends CryptoHandler {
 	private static final Logger log = LogManager.getLogger(CryptoHandlerTestHelper.class);
-	private FCMap<EntityId, HederaAccount> map;
+	private FCMap<MerkleEntityId, MerkleAccount> map;
 	private GlobalFlag globalFlag;
 	private HederaNodeStats stats;
 
-	public CryptoHandlerTestHelper(FCMap<EntityId, HederaAccount> map, HederaNodeStats stats) {
+	public CryptoHandlerTestHelper(FCMap<MerkleEntityId, MerkleAccount> map, HederaNodeStats stats) {
 		this.map = map;
 		this.globalFlag = GlobalFlag.getInstance();
 		this.stats = stats;
 	}
 
-	public CryptoHandlerTestHelper(FCMap<EntityId, HederaAccount> map){
+	public CryptoHandlerTestHelper(FCMap<MerkleEntityId, MerkleAccount> map){
 		this(map, null);
 	}
 
@@ -147,12 +147,12 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 					isAccountSetForDeletion = true;
 					break;
 				}
-				EntityId entityId = EntityId.fromPojoAccountId(acctId);
-				HederaAccount mapValue = map.get(entityId);
+				MerkleEntityId merkleEntityId = MerkleEntityId.fromPojoAccountId(acctId);
+				MerkleAccount mapValue = map.get(merkleEntityId);
 				if (mapValue == null) {
 					if (log.isDebugEnabled()) {
 						log.debug("@@ Null values detected: actAmt=" + actAmt + "; mapValue=" + mapValue + "; "
-								+ " mapKey :: " + entityId.toString() + "cryptoTransferTx=" + cryptoTransferTx);
+								+ " mapKey :: " + merkleEntityId.toString() + "cryptoTransferTx=" + cryptoTransferTx);
 					}
 					throw new InvalidTransactionException(ApplicationConstants.ACCOUNT_NOT_FOUND);
 				}
@@ -179,8 +179,8 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 			} else {
 				for (AccountAmount actAmt : accountAmounts) {
 					acctId = actAmt.getAccountID();
-					EntityId entityId = EntityId.fromPojoAccountId(acctId);
-					HederaAccount mapValue = new HederaAccount(map.get(entityId));
+					MerkleEntityId merkleEntityId = MerkleEntityId.fromPojoAccountId(acctId);
+					MerkleAccount mapValue = new MerkleAccount(map.get(merkleEntityId));
 					if (log.isDebugEnabled()) {
 						log.debug(
 								"Map Value of Account ID :: " + acctId.getAccountNum() + "  is :: " + mapValue);
@@ -188,7 +188,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 								+ actAmt.getAmount());
 					}
 					mapValue.setBalance(Math.addExact(mapValue.getBalance(), actAmt.getAmount()));
-					map.replace(entityId, mapValue);
+					map.replace(merkleEntityId, mapValue);
 					completedTransfers.addAccountAmounts(actAmt);
 				}
 				receipt = RequestBuilder.getTransactionReceipt(
@@ -272,7 +272,7 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 
 
 	public TransactionRecord cryptoDelete(TransactionBody txn, Instant consensusTime) {
-		FCMap<EntityId, HederaAccount> ledger = map;
+		FCMap<MerkleEntityId, MerkleAccount> ledger = map;
 
 		return recordOf(deletingAccountFrom(ledger).via(txn).at(consensusTime));
 	}
@@ -280,9 +280,9 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 
 	public boolean validateAccountID(AccountID accountID) {
 		boolean isValid = false;
-		EntityId entityId = EntityId.fromPojoAccountId(accountID);
-		if (map.containsKey(entityId)) {
-			HederaAccount mapValue = map.get(entityId);
+		MerkleEntityId merkleEntityId = MerkleEntityId.fromPojoAccountId(accountID);
+		if (map.containsKey(merkleEntityId)) {
+			MerkleAccount mapValue = map.get(merkleEntityId);
 			if (mapValue != null) {
 				//not contract ID
 				isValid = !mapValue.isSmartContract();
@@ -295,9 +295,9 @@ public class CryptoHandlerTestHelper extends CryptoHandler {
 	 * The method checks whether an account is set for deletion or not
 	 */
 	public boolean isAccountSetForDelete(AccountID accountID) {
-		EntityId accountKey = EntityId.fromPojoAccountId(accountID);
+		MerkleEntityId accountKey = MerkleEntityId.fromPojoAccountId(accountID);
 		if (map.containsKey(accountKey)) {
-			HederaAccount accountValue = map.get(accountKey);
+			MerkleAccount accountValue = map.get(accountKey);
 			return accountValue.isDeleted();
 		}
 		return false;
@@ -311,7 +311,7 @@ class AccountOperations {
 		return txn.get();
 	}
 
-	public static AccountOperations.DeleteSpec.Txn deletingAccountFrom(FCMap<EntityId, HederaAccount> ledger) {
+	public static AccountOperations.DeleteSpec.Txn deletingAccountFrom(FCMap<MerkleEntityId, MerkleAccount> ledger) {
 		return txn -> consensusTime -> new AccountOperations.DeletionRecord(consensusTime, txn, ledger);
 	}
 
@@ -322,11 +322,11 @@ class AccountOperations {
 
 		Instant consensusTime;
 		TransactionBody txn;
-		FCMap<EntityId, HederaAccount> ledger;
+		FCMap<MerkleEntityId, MerkleAccount> ledger;
 		AccountID target, payer, transfer;
 
 		public DeletionRecord(Instant consensusTime, TransactionBody txn,
-				FCMap<EntityId, HederaAccount> ledger) {
+				FCMap<MerkleEntityId, MerkleAccount> ledger) {
 			this.consensusTime = consensusTime;
 			this.txn = txn;
 			this.ledger = ledger;
@@ -388,16 +388,16 @@ class AccountOperations {
 		}
 	}
 
-	static void markDeleted(AccountID target, FCMap<EntityId, HederaAccount> ledger) {
-		EntityId key = EntityId.fromPojoAccountId(target);
-		HederaAccount account = new HederaAccount(ledger.get(key));
+	static void markDeleted(AccountID target, FCMap<MerkleEntityId, MerkleAccount> ledger) {
+		MerkleEntityId key = MerkleEntityId.fromPojoAccountId(target);
+		MerkleAccount account = new MerkleAccount(ledger.get(key));
 		account.setDeleted(true);
 		ledger.replace(key, account);
 	}
 
 	static void doTransfers(
 			TransferList transferList,
-			FCMap<EntityId, HederaAccount> ledger)
+			FCMap<MerkleEntityId, MerkleAccount> ledger)
 			throws InvalidAccountIDException, NegativeAccountBalanceException {
 		assertValidAccounts(transferList, ledger);
 		for (AccountAmount transfer : transferList.getAccountAmountsList()) {
@@ -407,7 +407,7 @@ class AccountOperations {
 
 	static void assertValidAccounts(
 			TransferList transferList,
-			FCMap<EntityId, HederaAccount> ledger) throws InvalidAccountIDException {
+			FCMap<MerkleEntityId, MerkleAccount> ledger) throws InvalidAccountIDException {
 		for (AccountAmount transfer : transferList.getAccountAmountsList()) {
 			if (!isValid(transfer.getAccountID(), ledger)) {
 				throw new InvalidAccountIDException(
@@ -417,18 +417,18 @@ class AccountOperations {
 		}
 	}
 
-	static boolean isValid(AccountID account, FCMap<EntityId, HederaAccount> ledger) {
+	static boolean isValid(AccountID account, FCMap<MerkleEntityId, MerkleAccount> ledger) {
 		return Optional
-				.ofNullable(ledger.get(EntityId.fromPojoAccountId(account)))
+				.ofNullable(ledger.get(MerkleEntityId.fromPojoAccountId(account)))
 				.map(a -> !a.getKey().hasContractID())
 				.orElse(false);
 	}
 
 	static void doTransfer(
-			AccountAmount transfer, FCMap<EntityId, HederaAccount> ledger)
+			AccountAmount transfer, FCMap<MerkleEntityId, MerkleAccount> ledger)
 			throws NegativeAccountBalanceException {
-		EntityId key = EntityId.fromPojoAccountId(transfer.getAccountID());
-		HederaAccount account = new HederaAccount(ledger.get(key));
+		MerkleEntityId key = MerkleEntityId.fromPojoAccountId(transfer.getAccountID());
+		MerkleAccount account = new MerkleAccount(ledger.get(key));
 		long adjustedBalance = Math.addExact(account.getBalance(), transfer.getAmount());
 		account.setBalance(adjustedBalance);
 		ledger.replace(key, account);
@@ -466,8 +466,8 @@ class AccountOperations {
 						.build());
 	}
 
-	static long balanceOf(AccountID account, FCMap<EntityId, HederaAccount> ledger) {
-		EntityId key = EntityId.fromPojoAccountId(account);
+	static long balanceOf(AccountID account, FCMap<MerkleEntityId, MerkleAccount> ledger) {
+		MerkleEntityId key = MerkleEntityId.fromPojoAccountId(account);
 		return ledger.get(key).getBalance();
 	}
 

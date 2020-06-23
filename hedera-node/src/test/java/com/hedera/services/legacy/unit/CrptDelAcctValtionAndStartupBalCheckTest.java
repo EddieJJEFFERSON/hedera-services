@@ -49,8 +49,8 @@ import com.hederahashgraph.api.proto.java.KeyList;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.SignatureList;
 import com.hederahashgraph.builder.RequestBuilder;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.legacy.core.jproto.JKey;
 
 import net.i2p.crypto.eddsa.EdDSAPrivateKey;
@@ -71,7 +71,7 @@ public class CrptDelAcctValtionAndStartupBalCheckTest {
 	private AccountID account3ID;
 	FCStorageWrapper storageWrapper;
 	TransactionHandler transactionHandler = null;
-	FCMap<EntityId, HederaAccount> fcMap = null;
+	FCMap<MerkleEntityId, MerkleAccount> fcMap = null;
 	private long LARGE_BALANCE = 1000000000000000l;
 	AccountID feeAccount;
 	List<AccountAmount> accountAmountsList;
@@ -85,7 +85,7 @@ public class CrptDelAcctValtionAndStartupBalCheckTest {
 		nodeAccount = 3l;
 		payerAccountId = RequestBuilder.getAccountIdBuild(payerAccount, 0l, 0l);
 		nodeAccountId = RequestBuilder.getAccountIdBuild(nodeAccount, 0l, 0l);
-		fcMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
+		fcMap = new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
 		feeAccount = RequestBuilder.getAccountIdBuild(98l, 0l, 0l);
 		accountAmountsList = new LinkedList<>();
 		hederaFunc = HederaFunctionality.CryptoTransfer;
@@ -138,10 +138,10 @@ public class CrptDelAcctValtionAndStartupBalCheckTest {
 
 
 	private void createAccount(AccountID payerAccount, long balance, Key key) throws Exception {
-		EntityId mk = new EntityId();
+		MerkleEntityId mk = new MerkleEntityId();
 		mk.setNum(payerAccount.getAccountNum());
 		mk.setRealm(0);
-		HederaAccount mv = new HederaAccount();
+		MerkleAccount mv = new MerkleAccount();
 		mv.setBalance(balance);
 		JKey jkey = JKey.mapKey(key);
 		mv.setKey(jkey);

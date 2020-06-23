@@ -23,23 +23,22 @@ package com.hedera.services.contracts.sources;
 import com.hedera.services.context.properties.PropertySource;
 import com.hedera.services.ledger.HederaLedger;
 import com.hedera.services.ledger.accounts.HederaAccountCustomizer;
-import com.hederahashgraph.api.proto.java.AccountID;
-
-import java.math.BigInteger;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
+import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JContractIDKey;
+import com.hederahashgraph.api.proto.java.AccountID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.Source;
 import org.ethereum.util.ALock;
 
+import java.math.BigInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import static com.hedera.services.utils.EntityIdUtils.accountParsedFromSolidityAddress;
 import static com.hedera.services.utils.EntityIdUtils.asContract;
 import static com.hedera.services.utils.EntityIdUtils.asLiteralString;
-import static com.hedera.services.legacy.core.jproto.HEntityId.convert;
 
 public class LedgerAccountsSource implements Source<byte[], AccountState> {
 	static Logger log = LogManager.getLogger(LedgerAccountsSource.class);
@@ -82,9 +81,9 @@ public class LedgerAccountsSource implements Source<byte[], AccountState> {
 			evmState.setAutoRenewPeriod(hederaAccount.getAutoRenewSecs());
 			if (hederaAccount.getProxy() != null) {
 				var proxy = hederaAccount.getProxy();
-				evmState.setProxyAccountShard(proxy.getShard());
-				evmState.setProxyAccountRealm(proxy.getRealm());
-				evmState.setProxyAccountNum(proxy.getNum());
+				evmState.setProxyAccountShard(proxy.shard());
+				evmState.setProxyAccountRealm(proxy.realm());
+				evmState.setProxyAccountNum(proxy.num());
 			}
 			evmState.setSenderThreshold(hederaAccount.getSenderThreshold());
 			evmState.setReceiverThreshold(hederaAccount.getReceiverThreshold());
@@ -132,11 +131,10 @@ public class LedgerAccountsSource implements Source<byte[], AccountState> {
 	}
 
 	private void createForEvm(AccountID id, AccountState evmState) {
-		AccountID proxy = AccountID.newBuilder()
-				.setShardNum(evmState.getProxyAccountShard())
-				.setRealmNum(evmState.getProxyAccountRealm())
-				.setAccountNum(evmState.getProxyAccountNum())
-				.build();
+		var proxy = new EntityId(
+				evmState.getProxyAccountShard(),
+				evmState.getProxyAccountRealm(),
+				evmState.getProxyAccountNum());
 		long fundsSentRecordThreshold = (evmState.getSenderThreshold() == 0)
 				? properties.getLongProperty("contracts.defaultSendThreshold")
 				: evmState.getSenderThreshold();
@@ -147,7 +145,7 @@ public class LedgerAccountsSource implements Source<byte[], AccountState> {
 		HederaAccountCustomizer customizer = new HederaAccountCustomizer()
 				.key(key)
 				.memo("")
-				.proxy(convert(proxy))
+				.proxy(proxy)
 				.expiry(evmState.getExpirationTime())
 				.autoRenewPeriod(evmState.getAutoRenewPeriod())
 				.isSmartContract(true)

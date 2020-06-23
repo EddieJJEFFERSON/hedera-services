@@ -22,17 +22,17 @@ package com.hedera.services.legacy.unit;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.ByteString;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.state.merkle.Topic;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.merkle.MerkleTopic;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.fees.HbarCentExchange;
 import com.hedera.services.legacy.config.PropertiesLoader;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.handler.FCStorageWrapper;
 import com.hedera.services.legacy.handler.TransactionHandler;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.legacy.service.FreezeServiceImpl;
 import com.hedera.services.legacy.service.GlobalFlag;
 import com.hedera.services.queries.validation.QueryFeeCheck;
@@ -45,7 +45,7 @@ import com.hedera.test.mocks.TestFeesFactory;
 import com.hederahashgraph.api.proto.java.*;
 import com.hederahashgraph.builder.RequestBuilder;
 import com.hederahashgraph.builder.TransactionSigner;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.hedera.services.legacy.proto.utils.CommonUtils;
 import com.swirlds.common.Platform;
 import com.swirlds.common.internal.SettingsCommon;
@@ -90,8 +90,8 @@ public class FreezeServiceImplTest {
     SettingsCommon.transactionMaxBytes = 1_234_567;
   }
 
-  FCMap<EntityId, HederaAccount> accountFCMap = null;
-  FCMap<EntityId, Topic> topicFCMap = null;
+  FCMap<MerkleEntityId, MerkleAccount> accountFCMap = null;
+  FCMap<MerkleEntityId, MerkleTopic> topicFCMap = null;
   Transaction tx;
   Transaction signTransaction;
   Platform platform;
@@ -102,7 +102,7 @@ public class FreezeServiceImplTest {
   private AccountID nodeAccountId;
   private Key key;
   private Map<String, PrivateKey> pubKey2privKeyMap;
-  private FCMap<BlobMeta, OptionalBlob> storageMap = null;
+  private FCMap<MerkleBlobMeta, MerkleOptionalBlob> storageMap = null;
   private FCStorageWrapper fcStorageWrapper;
 
   @BeforeAll
@@ -114,12 +114,12 @@ public class FreezeServiceImplTest {
             .thenReturn(true);
 
     //Init FCMap; Add account 58
-    accountFCMap = new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
-    EntityId mk = new EntityId();
+    accountFCMap = new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
+    MerkleEntityId mk = new MerkleEntityId();
     mk.setNum(payerAccount);
     mk.setRealm(0);
 
-    HederaAccount mv = new HederaAccount();
+    MerkleAccount mv = new MerkleAccount();
     mv.setBalance(10000000000000000l);
 
     pubKey2privKeyMap = new HashMap<>();
@@ -218,7 +218,7 @@ public class FreezeServiceImplTest {
     TransactionRecord record = TransactionRecord.newBuilder().setReceipt(
             TransactionReceipt.newBuilder().setStatus(ResponseCodeEnum.OK))
             .build();
-    receiptCache.setPostConsensus(txID, JTransactionRecord.convert(record));
+    receiptCache.setPostConsensus(txID, ExpirableTxnRecord.fromGprc(record));
   }
 
   /**

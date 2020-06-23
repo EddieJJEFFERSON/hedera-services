@@ -31,8 +31,8 @@ import com.hederahashgraph.api.proto.java.Query;
 import com.hederahashgraph.api.proto.java.QueryHeader;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.fee.CryptoFeeBuilder;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,11 +52,11 @@ import static com.hederahashgraph.api.proto.java.ResponseType.*;
 class GetAccountInfoResourceUsageTest {
 	StateView view;
 	CryptoFeeBuilder usageEstimator;
-	FCMap<EntityId, HederaAccount> accounts;
+	FCMap<MerkleEntityId, MerkleAccount> accounts;
 	GetAccountInfoResourceUsage subject;
 	Key aKey = Key.newBuilder().setEd25519(ByteString.copyFrom("NONSENSE".getBytes())).build();
 	String a = "0.0.1234";
-	HederaAccount aValue;
+	MerkleAccount aValue;
 
 	@BeforeEach
 	private void setup() throws Throwable {
@@ -82,7 +82,7 @@ class GetAccountInfoResourceUsageTest {
 		// setup:
 		FeeData costAnswerUsage = mock(FeeData.class);
 		FeeData answerOnlyUsage = mock(FeeData.class);
-		EntityId key = EntityId.fromPojoAccountId(asAccount(a));
+		MerkleEntityId key = MerkleEntityId.fromPojoAccountId(asAccount(a));
 
 		// given:
 		Query answerOnlyQuery = accountInfoQuery(a, ANSWER_ONLY);

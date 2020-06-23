@@ -24,8 +24,8 @@ import com.hedera.test.factories.keys.KeyFactory;
 import com.hedera.test.factories.keys.KeyTree;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.Key;
-import com.hedera.services.context.domain.haccount.HederaAccount;
-import com.hedera.services.legacy.core.jproto.HEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
+import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JKey;
 
 import java.util.Optional;
@@ -44,10 +44,10 @@ public class MapValueFactory {
 	private Optional<Boolean> isSmartContract = Optional.empty();
 	private Optional<AccountID> proxy = Optional.empty();
 
-	public HederaAccount get() {
-		HederaAccount value = new HederaAccount();
+	public MerkleAccount get() {
+		MerkleAccount value = new MerkleAccount();
 		memo.ifPresent(s -> value.setMemo(s));
-		proxy.ifPresent(p -> value.setProxy(HEntityId.convert(p)));
+		proxy.ifPresent(p -> value.setProxy(EntityId.ofNullableAccountId(p)));
 		balance.ifPresent(b -> { try { value.setBalance(b); } catch (Exception ignore) {} });
 		deleted.ifPresent(b -> value.setDeleted(b));
 		accountKeys.ifPresent(k -> value.setKey(k));

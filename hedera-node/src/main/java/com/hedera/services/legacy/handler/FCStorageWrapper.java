@@ -20,8 +20,8 @@ package com.hedera.services.legacy.handler;
  * ‍
  */
 
-import com.hedera.services.state.merkle.BlobMeta;
-import com.hedera.services.state.merkle.OptionalBlob;
+import com.hedera.services.state.merkle.MerkleBlobMeta;
+import com.hedera.services.state.merkle.MerkleOptionalBlob;
 import com.hedera.services.legacy.exception.StorageKeyNotFoundException;
 import com.swirlds.fcmap.FCMap;
 import org.apache.commons.lang3.ArrayUtils;
@@ -30,25 +30,25 @@ import org.apache.logging.log4j.Logger;
 
 public class FCStorageWrapper {
   private static final Logger log = LogManager.getLogger(FCStorageWrapper.class);
-  private FCMap<BlobMeta, OptionalBlob> storageMap;
+  private FCMap<MerkleBlobMeta, MerkleOptionalBlob> storageMap;
 
   public FCStorageWrapper() {
   }
 
-  public FCStorageWrapper(FCMap<BlobMeta, OptionalBlob> storageMap) {
+  public FCStorageWrapper(FCMap<MerkleBlobMeta, MerkleOptionalBlob> storageMap) {
     this.storageMap = storageMap;
   }
 
 
   public void fileCreate(String path, byte[] content, long createTimeSec, int createTimeNs,
       long expireTimeSec, byte[] metadata) {
-    BlobMeta sKey = new BlobMeta(path);
-    OptionalBlob sVal = new OptionalBlob(content);
+    MerkleBlobMeta sKey = new MerkleBlobMeta(path);
+    MerkleOptionalBlob sVal = new MerkleOptionalBlob(content);
     storageMap.put(sKey, sVal);
   }
 
   public byte[] fileRead(String path) {
-    BlobMeta sKey;
+    MerkleBlobMeta sKey;
     try {
       sKey = validateStorageKey(path);
     } catch (StorageKeyNotFoundException e) {
@@ -58,7 +58,7 @@ public class FCStorageWrapper {
   }
 
   public boolean fileExists(String path) {
-    BlobMeta sKey;
+    MerkleBlobMeta sKey;
     try {
       sKey = validateStorageKey(path);
       return storageMap.containsKey(sKey);
@@ -68,7 +68,7 @@ public class FCStorageWrapper {
   }
 
   public long getSize(String path) {
-    BlobMeta sKey = new BlobMeta(path);
+    MerkleBlobMeta sKey = new MerkleBlobMeta(path);
     if (storageMap.containsKey(sKey)) {
       return storageMap.get(sKey).getData().length;
     } else {
@@ -83,8 +83,8 @@ public class FCStorageWrapper {
     fileCreate(path, appendedContent, modifyTimeSec, modifyTimeNs, expireTimeSec, null);
   }
 
-  private BlobMeta validateStorageKey(String path) throws StorageKeyNotFoundException {
-    BlobMeta sKey = new BlobMeta(path);
+  private MerkleBlobMeta validateStorageKey(String path) throws StorageKeyNotFoundException {
+    MerkleBlobMeta sKey = new MerkleBlobMeta(path);
     if (!storageMap.containsKey(sKey)) {
       throw new StorageKeyNotFoundException("Destination file does not exist: '" + path + "'");
     }
@@ -93,7 +93,7 @@ public class FCStorageWrapper {
 
   public void delete(String path, long modifyTimeSec, int modifyTimeNs)
       throws StorageKeyNotFoundException {
-    BlobMeta sKey = validateStorageKey(path);
+    MerkleBlobMeta sKey = validateStorageKey(path);
     storageMap.remove(sKey);
   }
 }

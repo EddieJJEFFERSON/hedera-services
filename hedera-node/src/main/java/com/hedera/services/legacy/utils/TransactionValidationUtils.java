@@ -23,7 +23,7 @@ package com.hedera.services.legacy.utils;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessageV3;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.txns.validation.OptionValidator;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.ContractCallLocalResponse;
@@ -44,7 +44,7 @@ import com.hederahashgraph.api.proto.java.Transaction;
 import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionResponse;
 import com.hederahashgraph.builder.RequestBuilder;
-import com.hedera.services.state.merkle.EntityId;
+import com.hedera.services.state.merkle.MerkleEntityId;
 import com.hedera.services.legacy.core.TxnValidityAndFeeReq;
 import com.hedera.services.legacy.logic.ProtectedEntities;
 import com.swirlds.common.Platform;
@@ -275,14 +275,14 @@ public class TransactionValidationUtils {
 	public static ResponseCodeEnum validateTxBodyPostConsensus(
 			TransactionBody transactionBody,
 			Instant consensusTime,
-			FCMap<EntityId, HederaAccount> accountMap
+			FCMap<MerkleEntityId, MerkleAccount> accountMap
 	) {
 		long txnValidStart = transactionBody.getTransactionID().getTransactionValidStart().getSeconds();
 		if (txnValidStart < Instant.MIN.getEpochSecond() || txnValidStart > Instant.MAX.getEpochSecond()) {
 			return INVALID_TRANSACTION_START;
 		}
 		Instant startTime = convertProtoTimeStamp(transactionBody.getTransactionID().getTransactionValidStart());
-		if (!accountMap.containsKey(EntityId.fromPojoAccountId(transactionBody.getNodeAccountID()))) {
+		if (!accountMap.containsKey(MerkleEntityId.fromPojoAccountId(transactionBody.getNodeAccountID()))) {
 			return INVALID_NODE_ACCOUNT;
 		} else if (startTime.isAfter(consensusTime)) {
 			return INVALID_TRANSACTION_START;
@@ -294,8 +294,8 @@ public class TransactionValidationUtils {
 		}
 
 		AccountID payerAccount = transactionBody.getTransactionID().getAccountID();
-		EntityId payerAccountKey = EntityId.fromPojoAccountId(payerAccount);
-		HederaAccount payerAccountDetails = accountMap.get(payerAccountKey);
+		MerkleEntityId payerAccountKey = MerkleEntityId.fromPojoAccountId(payerAccount);
+		MerkleAccount payerAccountDetails = accountMap.get(payerAccountKey);
 		if (payerAccountDetails == null) {
 			return ResponseCodeEnum.PAYER_ACCOUNT_NOT_FOUND;
 		} else if (payerAccountDetails.getBalance() < transactionBody.getTransactionFee()) {

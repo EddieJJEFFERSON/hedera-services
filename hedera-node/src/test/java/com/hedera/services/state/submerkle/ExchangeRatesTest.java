@@ -75,9 +75,6 @@ class ExchangeRatesTest {
 		subject.serialize(out);
 
 		// then:
-		inOrder.verify(out).writeLong(ExchangeRates.OBSOLETE_VERSION);
-		inOrder.verify(out).writeLong(ExchangeRates.OBSOLETE_OBJECT_ID);
-		// and:
 		inOrder.verify(out).writeInt(expCurrentHbarEquiv);
 		inOrder.verify(out).writeInt(expCurrentCentEquiv);
 		inOrder.verify(out).writeLong(expCurrentExpiry);
@@ -94,8 +91,6 @@ class ExchangeRatesTest {
 		subject = new ExchangeRates();
 
 		given(in.readLong())
-				.willReturn(ExchangeRates.OBSOLETE_VERSION)
-				.willReturn(ExchangeRates.OBSOLETE_OBJECT_ID)
 				.willReturn(expCurrentExpiry)
 				.willReturn(expNextExpiry);
 		given(in.readInt())

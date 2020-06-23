@@ -20,7 +20,7 @@ package com.hedera.services.queries.crypto;
  * ‍
  */
 
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.context.primitives.StateView;
 import com.hedera.services.txns.validation.OptionValidator;
 import com.hedera.services.queries.answering.AnswerFunctions;
@@ -33,8 +33,8 @@ import com.hederahashgraph.api.proto.java.Response;
 import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.ResponseType;
 import com.hederahashgraph.api.proto.java.Transaction;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.fcmap.FCMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,12 +58,12 @@ import static com.hedera.services.context.domain.serdes.DomainSerdesTest.recordT
 class GetAccountRecordsAnswerTest {
 	long fee = 1_234L;
 	StateView view;
-	FCMap<EntityId, HederaAccount> accounts;
+	FCMap<MerkleEntityId, MerkleAccount> accounts;
 	Transaction paymentTxn;
 	String node = "0.0.3";
 	String payer = "0.0.12345";
 	String target = payer;
-	HederaAccount payerAccount;
+	MerkleAccount payerAccount;
 	OptionValidator optionValidator;
 
 	GetAccountRecordsAnswer subject;
@@ -84,7 +84,7 @@ class GetAccountRecordsAnswerTest {
 		payerAccount.records().offer(recordTwo());
 
 		accounts = mock(FCMap.class);
-		given(accounts.get(EntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);
+		given(accounts.get(MerkleEntityId.fromPojoAccountId(asAccount(target)))).willReturn(payerAccount);
 		view = new StateView(StateView.EMPTY_TOPICS, accounts);
 
 		optionValidator = mock(OptionValidator.class);
@@ -147,7 +147,7 @@ class GetAccountRecordsAnswerTest {
 		assertEquals(ANSWER_ONLY, opResponse.getHeader().getResponseType());
 		assertEquals(0, opResponse.getHeader().getCost());
 		// and:
-		assertEquals(JTransactionRecord.convert(payerAccount.recordList()), opResponse.getRecordsList());
+		assertEquals(ExpirableTxnRecord.allToGrpc(payerAccount.recordList()), opResponse.getRecordsList());
 	}
 
 	@Test

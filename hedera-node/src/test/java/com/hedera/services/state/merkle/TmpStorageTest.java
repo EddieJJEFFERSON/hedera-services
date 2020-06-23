@@ -17,7 +17,7 @@ class TmpStorageTest {
 	@Test
 	public void readFcmap() throws IOException {
 		// given:
-		FCMap<BlobMeta, OptionalBlob> subject = new FCMap<>(new BlobMeta.Provider(), new OptionalBlob.Provider());
+		FCMap<MerkleBlobMeta, MerkleOptionalBlob> subject = new FCMap<>(new MerkleBlobMeta.Provider(), new MerkleOptionalBlob.Provider());
 		// and:
 		var in = new SerializableDataInputStream(Files.newInputStream(Paths.get("testStorage.fcm")));
 
@@ -39,8 +39,8 @@ class TmpStorageTest {
 			"/b/c234",
 			"/c/d345",
 	};
-	private BlobMeta keyFrom(int s) {
-		return new BlobMeta(paths[s]);
+	private MerkleBlobMeta keyFrom(int s) {
+		return new MerkleBlobMeta(paths[s]);
 	}
 
 	private byte[][] blobs = {
@@ -48,7 +48,7 @@ class TmpStorageTest {
 			"Where like a pillow on a bed".getBytes(),
 			"'Twas brillig, and the slithy toves".getBytes(),
 	};
-	private OptionalBlob blobFrom(int s) {
-		return new OptionalBlob(blobs[s]);
+	private MerkleOptionalBlob blobFrom(int s) {
+		return new MerkleOptionalBlob(blobs[s]);
 	}
 }

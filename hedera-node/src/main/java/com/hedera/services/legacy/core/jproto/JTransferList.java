@@ -20,6 +20,7 @@ package com.hedera.services.legacy.core.jproto;
  * ‍
  */
 
+import com.hedera.services.state.submerkle.EntityId;
 import com.hederahashgraph.api.proto.java.AccountAmount;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.builder.RequestBuilder;
@@ -36,10 +37,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * @author Akshay
- * @Date : 1/9/2019
- */
 public class JTransferList implements FastCopyable {
 
   private static final Logger log = LogManager.getLogger(JTransferList.class);
@@ -63,7 +60,7 @@ public class JTransferList implements FastCopyable {
     return accountAmounts
         .stream()
         .filter(a -> a.getAccountID() != null)
-        .map(a -> new JAccountAmount(HEntityId.convert(a.getAccountID()), a.getAmount()))
+        .map(a -> new JAccountAmount(EntityId.ofNullableAccountId(a.getAccountID()), a.getAmount()))
         .collect(Collectors.toList());
   }
 
@@ -76,9 +73,9 @@ public class JTransferList implements FastCopyable {
     AccountAmount.Builder builder = AccountAmount.newBuilder();
     if (jAccountAmount.getAccountID() != null) {
       AccountID accountID = RequestBuilder
-          .getAccountIdBuild(jAccountAmount.getAccountID().getNum(),
-              jAccountAmount.getAccountID().getRealm(),
-              jAccountAmount.getAccountID().getShard());
+          .getAccountIdBuild(jAccountAmount.getAccountID().num(),
+              jAccountAmount.getAccountID().realm(),
+              jAccountAmount.getAccountID().shard());
       builder.setAccountID(accountID);
     }
     return builder.setAmount(jAccountAmount.getAmount()).build();

@@ -32,7 +32,7 @@ import com.hedera.services.keys.RevocationServiceCharacteristics;
 import com.hedera.services.legacy.config.PropertiesLoader;
 import com.hedera.services.legacy.core.jproto.JKey;
 import com.hedera.services.legacy.core.jproto.JKeyList;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.hedera.services.legacy.crypto.SignatureStatus;
 import com.hedera.services.legacy.crypto.SignatureStatusCode;
 import com.hedera.services.legacy.utils.TransactionValidationUtils;
@@ -61,7 +61,6 @@ import static com.hedera.services.sigs.Rationalization.IN_HANDLE_SUMMARY_FACTORY
 import static com.hedera.services.txns.diligence.DuplicateClassification.DUPLICATE;
 import static com.hedera.services.txns.diligence.DuplicateClassification.NODE_DUPLICATE;
 import static com.hedera.services.utils.EntityIdUtils.readableId;
-import static com.hedera.services.legacy.core.jproto.JTransactionRecord.convert;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.*;
 import static com.hedera.services.sigs.HederaToPlatformSigOps.rationalizeIn;
 import static java.time.ZoneOffset.UTC;
@@ -148,7 +147,7 @@ public class AwareProcessLogic implements ProcessLogic {
 	}
 
 	private void addRecordToStream() {
-		TransactionRecord finalRecord = JTransactionRecord.convert(ctx.recordsHistorian().lastCreatedRecord().get());
+		TransactionRecord finalRecord = ExpirableTxnRecord.toGrpc(ctx.recordsHistorian().lastCreatedRecord().get());
 		addForStreaming(ctx.txnCtx().accessor().getSignedTxn(), finalRecord, ctx.txnCtx().consensusTime());
 	}
 

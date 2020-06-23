@@ -22,8 +22,8 @@ package com.hedera.services.legacy.export;
 
 import com.hedera.services.ServicesState;
 import com.hedera.test.utils.IdUtils;
-import com.hedera.services.state.merkle.EntityId;
-import com.hedera.services.context.domain.haccount.HederaAccount;
+import com.hedera.services.state.merkle.MerkleEntityId;
+import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.legacy.exception.InvalidTotalAccountBalanceException;
 import com.swirlds.common.Platform;
 import com.swirlds.fcmap.FCMap;
@@ -88,16 +88,16 @@ public class AccountBalanceExportTest {
     Assert.assertTrue(accountBalanceExport.timeToExport(timestamp_6));
   }
 
-  FCMap<EntityId, HederaAccount> getAccountMapForTest() throws Exception {
-    FCMap<EntityId, HederaAccount> fcMap =
-            new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
+  FCMap<MerkleEntityId, MerkleAccount> getAccountMapForTest() throws Exception {
+    FCMap<MerkleEntityId, MerkleAccount> fcMap =
+            new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
     for (long[] account : accounts) {
-      EntityId mk = new EntityId();
+      MerkleEntityId mk = new MerkleEntityId();
       mk.setShard(account[0]);
       mk.setRealm(account[1]);
       mk.setNum(account[2]);
 
-      HederaAccount mv = new HederaAccount();
+      MerkleAccount mv = new MerkleAccount();
       mv.setBalance(account[3]);
       fcMap.put(mk, mv);
     }
@@ -220,16 +220,16 @@ public class AccountBalanceExportTest {
     return state;
   }
 
-  FCMap<EntityId, HederaAccount> getAccountMapWithInvalidTotalBalanceForTest() throws Exception {
-    FCMap<EntityId, HederaAccount> fcMap =
-            new FCMap<>(new EntityId.Provider(), HederaAccount.LEGACY_PROVIDER);
+  FCMap<MerkleEntityId, MerkleAccount> getAccountMapWithInvalidTotalBalanceForTest() throws Exception {
+    FCMap<MerkleEntityId, MerkleAccount> fcMap =
+            new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER);
     for (long[] account : accounts) {
-      EntityId mk = new EntityId();
+      MerkleEntityId mk = new MerkleEntityId();
       mk.setShard(account[0]);
       mk.setRealm(account[1]);
       mk.setNum(account[2]);
 
-      HederaAccount mv = new HederaAccount();
+      MerkleAccount mv = new MerkleAccount();
       mv.setBalance(account[3] + 1);
       fcMap.put(mk, mv);
     }

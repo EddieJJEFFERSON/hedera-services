@@ -24,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.hedera.services.utils.MiscUtils;
 import com.hederahashgraph.api.proto.java.TransferList;
-import com.hedera.services.legacy.core.jproto.HEntityId;
-import com.hedera.services.legacy.core.jproto.JTimestamp;
+import com.hedera.services.state.submerkle.EntityId;
+import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.legacy.core.jproto.JTransactionID;
 import com.hedera.services.legacy.core.jproto.JTransactionReceipt;
-import com.hedera.services.legacy.core.jproto.JTransactionRecord;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.hedera.services.legacy.core.jproto.JTransferList;
 import org.apache.commons.codec.binary.Hex;
 
@@ -59,7 +59,7 @@ public class PojoRecord {
 	private PojoFunctionResult callResult;
 	private PojoFunctionResult createResult;
 
-	public static PojoRecord from(JTransactionRecord value) {
+	public static PojoRecord from(ExpirableTxnRecord value) {
 		var pojo = new PojoRecord();
 		pojo.setTxnId(asString(value.getTransactionID()));
 		pojo.setReceipt(asString(value.getTxReceipt()));
@@ -158,19 +158,19 @@ public class PojoRecord {
 		this.receipt = receipt;
 	}
 
-	public static String asString(HEntityId id) {
+	public static String asString(EntityId id) {
 		if (id == null) {
 			return null;
 		}
-		return String.format("%d.%d.%d", id.getShard(), id.getRealm(), id.getNum());
+		return String.format("%d.%d.%d", id.shard(), id.realm(), id.num());
 	}
 
-	public static String asString(JTimestamp stamp) {
-		return String.format("%d.%d", stamp.getSeconds(), stamp.getNano());
+	public static String asString(RichInstant stamp) {
+		return String.format("%d.%d", stamp.getSeconds(), stamp.getNanos());
 	}
 
 	public static String asString(JTransactionID txnId) {
-		var ts = String.format("%d.%d", txnId.getStartTime().getSeconds(), txnId.getStartTime().getNano());
+		var ts = String.format("%d.%d", txnId.getStartTime().getSeconds(), txnId.getStartTime().getNanos());
 		return String.format("From %s @ %s", asString(txnId.getPayerAccount()), ts);
 	}
 

@@ -41,6 +41,8 @@ class SequenceNumberTest {
 		assertEquals(startNo, seqNo);
 		// and:
 		assertEquals(startNo + 1, initSubject.i);
+		// and:
+		assertEquals(startNo + 1, initSubject.current());
 	}
 
 	@Test
