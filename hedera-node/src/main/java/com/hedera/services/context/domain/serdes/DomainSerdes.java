@@ -107,17 +107,11 @@ public class DomainSerdes {
 		return in.readSerializable();
 	}
 
+	@Deprecated
 	@SuppressWarnings("unchecked")
-	public void serializeRecords(FCQueue<ExpirableTxnRecord> records, DataOutputStream out) throws IOException {
-		SerializableDataOutputStream fcOut = (SerializableDataOutputStream)out;
-		records.copyTo(fcOut);
-		records.copyToExtra(fcOut);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void deserializeIntoRecords(DataInputStream in, FCQueue<ExpirableTxnRecord> to) throws IOException {
-		SerializableDataInputStream fcIn = (SerializableDataInputStream)in;
-		to.copyFrom(fcIn);
-		to.copyFromExtra(fcIn);
+	public void deserializeIntoRecords(DataInputStream din, FCQueue<ExpirableTxnRecord> to) throws IOException {
+		SerializableDataInputStream in = (SerializableDataInputStream)din;
+		to.copyFrom(in);
+		to.copyFromExtra(in);
 	}
 }

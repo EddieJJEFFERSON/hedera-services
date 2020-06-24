@@ -205,22 +205,6 @@ public class DomainSerdesTest {
 		verify(out).writeSerializable(data, true);
 	}
 
-	@Test
-	public void recordsSerdesWork() throws Exception {
-		// given:
-		FCQueue<ExpirableTxnRecord> recordsIn = new FCQueue<>(ExpirableTxnRecord::deserialize);
-		recordsIn.offer(recordOne());
-		recordsIn.offer(recordTwo());
-
-		// when:
-		byte[] repr = serOutcome(out -> subject.serializeRecords(recordsIn, out));
-		// and:
-		FCQueue<ExpirableTxnRecord> recordsOut = new FCQueue<>(ExpirableTxnRecord::deserialize);
-		deOutcome(in -> { subject.deserializeIntoRecords(in, recordsOut); return recordsOut; }, repr);
-
-		// then:
-		assertEquals(recordsIn, recordsOut);
-	}
 
 	@Test
 	public void idSerdesWork() throws Exception {

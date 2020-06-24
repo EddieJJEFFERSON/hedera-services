@@ -243,7 +243,7 @@ public class HederaLedger {
 		FCQueue<ExpirableTxnRecord> records = (FCQueue<ExpirableTxnRecord>)ledger.get(id, TRANSACTION_RECORDS);
 		records.offer(record);
 		ledger.set(id, TRANSACTION_RECORDS, records);
-		return records.peek().getExpirationTime();
+		return records.peek().getExpiry();
 	}
 
 	public long purgeExpiredRecords(AccountID id, long now) {
@@ -251,11 +251,11 @@ public class HederaLedger {
 		long newEarliestExpiry = -1;
 		int numBefore = records.size();
 
-		while (!records.isEmpty() && records.peek().getExpirationTime() <= now) {
+		while (!records.isEmpty() && records.peek().getExpiry() <= now) {
 			records.poll();
 		}
 		if (!records.isEmpty()) {
-			newEarliestExpiry = records.peek().getExpirationTime();
+			newEarliestExpiry = records.peek().getExpiry();
 		}
 		ledger.set(id, TRANSACTION_RECORDS, records);
 

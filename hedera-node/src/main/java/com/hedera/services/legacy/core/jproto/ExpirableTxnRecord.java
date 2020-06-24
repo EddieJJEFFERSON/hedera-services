@@ -56,32 +56,36 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	static final int MERKLE_VERSION = 1;
 	static final long RUNTIME_CONSTRUCTABLE_ID = 0x8b9ede7ca8d8db93L;
 
-	static DomainSerdes serdes = new DomainSerdes();
-
 	@Deprecated
 	public static final Provider LEGACY_PROVIDER = new Provider();
+
+	static DomainSerdes serdes = new DomainSerdes();
+	static TxnId.Provider legacyTxnIdProvider = TxnId.LEGACY_PROVIDER;
+	static TxnReceipt.Provider legacyReceiptProvider = TxnReceipt.LEGACY_PROVIDER;
+	static RichInstant.Provider legacyInstantProvider = RichInstant.LEGACY_PROVIDER;
+	static HbarAdjustments.Provider legacyAdjustmentsProvider = HbarAdjustments.LEGACY_PROVIDER;
 	static SolidityFnResult.Provider legacyFnResultProvider = SolidityFnResult.LEGACY_PROVIDER;
 
 	private static final long LEGACY_VERSION_1 = 1;
 	private static final long LEGACY_VERSION_2 = 2;
 	private static final long CURRENT_VERSION = 3;
-	private JTransactionReceipt txReceipt;
+
+	private long fee;
+	private long expiry;
+	private Hash hash;
+	private TxnId txnId;
 	private byte[] txHash;
-	private JTransactionID transactionID;
-	private RichInstant consensusTimestamp;
 	private String memo;
-	private long transactionFee;
+	private RichInstant consensusTimestamp;
+	private HbarAdjustments hbarAdjustments;
 	private SolidityFnResult contractCallResult;
 	private SolidityFnResult contractCreateResult;
-	private HbarAdjustments hbarAdjustments;
-	private long expirationTime; //
-
-	private Hash hash;
+	private TxnReceipt txReceipt;
 
 	@Deprecated
-	public static class Provider implements SerializedObjectProvider {
+	public static class Provider implements SerializedObjectProvider<ExpirableTxnRecord> {
 		@Override
-		public FastCopyable deserialize(DataInputStream in) throws IOException {
+		public ExpirableTxnRecord deserialize(DataInputStream in) throws IOException {
 			throw new AssertionError("Not implemented");
 		}
 	}
@@ -93,41 +97,42 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	}
 
 	public ExpirableTxnRecord(
-			JTransactionReceipt txReceipt,
+			TxnReceipt txReceipt,
 			byte[] txHash,
-			JTransactionID transactionID,
+			TxnId txnId,
 			RichInstant consensusTimestamp,
 			String memo,
-			long transactionFee,
+			long fee,
 			HbarAdjustments transferList,
 			SolidityFnResult contractCallResult,
 			SolidityFnResult createResult
 	) {
 		this.txReceipt = txReceipt;
 		this.txHash = txHash;
-		this.transactionID = transactionID;
+		this.txnId = txnId;
 		this.consensusTimestamp = consensusTimestamp;
 		this.memo = memo;
-		this.transactionFee = transactionFee;
+		this.fee = fee;
 		this.hbarAdjustments = transferList;
 		this.contractCallResult = contractCallResult;
 		this.contractCreateResult = createResult;
 	}
 
 	public ExpirableTxnRecord(ExpirableTxnRecord that) {
-		this.txReceipt = (that.txReceipt != null) ? (JTransactionReceipt) that.txReceipt.copy() : null;
+		this.txReceipt = that.txReceipt;
 		this.txHash = (that.txHash != null) ? Arrays.copyOf(that.txHash, that.txHash.length) : null;
-		this.transactionID = (that.transactionID != null) ? (JTransactionID) that.transactionID.copy() : null;
+		this.txnId = that.txnId;
 		this.consensusTimestamp = that.consensusTimestamp;
 		this.memo = that.memo;
-		this.transactionFee = that.transactionFee;
-		this.expirationTime = that.expirationTime;
+		this.fee = that.fee;
+		this.expiry = that.expiry;
 		this.hbarAdjustments = that.hbarAdjustments;
 		this.contractCallResult = that.contractCallResult;
 		this.contractCreateResult = that.contractCreateResult;
 	}
 
 	/* --- Object --- */
+
 	@Override
 	public boolean equals(Object o) {
 		System.out.println("In equals!");
@@ -138,35 +143,35 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			return false;
 		}
 		var that = (ExpirableTxnRecord) o;
-		System.out.println("Receipts match? " + txReceipt.equals(that.txReceipt));
-		return transactionFee == that.transactionFee &&
+		return fee == that.fee &&
 				txReceipt.equals(that.txReceipt) &&
 				Arrays.equals(txHash, that.txHash) &&
-				transactionID.equals(that.transactionID) &&
+				txnId.equals(that.txnId) &&
 				Objects.equals(consensusTimestamp, that.consensusTimestamp) &&
 				Objects.equals(memo, that.memo) &&
 				Objects.equals(contractCallResult, that.contractCallResult) &&
 				Objects.equals(contractCreateResult, that.contractCreateResult) &&
 				Objects.equals(hbarAdjustments, that.hbarAdjustments) &&
-				Objects.equals(expirationTime, that.expirationTime);
+				Objects.equals(expiry, that.expiry);
 	}
 
 	@Override
 	public int hashCode() {
 		var result = Objects.hash(
 				txReceipt,
-				transactionID,
+				txnId,
 				consensusTimestamp,
 				memo,
-				transactionFee,
+				fee,
 				contractCallResult,
 				contractCreateResult,
 				hbarAdjustments,
-				expirationTime);
+				expiry);
 		return result * 31 + Arrays.hashCode(txHash);
 	}
 
 	/* --- SelfSerializable --- */
+
 	@Override
 	public long getClassId() {
 		return RUNTIME_CONSTRUCTABLE_ID;
@@ -192,7 +197,9 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		deserialize(serializableDataInputStream, this);
 	}
 
-	public JTransactionReceipt getTxReceipt() {
+	/* --- Object --- */
+
+	public TxnReceipt getTxReceipt() {
 		return txReceipt;
 	}
 
@@ -200,8 +207,8 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		return txHash;
 	}
 
-	public JTransactionID getTransactionID() {
-		return transactionID;
+	public TxnId getTxnId() {
+		return txnId;
 	}
 
 	public RichInstant getConsensusTimestamp() {
@@ -212,8 +219,8 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		return memo;
 	}
 
-	public long getTransactionFee() {
-		return transactionFee;
+	public long getFee() {
+		return fee;
 	}
 
 	public SolidityFnResult getContractCallResult() {
@@ -228,12 +235,12 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		return hbarAdjustments;
 	}
 
-	public long getExpirationTime() {
-		return expirationTime;
+	public long getExpiry() {
+		return expiry;
 	}
 
-	public void setExpirationTime(long expirationTime) {
-		this.expirationTime = expirationTime;
+	public void setExpiry(long expiry) {
+		this.expiry = expiry;
 	}
 
 	@Override
@@ -241,13 +248,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		out.writeLong(versionToSerialize.orElse(CURRENT_VERSION));
 		out.writeLong(JObjectType.JTransactionRecord.longValue());
 
-		if (this.txReceipt != null) {
-			out.writeBoolean(true);
-			this.txReceipt.copyTo(out);
-			this.txReceipt.copyToExtra(out);
-		} else {
-			out.writeBoolean(false);
-		}
+		serdes.writeNullableSerializable(txReceipt, out);
 
 		if (this.txHash != null && this.txHash.length > 0) {
 			out.writeInt(this.txHash.length);
@@ -256,13 +257,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			out.writeInt(0);
 		}
 
-		if (this.transactionID != null) {
-			out.writeBoolean(true);
-			this.transactionID.copyTo(out);
-			this.transactionID.copyToExtra(out);
-		} else {
-			out.writeBoolean(false);
-		}
+		serdes.writeNullableSerializable(txnId, out);
 
 		if (this.consensusTimestamp != null) {
 			out.writeBoolean(true);
@@ -279,14 +274,14 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			out.writeInt(0);
 		}
 
-		out.writeLong(this.transactionFee);
+		out.writeLong(this.fee);
 
 		serdes.writeNullableSerializable(hbarAdjustments, out);
 		serdes.writeNullableSerializable(contractCallResult, out);
 		serdes.writeNullableSerializable(contractCreateResult, out);
 
 		if (versionToSerialize.orElse(CURRENT_VERSION) > LEGACY_VERSION_2) {
-			out.writeLong(this.expirationTime);
+			out.writeLong(this.expiry);
 		}
 	}
 
@@ -323,7 +318,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		}
 
 		if (tBytes) {
-			expirableTxnRecord.txReceipt = JTransactionReceipt.deserialize(inStream);
+			expirableTxnRecord.txReceipt = legacyReceiptProvider.deserialize(inStream);
 		} else {
 			expirableTxnRecord.txReceipt = null;
 		}
@@ -342,9 +337,9 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		}
 
 		if (txBytes) {
-			expirableTxnRecord.transactionID = JTransactionID.deserialize(inStream);
+			expirableTxnRecord.txnId = legacyTxnIdProvider.deserialize(inStream);
 		} else {
-			expirableTxnRecord.transactionID = null;
+			expirableTxnRecord.txnId = null;
 		}
 
 		boolean cBytes;
@@ -355,7 +350,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		}
 
 		if (cBytes) {
-			expirableTxnRecord.consensusTimestamp = RichInstant.LEGACY_PROVIDER.deserialize(inStream);
+			expirableTxnRecord.consensusTimestamp = legacyInstantProvider.deserialize(inStream);
 		} else {
 			expirableTxnRecord.consensusTimestamp = null;
 		}
@@ -368,7 +363,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			expirableTxnRecord.memo = null;
 		}
 
-		expirableTxnRecord.transactionFee = inStream.readLong();
+		expirableTxnRecord.fee = inStream.readLong();
 
 		boolean trBytes;
 
@@ -379,7 +374,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		}
 
 		if (trBytes) {
-			expirableTxnRecord.hbarAdjustments = HbarAdjustments.LEGACY_PROVIDER.deserialize(inStream);
+			expirableTxnRecord.hbarAdjustments = legacyAdjustmentsProvider.deserialize(inStream);
 		} else {
 			expirableTxnRecord.hbarAdjustments = null;
 		}
@@ -411,7 +406,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		}
 
 		if (version >= CURRENT_VERSION) {
-			expirableTxnRecord.expirationTime = inStream.readLong();
+			expirableTxnRecord.expiry = inStream.readLong();
 		}
 	}
 
@@ -462,12 +457,9 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 
 	public static ExpirableTxnRecord fromGprc(TransactionRecord record) {
 		try {
-			JTransactionReceipt jTransactionReceipt =
-					JTransactionReceipt.convert(record.getReceipt());
-			JTransactionID jTransactionID = new JTransactionID();
-			if (record.hasTransactionID()) {
-				jTransactionID = JTransactionID.convert(record.getTransactionID());
-			}
+			TxnReceipt txnReceipt =
+					TxnReceipt.fromGrpc(record.getReceipt());
+			TxnId txnId = TxnId.fromGrpc(record.getTransactionID());
 
 			HbarAdjustments hbarAdjustments = null;
 			if (record.hasTransferList()) {
@@ -484,8 +476,8 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 				createResult = SolidityFnResult.fromGrpc(record.getContractCreateResult());
 			}
 
-			return new ExpirableTxnRecord(jTransactionReceipt,
-					record.getTransactionHash().toByteArray(), jTransactionID,
+			return new ExpirableTxnRecord(txnReceipt,
+					record.getTransactionHash().toByteArray(), txnId,
 					RichInstant.fromGrpc(record.getConsensusTimestamp()),
 					record.getMemo(),
 					record.getTransactionFee(), hbarAdjustments, callResult, createResult);
@@ -504,12 +496,12 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	public static TransactionRecord toGrpc(ExpirableTxnRecord expirableTxnRecord) {
 		TransactionRecord.Builder builder = TransactionRecord.newBuilder();
 		try {
-			TransactionReceipt txReceipt = JTransactionReceipt.convert(expirableTxnRecord.getTxReceipt());
-			if (expirableTxnRecord.getTransactionID() != null) {
-				EntityId payer = expirableTxnRecord.getTransactionID().getPayerAccount();
-				RichInstant timestamp = expirableTxnRecord.getTransactionID().getStartTime();
+			TransactionReceipt txReceipt = TxnReceipt.convert(expirableTxnRecord.getTxReceipt());
+			if (expirableTxnRecord.getTxnId() != null) {
+				EntityId payer = expirableTxnRecord.getTxnId().getPayerAccount();
+				RichInstant timestamp = expirableTxnRecord.getTxnId().getValidStart();
 				if ((payer != null) || (timestamp != null)) {
-					builder.setTransactionID(JTransactionID.convert(expirableTxnRecord.getTransactionID()));
+					builder.setTransactionID(expirableTxnRecord.getTxnId().toGrpc());
 				}
 			}
 
@@ -518,7 +510,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 				timestamp = expirableTxnRecord.getConsensusTimestamp().toGrpc();
 			}
 			builder.setConsensusTimestamp(timestamp)
-					.setTransactionFee(expirableTxnRecord.getTransactionFee())
+					.setTransactionFee(expirableTxnRecord.getFee())
 					.setReceipt(txReceipt);
 			if (expirableTxnRecord.getMemo() != null) {
 				builder.setMemo(expirableTxnRecord.getMemo());

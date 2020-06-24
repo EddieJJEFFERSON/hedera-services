@@ -35,7 +35,7 @@ import com.hederahashgraph.api.proto.java.TransactionBody;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.legacy.core.jproto.JTransactionID;
+import com.hedera.services.legacy.core.jproto.TxnId;
 import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -180,7 +180,7 @@ class RecordCacheTest {
 		ExpirableTxnRecord record = captor.getValue().get();
 		assertEquals("FAIL_INVALID", record.getTxReceipt().getStatus());
 		assertEquals("Catastrophe!", record.getMemo());
-		assertEquals(txnId, JTransactionID.convert(record.getTransactionID()));
+		assertEquals(txnId, record.getTxnId().toGrpc());
 		assertEquals(asTimestamp(consensusTime), record.getConsensusTimestamp().toGrpc());
 		assertArrayEquals(sha384HashOf(accessor).toByteArray(), record.getTxHash(), "Wrong hash!");
 	}

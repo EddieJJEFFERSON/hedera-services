@@ -89,7 +89,7 @@ public class MerkleAccountTest {
 
 	public static void offerRecordsInOrder(MerkleAccount account, List<ExpirableTxnRecord> _records) {
 		List<ExpirableTxnRecord> recordList = new ArrayList<>(_records);
-		recordList.sort(comparingLong(ExpirableTxnRecord::getExpirationTime));
+		recordList.sort(comparingLong(ExpirableTxnRecord::getExpiry));
 		var records = account.records();
 		for (ExpirableTxnRecord record : recordList) {
 			records.offer(record);
@@ -358,7 +358,7 @@ public class MerkleAccountTest {
 		// setup:
 		var record = mock(ExpirableTxnRecord.class);
 
-		given(record.getExpirationTime()).willReturn(expiry);
+		given(record.getExpiry()).willReturn(expiry);
 		given(records.peek()).willReturn(record);
 
 		// then:

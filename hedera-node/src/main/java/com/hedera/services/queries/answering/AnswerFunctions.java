@@ -29,7 +29,7 @@ import com.hederahashgraph.api.proto.java.Query;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hedera.services.state.merkle.MerkleEntityId;
-import com.hedera.services.legacy.core.jproto.JTransactionID;
+import com.hedera.services.legacy.core.jproto.TxnId;
 import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,10 +55,10 @@ public class AnswerFunctions {
 			try {
 				AccountID id = txnId.getAccountID();
 				MerkleAccount account = view.accounts().get(MerkleEntityId.fromPojoAccountId(id));
-				JTransactionID searchableId = JTransactionID.convert(txnId);
+				TxnId searchableId = TxnId.fromGrpc(txnId);
 				return account.recordList()
 						.stream()
-						.filter(r -> r.getTransactionID().equals(searchableId))
+						.filter(r -> r.getTxnId().equals(searchableId))
 						.findAny()
 						.map(ExpirableTxnRecord::toGrpc);
 			} catch (Exception ignore) {

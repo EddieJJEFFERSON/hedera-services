@@ -126,7 +126,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 
 		int accountTtl = properties.getIntProperty("ledger.records.ttl");
 		long accountRecordExpiry = txnCtx.consensusTime().getEpochSecond() + accountTtl;
-		lastCreatedRecord = asJRecord(record, accountRecordExpiry);
+		lastCreatedRecord = asExpirableRecord(record, accountRecordExpiry);
 		log.debug("Last created record updated to: {}", record);
 		addToEachAccount(qualifiers, lastCreatedRecord);
 
@@ -233,14 +233,14 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	private void addToAccount(AccountID id, ExpirableTxnRecord jRecord) {
 		ledger.addRecord(id, jRecord);
 		if (!accountsWithExpiringRecords.contains(id)) {
-			expirations.offer(new EarliestRecordExpiry(jRecord.getExpirationTime(), id));
+			expirations.offer(new EarliestRecordExpiry(jRecord.getExpiry(), id));
 			accountsWithExpiringRecords.add(id);
 		}
 	}
 
-	private ExpirableTxnRecord asJRecord(TransactionRecord record, long expiry) {
+	private ExpirableTxnRecord asExpirableRecord(TransactionRecord record, long expiry) {
 		ExpirableTxnRecord jRecord = ExpirableTxnRecord.fromGprc(record);
-		jRecord.setExpirationTime(expiry);
+		jRecord.setExpiry(expiry);
 		return jRecord;
 	}
 

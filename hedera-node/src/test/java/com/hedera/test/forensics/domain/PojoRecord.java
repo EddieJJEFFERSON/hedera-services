@@ -25,8 +25,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.hedera.services.utils.MiscUtils;
 import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.state.submerkle.RichInstant;
-import com.hedera.services.legacy.core.jproto.JTransactionID;
-import com.hedera.services.legacy.core.jproto.JTransactionReceipt;
+import com.hedera.services.legacy.core.jproto.TxnId;
+import com.hedera.services.legacy.core.jproto.TxnReceipt;
 import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import org.apache.commons.codec.binary.Hex;
 
@@ -57,13 +57,13 @@ public class PojoRecord {
 
 	public static PojoRecord from(ExpirableTxnRecord value) {
 		var pojo = new PojoRecord();
-		pojo.setTxnId(asString(value.getTransactionID()));
+		pojo.setTxnId(asString(value.getTxnId()));
 		pojo.setReceipt(asString(value.getTxReceipt()));
 		pojo.setHash(Hex.encodeHexString(value.getTxHash()));
 		pojo.setTimestamp(asString(value.getConsensusTimestamp()));
 		pojo.setMemo(value.getMemo());
-		pojo.setFee(value.getTransactionFee());
-		pojo.setExpiry(value.getExpirationTime());
+		pojo.setFee(value.getFee());
+		pojo.setExpiry(value.getExpiry());
 		pojo.setTransfers(MiscUtils.readableTransferList(value.getHbarAdjustments().toGrpc()));
 		if (value.getContractCallResult() != null) {
 			pojo.setCallResult(PojoFunctionResult.from(value.getContractCallResult()));
@@ -165,21 +165,21 @@ public class PojoRecord {
 		return String.format("%d.%d", stamp.getSeconds(), stamp.getNanos());
 	}
 
-	public static String asString(JTransactionID txnId) {
-		var ts = String.format("%d.%d", txnId.getStartTime().getSeconds(), txnId.getStartTime().getNanos());
+	public static String asString(TxnId txnId) {
+		var ts = String.format("%d.%d", txnId.getValidStart().getSeconds(), txnId.getValidStart().getNanos());
 		return String.format("From %s @ %s", asString(txnId.getPayerAccount()), ts);
 	}
 
-	public static String asString(JTransactionReceipt receipt) {
+	public static String asString(TxnReceipt receipt) {
 		var createdId = "";
-		if (receipt.getAccountID() != null) {
-			createdId = "+Account" + asString(receipt.getAccountID());
-		} else if (receipt.getContractID() != null) {
-			createdId = "+Contract" + asString(receipt.getContractID());
-		} else if (receipt.getFileID() != null) {
-			createdId = "+File" + asString(receipt.getFileID());
-		} else if (receipt.getTopicID() != null) {
-			createdId = "+Topic" + asString(receipt.getTopicID());
+		if (receipt.getAccountId() != null) {
+			createdId = "+Account" + asString(receipt.getAccountId());
+		} else if (receipt.getContractId() != null) {
+			createdId = "+Contract" + asString(receipt.getContractId());
+		} else if (receipt.getFileId() != null) {
+			createdId = "+File" + asString(receipt.getFileId());
+		} else if (receipt.getTopicId() != null) {
+			createdId = "+Topic" + asString(receipt.getTopicId());
 		}
 
 		var rates = "N/A";

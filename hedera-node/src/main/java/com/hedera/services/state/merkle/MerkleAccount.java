@@ -305,7 +305,7 @@ public class MerkleAccount extends AbstractMerkleInternal implements FCMValue, M
 
 	public long expiryOfEarliestRecord() {
 		var records = records();
-		return records.isEmpty() ? -1L : records.peek().getExpirationTime();
+		return records.isEmpty() ? -1L : records.peek().getExpiry();
 	}
 
 	public List<ExpirableTxnRecord> recordList() {
@@ -346,9 +346,9 @@ public class MerkleAccount extends AbstractMerkleInternal implements FCMValue, M
 					deleted, smartContract, receiverSigRequired,
 					proxy);
 
-			var records = new FCQueue<ExpirableTxnRecord>(ExpirableTxnRecord::deserialize);
+			var records = new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER);
 			serdes.deserializeIntoRecords(in, records);
-			var payerRecords = new FCQueue<ExpirableTxnRecord>(ExpirableTxnRecord::deserialize);
+			var payerRecords = new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER);
 
 			return new MerkleAccount(List.of(state, records, payerRecords));
 		}

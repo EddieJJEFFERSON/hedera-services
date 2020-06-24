@@ -39,7 +39,7 @@ import com.hederahashgraph.api.proto.java.TransferList;
 import com.hedera.services.state.merkle.MerkleEntityId;
 import com.hedera.services.state.merkle.MerkleAccount;
 import com.hedera.services.state.submerkle.RichInstant;
-import com.hedera.services.legacy.core.jproto.JTransactionID;
+import com.hedera.services.legacy.core.jproto.TxnId;
 import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.fcmap.FCMap;
 import com.swirlds.fcqueue.FCQueue;
@@ -132,7 +132,7 @@ public class FeePayingRecordsHistorianTest {
 			.build();
 	final private ExpirableTxnRecord jFinalRecord = ExpirableTxnRecord.fromGprc(finalRecord);
 	{
-		jFinalRecord.setExpirationTime(expiry);
+		jFinalRecord.setExpiry(expiry);
 	}
 
 	private MerkleAccount aValue;
@@ -532,14 +532,14 @@ public class FeePayingRecordsHistorianTest {
 					ExpirableTxnRecord record = new ExpirableTxnRecord(
 						null,
 						new byte[0],
-						JTransactionID.convert(txnIds.get(i)),
+						TxnId.fromGrpc(txnIds.get(i)),
 						RichInstant.fromGrpc(Timestamp.newBuilder().setSeconds(consensusTimes.get(i)).build()),
 						"",
 						0L,
 						null,
 						null,
 						null);
-					record.setExpirationTime(expiries.get(i));
+					record.setExpiry(expiries.get(i));
 					return record;
 				}).collect(Collectors.toCollection(LinkedList::new))));
 		given(accounts.get(key)).willReturn(value);

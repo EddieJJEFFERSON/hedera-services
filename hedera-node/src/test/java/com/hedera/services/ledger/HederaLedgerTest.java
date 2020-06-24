@@ -550,7 +550,7 @@ public class HederaLedgerTest {
 		assertThat(
 				((FCQueue<ExpirableTxnRecord>)captor.getValue())
 						.stream()
-						.map(ExpirableTxnRecord::getExpirationTime)
+						.map(ExpirableTxnRecord::getExpiry)
 						.collect(Collectors.toList()),
 				contains(311L, 500L));
 	}
@@ -603,7 +603,7 @@ public class HederaLedgerTest {
 		assertThat(
 				((FCQueue<ExpirableTxnRecord>)captor.getValue())
 						.stream()
-						.map(ExpirableTxnRecord::getExpirationTime)
+						.map(ExpirableTxnRecord::getExpiry)
 						.collect(Collectors.toList()),
 				contains(100L, 50L, 200L, 311L, 1L));
 	}
@@ -860,7 +860,7 @@ public class HederaLedgerTest {
 		FCQueue<ExpirableTxnRecord> records = new FCQueue<>(ExpirableTxnRecord::deserialize);
 		for (int i = 0; i < expiries.length; i++) {
 			ExpirableTxnRecord record = new ExpirableTxnRecord();
-			record.setExpirationTime(expiries[i]);
+			record.setExpiry(expiries[i]);
 			records.offer(record);
 		}
 		return records;
