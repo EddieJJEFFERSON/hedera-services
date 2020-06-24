@@ -23,16 +23,12 @@ package com.hedera.test.forensics.domain;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.hedera.services.utils.MiscUtils;
-import com.hederahashgraph.api.proto.java.TransferList;
 import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.legacy.core.jproto.JTransactionID;
 import com.hedera.services.legacy.core.jproto.JTransactionReceipt;
 import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
-import com.hedera.services.legacy.core.jproto.HbarAdjustments;
 import org.apache.commons.codec.binary.Hex;
-
-import static java.util.stream.Collectors.toList;
 
 @JsonPropertyOrder({
 		"receipt",

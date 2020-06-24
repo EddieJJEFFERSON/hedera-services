@@ -1,4 +1,4 @@
-package com.hedera.services.legacy.core.jproto;
+package com.hedera.services.state.submerkle;
 
 /*-
  * ‌
@@ -21,9 +21,7 @@ package com.hedera.services.legacy.core.jproto;
  */
 
 import com.google.common.base.MoreObjects;
-import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.utils.EntityIdUtils;
-import com.hedera.services.utils.MiscUtils;
 import com.hederahashgraph.api.proto.java.AccountAmount;
 import com.hederahashgraph.api.proto.java.TransferList;
 import com.swirlds.common.io.SelfSerializable;
@@ -35,11 +33,11 @@ import org.apache.logging.log4j.Logger;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.IntStream;
 
-import static com.hedera.services.state.submerkle.EntityId.ofNullableAccountId;
 import static com.hedera.services.utils.MiscUtils.readableTransferList;
 import static java.util.stream.Collectors.toList;
 
@@ -49,8 +47,10 @@ public class HbarAdjustments implements SelfSerializable {
 	static final int MERKLE_VERSION = 1;
 	static final long RUNTIME_CONSTRUCTABLE_ID = 0xd8b06bd46e12a466L;
 
+	static final long[] NO_HBARS = new long[0];
 	static EntityId.Provider legacyIdProvider = EntityId.LEGACY_PROVIDER;
 
+	public static final int MAX_NUM_ADJUSTMENTS = 25;
 	public static final HbarAdjustments.Provider LEGACY_PROVIDER = new Provider();
 
 	@Deprecated
@@ -63,57 +63,22 @@ public class HbarAdjustments implements SelfSerializable {
 
 			int numAdjustments = in.readInt();
 			if (numAdjustments > 0) {
-				List<Adjustment> adjustments = new ArrayList<>();
+				pojo.hbars = new long[numAdjustments];
+				pojo.accountIds = new ArrayList<>(numAdjustments);
 				for (int i = 0; i < numAdjustments; i++) {
 					in.readLong();
 					in.readLong();
-					var accountId = legacyIdProvider.deserialize(in);
-					adjustments.add(new Adjustment(in.readLong(), accountId));
+					pojo.accountIds.add(legacyIdProvider.deserialize(in));
+					pojo.hbars[i] = in.readLong();
 				}
-				pojo.adjustments = adjustments;
 			}
 
 			return pojo;
 		}
 	}
 
-	public static class Adjustment {
-		private final long hbars;
-		private final EntityId accountId;
-
-		public Adjustment(long hbars, EntityId accountId) {
-			this.hbars = hbars;
-			this.accountId = accountId;
-		}
-
-		public long getHbars() {
-			return hbars;
-		}
-
-		public EntityId getAccountId() {
-			return accountId;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (o == this) {
-				return true;
-			}
-			if (o == null || Adjustment.class != o.getClass()) {
-				return false;
-			}
-			var that = (Adjustment)o;
-			return hbars == that.hbars && accountId.equals(that.accountId);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = Long.hashCode(hbars);
-			return result * 31 + accountId.hashCode();
-		}
-	}
-
-	List<Adjustment> adjustments = Collections.emptyList();
+	long[] hbars = NO_HBARS;
+	List<EntityId> accountIds = Collections.emptyList();
 
 	public HbarAdjustments() { }
 
@@ -131,36 +96,37 @@ public class HbarAdjustments implements SelfSerializable {
 
 	@Override
 	public void deserialize(SerializableDataInputStream in, int version) throws IOException {
-		throw new AssertionError("Not implemented");
+		accountIds = in.readSerializableList(MAX_NUM_ADJUSTMENTS, true, EntityId::new);
+		hbars = in.readLongArray(MAX_NUM_ADJUSTMENTS);
 	}
 
 	@Override
 	public void serialize(SerializableDataOutputStream out) throws IOException {
-		out.writeSerializableList(
-				adjustments.stream().map(Adjustment::getAccountId).collect(toList()),
-				true,
-				true);
-		out.writeLongArray(adjustments.stream().mapToLong(Adjustment::getHbars).toArray());
+		out.writeSerializableList(accountIds, true, true);
+		out.writeLongArray(hbars);
 	}
 
+	/* ---- Object --- */
+
 	@Override
-	public boolean equals(final Object o) {
+	public boolean equals(Object o) {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (o == null || HbarAdjustments.class != o.getClass()) {
 			return false;
 		}
 
 		HbarAdjustments that = (HbarAdjustments) o;
-		return adjustments.equals(that.adjustments);
+		return accountIds.equals(that.accountIds) && Arrays.equals(hbars, that.hbars);
 	}
 
 	@Override
 	public int hashCode() {
 		int result = Long.hashCode(RUNTIME_CONSTRUCTABLE_ID);
 		result = result * 31 + Integer.hashCode(MERKLE_VERSION);
-		return result * 31 + Objects.hash(adjustments);
+		result = result * 31 + accountIds.hashCode();
+		return result * 31 + Arrays.hashCode(hbars);
 	}
 
 	@Override
@@ -174,19 +140,23 @@ public class HbarAdjustments implements SelfSerializable {
 
 	public TransferList toGrpc() {
 		var grpc = TransferList.newBuilder();
-		adjustments.stream()
-				.map(adjustment -> AccountAmount.newBuilder()
-						.setAmount(adjustment.getHbars())
-						.setAccountID(EntityIdUtils.asAccount(adjustment.getAccountId())))
+		IntStream.range(0, hbars.length)
+				.mapToObj(i -> AccountAmount.newBuilder()
+						.setAmount(hbars[i])
+						.setAccountID(EntityIdUtils.asAccount(accountIds.get(i))))
 				.forEach(grpc::addAccountAmounts);
 		return grpc.build();
 	}
 
 	public static HbarAdjustments fromGrpc(TransferList grpc) {
 		var pojo = new HbarAdjustments();
-		pojo.adjustments = grpc.getAccountAmountsList().stream()
-				.map(subGprc -> new Adjustment(subGprc.getAmount(), ofNullableAccountId(subGprc.getAccountID())))
-				.collect(toList());
+		pojo.hbars = grpc.getAccountAmountsList().stream()
+				.mapToLong(AccountAmount::getAmount)
+				.toArray();
+		pojo.accountIds = grpc.getAccountAmountsList().stream()
+						.map(AccountAmount::getAccountID)
+						.map(EntityId::ofNullableAccountId)
+						.collect(toList());
 		return pojo;
 	}
 }

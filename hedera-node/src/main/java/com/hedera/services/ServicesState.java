@@ -207,7 +207,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 		in.readBoolean();
 		in.readLong();
 		in.readLong();
-		networkCtx().midnightRates().deserialize(in);
+		networkCtx().midnightRates().deserialize(in, ExchangeRates.MERKLE_VERSION);
 		if (in.readBoolean()) {
 			networkCtx().setConsensusTimeOfLastHandledTxn(in.readInstant());
 		}

@@ -53,8 +53,7 @@ public class MerkleNetworkContext extends AbstractMerkleNode implements MerkleLe
 		consensusTimeOfLastHandledTxn = Instant.ofEpochSecond(in.readLong(), in.readInt());
 		seqNo = seqNoSupplier.get();
 		seqNo.deserialize(in);
-		midnightRateSet = ratesSupplier.get();
-		midnightRateSet.deserialize(in);
+		midnightRateSet = in.readSerializable(true, ratesSupplier);
 	}
 
 	@Override
@@ -62,7 +61,7 @@ public class MerkleNetworkContext extends AbstractMerkleNode implements MerkleLe
 		out.writeLong(consensusTimeOfLastHandledTxn.getEpochSecond());
 		out.writeInt(consensusTimeOfLastHandledTxn.getNano());
 		seqNo.serialize(out);
-		midnightRateSet.serialize(out);
+		out.writeSerializable(midnightRateSet, true);
 	}
 
 	public Instant consensusTimeOfLastHandledTxn() {

@@ -13,11 +13,14 @@ import org.mockito.InOrder;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.booleanThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.inOrder;
 import static org.mockito.BDDMockito.mock;
@@ -75,7 +78,7 @@ class MerkleNetworkContextTest {
 		assertEquals(consensusTimeOfLastHandledTxn, subject.consensusTimeOfLastHandledTxn);
 		// and:
 		inOrder.verify(seqNo).deserialize(in);
-		inOrder.verify(midnightRateSet).deserialize(in);
+		inOrder.verify(in).readSerializable(booleanThat(Boolean.TRUE::equals), any(Supplier.class));
 	}
 
 	@Test

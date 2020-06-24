@@ -23,14 +23,13 @@ package com.hedera.services.legacy.core.jproto;
 import com.google.protobuf.ByteString;
 import com.hedera.services.context.domain.serdes.DomainSerdes;
 import com.hedera.services.state.submerkle.EntityId;
+import com.hedera.services.state.submerkle.HbarAdjustments;
 import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.state.submerkle.SolidityFnResult;
-import com.hederahashgraph.api.proto.java.AccountAmount;
 import com.hederahashgraph.api.proto.java.ContractFunctionResult;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hederahashgraph.api.proto.java.TransferList;
 import com.swirlds.common.FastCopyable;
 
 import java.io.DataInputStream;

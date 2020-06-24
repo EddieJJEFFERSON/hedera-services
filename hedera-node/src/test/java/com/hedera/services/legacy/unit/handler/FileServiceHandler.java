@@ -500,7 +500,7 @@ public class FileServiceHandler {
    */
   public boolean isSmallChange(ExchangeRateSet exchangeRateSet) {
     return isSmallChange(PropertiesLoader.getExchangeRateAllowedPercentage(),
-        midnightRateSet.getCurrentCentEquiv(), midnightRateSet.getCurrentHbarEquiv(),
+        midnightRateSet.getCurrCentEquiv(), midnightRateSet.getCurrHbarEquiv(),
         exchangeRateSet.getCurrentRate().getCentEquiv(),
         exchangeRateSet.getCurrentRate().getHbarEquiv()) && isSmallChange(
         PropertiesLoader.getExchangeRateAllowedPercentage(),

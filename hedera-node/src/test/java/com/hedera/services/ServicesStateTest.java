@@ -316,7 +316,7 @@ class ServicesStateTest {
 		inOrder.verify(accounts).copyFrom(in);
 		inOrder.verify(storage).copyFrom(in);
 		inOrder.verify(in).readBoolean();
-		inOrder.verify(midnightRates).deserialize(in);
+		inOrder.verify(midnightRates).deserialize(in, ExchangeRates.MERKLE_VERSION);
 		inOrder.verify(in).readBoolean();
 		inOrder.verify(in).readInstant();
 		inOrder.verify(networkCtx).setConsensusTimeOfLastHandledTxn(lastHandleTime);

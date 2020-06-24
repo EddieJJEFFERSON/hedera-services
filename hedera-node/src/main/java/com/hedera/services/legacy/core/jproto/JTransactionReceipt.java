@@ -151,10 +151,6 @@ public class JTransactionReceipt implements FastCopyable {
     return exchangeRate;
   }
 
-  public void setExchangeRate(JExchangeRateSet exchangeRate) {
-    this.exchangeRate = exchangeRate;
-  }
-
   public EntityId getTopicID() {
     return topicID;
   }

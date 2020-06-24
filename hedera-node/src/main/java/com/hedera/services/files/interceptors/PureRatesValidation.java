@@ -41,7 +41,7 @@ public class PureRatesValidation {
 	) {
 		return canonicalTest(
 				limitPercent,
-				midnightRates.getCurrentCentEquiv(), midnightRates.getCurrentHbarEquiv(),
+				midnightRates.getCurrCentEquiv(), midnightRates.getCurrHbarEquiv(),
 				proposedRates.getCurrentRate().getCentEquiv(), proposedRates.getCurrentRate().getHbarEquiv())
 				&& canonicalTest(
 						limitPercent,

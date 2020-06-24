@@ -37,11 +37,6 @@ import com.hederahashgraph.api.proto.java.ExchangeRate;
 import com.hederahashgraph.api.proto.java.TimestampSeconds;
 import com.hedera.services.legacy.exception.SerializationException;
 
-/**
- * Custom class represents ExchangeRate message.
- * 
- * @author Hua Li Created on 2019-06-11
- */
 public class JExchangeRate implements FastCopyable {
   private static final Logger log = LogManager.getLogger(JExchangeRate.class);
   private static final long LEGACY_VERSION_1 = 1;

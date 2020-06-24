@@ -94,8 +94,8 @@ class PureRatesValidationTest {
 			boolean increaseRates
 	) {
 		Pair<Integer, Integer> currentPair = getNewHandC(
-				exchangeRates.getCurrentHbarEquiv(),
-				exchangeRates.getCurrentCentEquiv(),
+				exchangeRates.getCurrHbarEquiv(),
+				exchangeRates.getCurrCentEquiv(),
 				smallChangeToCurrentRate, increaseRates);
 
 		ExchangeRate.Builder currentRate = ExchangeRate.newBuilder()

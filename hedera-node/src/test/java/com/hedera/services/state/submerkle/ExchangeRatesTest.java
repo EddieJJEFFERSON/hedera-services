@@ -11,6 +11,7 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.time.Instant;
 
@@ -23,7 +24,6 @@ import static org.mockito.BDDMockito.mock;
 
 @RunWith(JUnitPlatform.class)
 class ExchangeRatesTest {
-
 	private int expCurrentHbarEquiv = 25;
 	private int expCurrentCentEquiv = 1;
 	private long expCurrentExpiry = Instant.now().getEpochSecond() + 1_234L;
@@ -32,10 +32,14 @@ class ExchangeRatesTest {
 	private int expNextCentEquiv = 2;
 	private long expNextExpiry = Instant.now().getEpochSecond() + 5_678L;
 
+	DataInputStream din;
+
 	ExchangeRates subject;
 
 	@BeforeEach
 	private void setup() {
+		din = mock(DataInputStream.class);
+
 		subject = new ExchangeRates(
 				expCurrentHbarEquiv, expCurrentCentEquiv, expCurrentExpiry,
 				expNextHbarEquiv, expNextCentEquiv, expNextExpiry);
@@ -51,14 +55,32 @@ class ExchangeRatesTest {
 	}
 
 	@Test
+	public void legacyProviderWorks() throws IOException {
+		given(din.readBoolean()).willReturn(true);
+		given(din.readLong())
+				.willReturn(-1L).willReturn(-2L)
+				.willReturn(-1L).willReturn(-2L).willReturn(expCurrentExpiry)
+				.willReturn(-1L).willReturn(-2L).willReturn(expNextExpiry);
+		given(din.readInt())
+				.willReturn(expCurrentHbarEquiv).willReturn(expCurrentCentEquiv)
+				.willReturn(expNextHbarEquiv).willReturn(expNextCentEquiv);
+
+		// when:
+		var subjectRead = ExchangeRates.LEGACY_PROVIDER.deserialize(din);
+
+		// then:
+		assertEquals(subject, subjectRead);
+	}
+
+	@Test
 	public void copyWorks() {
 		// given:
 		var subjectCopy = subject.copy();
 
 		// expect:
-		assertEquals(expCurrentHbarEquiv, subjectCopy.getCurrentHbarEquiv());
-		assertEquals(expCurrentCentEquiv, subjectCopy.getCurrentCentEquiv());
-		assertEquals(expCurrentExpiry, subjectCopy.getCurrentExpiry());
+		assertEquals(expCurrentHbarEquiv, subjectCopy.getCurrHbarEquiv());
+		assertEquals(expCurrentCentEquiv, subjectCopy.getCurrCentEquiv());
+		assertEquals(expCurrentExpiry, subjectCopy.getCurrExpiry());
 		assertEquals(expNextHbarEquiv, subjectCopy.getNextHbarEquiv());
 		assertEquals(expNextCentEquiv, subjectCopy.getNextCentEquiv());
 		assertEquals(expNextExpiry, subjectCopy.getNextExpiry());
@@ -100,12 +122,12 @@ class ExchangeRatesTest {
 				.willReturn(expNextCentEquiv);
 
 		// when:
-		subject.deserialize(in);
+		subject.deserialize(in, ExchangeRates.MERKLE_VERSION);
 
 		// then:
-		assertEquals(expCurrentHbarEquiv, subject.getCurrentHbarEquiv());
-		assertEquals(expCurrentCentEquiv, subject.getCurrentCentEquiv());
-		assertEquals(expCurrentExpiry, subject.getCurrentExpiry());
+		assertEquals(expCurrentHbarEquiv, subject.getCurrHbarEquiv());
+		assertEquals(expCurrentCentEquiv, subject.getCurrCentEquiv());
+		assertEquals(expCurrentExpiry, subject.getCurrExpiry());
 		assertEquals(expNextHbarEquiv, subject.getNextHbarEquiv());
 		assertEquals(expNextCentEquiv, subject.getNextCentEquiv());
 		assertEquals(expNextExpiry, subject.getNextExpiry());
@@ -115,9 +137,9 @@ class ExchangeRatesTest {
 	@Test
 	public void sanityChecks() {
 		// expect:
-		assertEquals(expCurrentHbarEquiv, subject.getCurrentHbarEquiv());
-		assertEquals(expCurrentCentEquiv, subject.getCurrentCentEquiv());
-		assertEquals(expCurrentExpiry, subject.getCurrentExpiry());
+		assertEquals(expCurrentHbarEquiv, subject.getCurrHbarEquiv());
+		assertEquals(expCurrentCentEquiv, subject.getCurrCentEquiv());
+		assertEquals(expCurrentExpiry, subject.getCurrExpiry());
 		assertEquals(expNextHbarEquiv, subject.getNextHbarEquiv());
 		assertEquals(expNextCentEquiv, subject.getNextCentEquiv());
 		assertEquals(expNextExpiry, subject.getNextExpiry());
@@ -147,9 +169,9 @@ class ExchangeRatesTest {
 		subject.replaceWith(newRates);
 
 		// expect:
-		assertEquals(expCurrentHbarEquiv, subject.getCurrentHbarEquiv());
-		assertEquals(expCurrentCentEquiv, subject.getCurrentCentEquiv());
-		assertEquals(expCurrentExpiry, subject.getCurrentExpiry());
+		assertEquals(expCurrentHbarEquiv, subject.getCurrHbarEquiv());
+		assertEquals(expCurrentCentEquiv, subject.getCurrCentEquiv());
+		assertEquals(expCurrentExpiry, subject.getCurrExpiry());
 		assertEquals(expNextHbarEquiv, subject.getNextHbarEquiv());
 		assertEquals(expNextCentEquiv, subject.getNextCentEquiv());
 		assertEquals(expNextExpiry, subject.getNextExpiry());
@@ -160,9 +182,9 @@ class ExchangeRatesTest {
 	public void toStringWorks() {
 		// expect:
 		assertEquals(
-				"ExchangeRates{currentHbarEquiv=" + expCurrentHbarEquiv +
-						", currentCentEquiv=" + expCurrentCentEquiv +
-						", currentExpiry=" + expCurrentExpiry +
+				"ExchangeRates{currHbarEquiv=" + expCurrentHbarEquiv +
+						", currCentEquiv=" + expCurrentCentEquiv +
+						", currExpiry=" + expCurrentExpiry +
 						", nextHbarEquiv=" + expNextHbarEquiv +
 						", nextCentEquiv=" + expNextCentEquiv +
 						", nextExpiry=" + expNextExpiry + "}",
