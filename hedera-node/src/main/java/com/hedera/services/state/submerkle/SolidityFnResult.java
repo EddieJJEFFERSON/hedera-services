@@ -75,7 +75,7 @@ public class SolidityFnResult implements SelfSerializable {
 		public SolidityFnResult deserialize(DataInputStream in) throws IOException {
 			var fnResult = new SolidityFnResult();
 
-			in.readLong();
+			var version = in.readLong();
 			in.readLong();
 
 			if (in.readBoolean()) {
@@ -108,9 +108,11 @@ public class SolidityFnResult implements SelfSerializable {
 				fnResult.logs.add(legacyLogProvider.deserialize(in));
 			}
 
-			int numCreatedContracts = in.readInt();
-			for (int i = 0; i < numCreatedContracts; i++) {
-				fnResult.createdContractIds.add(legacyIdProvider.deserialize(in));
+			if (version == 3) {
+				int numCreatedContracts = in.readInt();
+				for (int i = 0; i < numCreatedContracts; i++) {
+					fnResult.createdContractIds.add(legacyIdProvider.deserialize(in));
+				}
 			}
 
 			return fnResult;

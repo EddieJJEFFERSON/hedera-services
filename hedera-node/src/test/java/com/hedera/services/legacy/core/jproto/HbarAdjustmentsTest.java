@@ -62,9 +62,9 @@ class HbarAdjustmentsTest {
 	public void legacyProviderWorks() throws IOException {
 		given(din.readLong())
 				.willReturn(-1L).willReturn(-2L)
-				.willReturn(aAmount)
-				.willReturn(bAmount)
-				.willReturn(cAmount);
+				.willReturn(-1L).willReturn(-2L).willReturn(aAmount)
+				.willReturn(-1L).willReturn(-2L).willReturn(bAmount)
+				.willReturn(-1L).willReturn(-2L).willReturn(cAmount);
 		given(din.readInt()).willReturn(3);
 		given(idProvider.deserialize(din))
 				.willReturn(aEntity)

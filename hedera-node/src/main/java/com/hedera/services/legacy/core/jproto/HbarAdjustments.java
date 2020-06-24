@@ -20,8 +20,10 @@ package com.hedera.services.legacy.core.jproto;
  * ‍
  */
 
+import com.google.common.base.MoreObjects;
 import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.utils.EntityIdUtils;
+import com.hedera.services.utils.MiscUtils;
 import com.hederahashgraph.api.proto.java.AccountAmount;
 import com.hederahashgraph.api.proto.java.TransferList;
 import com.swirlds.common.io.SelfSerializable;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.hedera.services.state.submerkle.EntityId.ofNullableAccountId;
+import static com.hedera.services.utils.MiscUtils.readableTransferList;
 import static java.util.stream.Collectors.toList;
 
 public class HbarAdjustments implements SelfSerializable {
@@ -62,6 +65,8 @@ public class HbarAdjustments implements SelfSerializable {
 			if (numAdjustments > 0) {
 				List<Adjustment> adjustments = new ArrayList<>();
 				for (int i = 0; i < numAdjustments; i++) {
+					in.readLong();
+					in.readLong();
 					var accountId = legacyIdProvider.deserialize(in);
 					adjustments.add(new Adjustment(in.readLong(), accountId));
 				}
@@ -156,6 +161,13 @@ public class HbarAdjustments implements SelfSerializable {
 		int result = Long.hashCode(RUNTIME_CONSTRUCTABLE_ID);
 		result = result * 31 + Integer.hashCode(MERKLE_VERSION);
 		return result * 31 + Objects.hash(adjustments);
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+				.add("readable", readableTransferList(toGrpc()))
+				.toString();
 	}
 
 	/* --- Helpers --- */
