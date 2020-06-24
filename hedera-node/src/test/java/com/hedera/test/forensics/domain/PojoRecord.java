@@ -29,7 +29,7 @@ import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.legacy.core.jproto.JTransactionID;
 import com.hedera.services.legacy.core.jproto.JTransactionReceipt;
 import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
-import com.hedera.services.legacy.core.jproto.JTransferList;
+import com.hedera.services.legacy.core.jproto.HbarAdjustments;
 import org.apache.commons.codec.binary.Hex;
 
 import static java.util.stream.Collectors.toList;
@@ -68,7 +68,7 @@ public class PojoRecord {
 		pojo.setMemo(value.getMemo());
 		pojo.setFee(value.getTransactionFee());
 		pojo.setExpiry(value.getExpirationTime());
-		pojo.setTransfers(MiscUtils.readableTransferList(xfersFrom(value.getjTransferList())));
+		pojo.setTransfers(MiscUtils.readableTransferList(value.getHbarAdjustments().toGrpc()));
 		if (value.getContractCallResult() != null) {
 			pojo.setCallResult(PojoFunctionResult.from(value.getContractCallResult()));
 		}
@@ -172,13 +172,6 @@ public class PojoRecord {
 	public static String asString(JTransactionID txnId) {
 		var ts = String.format("%d.%d", txnId.getStartTime().getSeconds(), txnId.getStartTime().getNanos());
 		return String.format("From %s @ %s", asString(txnId.getPayerAccount()), ts);
-	}
-
-	public static TransferList xfersFrom(JTransferList list) {
-		return TransferList.newBuilder()
-				.addAllAccountAmounts(
-						list.getjAccountAmountsList().stream().map(JTransferList::convert).collect(toList()))
-				.build();
 	}
 
 	public static String asString(JTransactionReceipt receipt) {

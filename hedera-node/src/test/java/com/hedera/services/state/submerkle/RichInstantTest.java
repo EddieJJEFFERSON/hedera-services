@@ -20,9 +20,9 @@ package com.hedera.services.state.submerkle;
  * ‍
  */
 
-import com.hedera.services.state.submerkle.RichInstant;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.swirlds.common.io.SerializableDataInputStream;
+import com.swirlds.common.io.SerializableDataOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -50,6 +50,19 @@ class RichInstantTest {
 		din = mock(DataInputStream.class);
 
 		subject = new RichInstant(seconds, nanos);
+	}
+
+	@Test
+	public void serializeWorks() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+
+		// when:
+		subject.serialize(out);
+
+		// then:
+		verify(out).writeLong(seconds);
+		verify(out).writeInt(nanos);
 	}
 
 	@Test

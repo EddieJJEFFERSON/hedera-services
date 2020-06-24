@@ -62,7 +62,8 @@ public class RichInstant {
 	}
 
 	public void serialize(SerializableDataOutputStream out) throws IOException {
-		throw new AssertionError("Not implemented");
+		out.writeLong(seconds);
+		out.writeInt(nanos);
 	}
 
 	/* --- Object --- */

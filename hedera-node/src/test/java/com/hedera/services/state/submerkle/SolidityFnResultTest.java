@@ -1,13 +1,7 @@
 package com.hedera.services.state.submerkle;
 
-import static java.util.stream.Collectors.toList;
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.google.protobuf.ByteString;
 import com.hedera.services.context.domain.serdes.DomainSerdes;
-import com.hedera.services.state.submerkle.EntityId;
-import com.hedera.services.state.submerkle.SolidityFnResult;
-import com.hedera.services.state.submerkle.SolidityLog;
 import com.hederahashgraph.api.proto.java.ContractFunctionResult;
 import com.swirlds.common.CommonUtils;
 import com.swirlds.common.io.SerializableDataInputStream;
@@ -30,7 +24,21 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.mockito.BDDMockito.*;
+import static java.util.stream.Collectors.toList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.anyInt;
+import static org.mockito.BDDMockito.argThat;
+import static org.mockito.BDDMockito.booleanThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.inOrder;
+import static org.mockito.BDDMockito.intThat;
+import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.verify;
+import static org.mockito.BDDMockito.willAnswer;
+import static org.mockito.BDDMockito.willThrow;
 
 @RunWith(JUnitPlatform.class)
 class SolidityFnResultTest {

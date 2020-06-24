@@ -74,7 +74,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	private long transactionFee;
 	private SolidityFnResult contractCallResult;
 	private SolidityFnResult contractCreateResult;
-	private JTransferList jTransferList;
+	private HbarAdjustments hbarAdjustments;
 	private long expirationTime; //
 
 	private Hash hash;
@@ -100,7 +100,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			RichInstant consensusTimestamp,
 			String memo,
 			long transactionFee,
-			JTransferList transferList,
+			HbarAdjustments transferList,
 			SolidityFnResult contractCallResult,
 			SolidityFnResult createResult
 	) {
@@ -110,7 +110,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		this.consensusTimestamp = consensusTimestamp;
 		this.memo = memo;
 		this.transactionFee = transactionFee;
-		this.jTransferList = transferList;
+		this.hbarAdjustments = transferList;
 		this.contractCallResult = contractCallResult;
 		this.contractCreateResult = createResult;
 	}
@@ -123,7 +123,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		this.memo = that.memo;
 		this.transactionFee = that.transactionFee;
 		this.expirationTime = that.expirationTime;
-		this.jTransferList = (that.jTransferList != null) ? (JTransferList) that.jTransferList.copy() : null;
+		this.hbarAdjustments = that.hbarAdjustments;
 		this.contractCallResult = that.contractCallResult;
 		this.contractCreateResult = that.contractCreateResult;
 	}
@@ -146,7 +146,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 				Objects.equals(memo, that.memo) &&
 				Objects.equals(contractCallResult, that.contractCallResult) &&
 				Objects.equals(contractCreateResult, that.contractCreateResult) &&
-				Objects.equals(jTransferList, that.jTransferList) &&
+				Objects.equals(hbarAdjustments, that.hbarAdjustments) &&
 				Objects.equals(expirationTime, that.expirationTime);
 	}
 
@@ -160,7 +160,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 				transactionFee,
 				contractCallResult,
 				contractCreateResult,
-				jTransferList,
+				hbarAdjustments,
 				expirationTime);
 		return result * 31 + Arrays.hashCode(txHash);
 	}
@@ -223,8 +223,8 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		return contractCreateResult;
 	}
 
-	public JTransferList getjTransferList() {
-		return jTransferList;
+	public HbarAdjustments getHbarAdjustments() {
+		return hbarAdjustments;
 	}
 
 	public long getExpirationTime() {
@@ -236,63 +236,56 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	}
 
 	@Override
-	public void serialize(final SerializableDataOutputStream outStream) throws IOException {
-		outStream.writeLong(versionToSerialize.orElse(CURRENT_VERSION));
-		outStream.writeLong(JObjectType.JTransactionRecord.longValue());
+	public void serialize(final SerializableDataOutputStream out) throws IOException {
+		out.writeLong(versionToSerialize.orElse(CURRENT_VERSION));
+		out.writeLong(JObjectType.JTransactionRecord.longValue());
 
 		if (this.txReceipt != null) {
-			outStream.writeBoolean(true);
-			this.txReceipt.copyTo(outStream);
-			this.txReceipt.copyToExtra(outStream);
+			out.writeBoolean(true);
+			this.txReceipt.copyTo(out);
+			this.txReceipt.copyToExtra(out);
 		} else {
-			outStream.writeBoolean(false);
+			out.writeBoolean(false);
 		}
 
 		if (this.txHash != null && this.txHash.length > 0) {
-			outStream.writeInt(this.txHash.length);
-			outStream.write(this.txHash);
+			out.writeInt(this.txHash.length);
+			out.write(this.txHash);
 		} else {
-			outStream.writeInt(0);
+			out.writeInt(0);
 		}
 
 		if (this.transactionID != null) {
-			outStream.writeBoolean(true);
-			this.transactionID.copyTo(outStream);
-			this.transactionID.copyToExtra(outStream);
+			out.writeBoolean(true);
+			this.transactionID.copyTo(out);
+			this.transactionID.copyToExtra(out);
 		} else {
-			outStream.writeBoolean(false);
+			out.writeBoolean(false);
 		}
 
 		if (this.consensusTimestamp != null) {
-			outStream.writeBoolean(true);
-			this.consensusTimestamp.serialize(outStream);
+			out.writeBoolean(true);
+			this.consensusTimestamp.serialize(out);
 		} else {
-			outStream.writeBoolean(false);
+			out.writeBoolean(false);
 		}
 
 		if (this.memo != null) {
 			byte[] bytes = StringUtils.getBytesUtf8(this.memo);
-			outStream.writeInt(bytes.length);
-			outStream.write(bytes);
+			out.writeInt(bytes.length);
+			out.write(bytes);
 		} else {
-			outStream.writeInt(0);
+			out.writeInt(0);
 		}
 
-		outStream.writeLong(this.transactionFee);
+		out.writeLong(this.transactionFee);
 
-		if (this.jTransferList != null) {
-			outStream.writeBoolean(true);
-			this.jTransferList.copyTo(outStream);
-			this.jTransferList.copyToExtra(outStream);
-		} else {
-			outStream.writeBoolean(false);
-		}
-
-		serdes.writeNullableSerializable(contractCallResult, outStream);
-		serdes.writeNullableSerializable(contractCreateResult, outStream);
+		serdes.writeNullableSerializable(hbarAdjustments, out);
+		serdes.writeNullableSerializable(contractCallResult, out);
+		serdes.writeNullableSerializable(contractCreateResult, out);
 
 		if (versionToSerialize.orElse(CURRENT_VERSION) > LEGACY_VERSION_2) {
-			outStream.writeLong(this.expirationTime);
+			out.writeLong(this.expirationTime);
 		}
 	}
 
@@ -385,9 +378,9 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 		}
 
 		if (trBytes) {
-			expirableTxnRecord.jTransferList = JTransferList.deserialize(inStream);
+			expirableTxnRecord.hbarAdjustments = HbarAdjustments.LEGACY_PROVIDER.deserialize(inStream);
 		} else {
-			expirableTxnRecord.jTransferList = null;
+			expirableTxnRecord.hbarAdjustments = null;
 		}
 
 		boolean clBytes;
@@ -475,10 +468,9 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 				jTransactionID = JTransactionID.convert(record.getTransactionID());
 			}
 
-			JTransferList jTransferList = null;
+			HbarAdjustments hbarAdjustments = null;
 			if (record.hasTransferList()) {
-				jTransferList = new JTransferList(
-						record.getTransferList().getAccountAmountsList());
+				hbarAdjustments = HbarAdjustments.fromGrpc(record.getTransferList());
 			}
 
 			SolidityFnResult callResult = null;
@@ -495,7 +487,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 					record.getTransactionHash().toByteArray(), jTransactionID,
 					RichInstant.fromGrpc(record.getConsensusTimestamp()),
 					record.getMemo(),
-					record.getTransactionFee(), jTransferList, callResult, createResult);
+					record.getTransactionFee(), hbarAdjustments, callResult, createResult);
 		} catch (Exception ex) {
 			log.error("Conversion Of TransactionRecord to JTransactionRecord  Failed..", ex);
 		}
@@ -533,14 +525,8 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			if (expirableTxnRecord.getTxHash().length > 0) {
 				builder.setTransactionHash(ByteString.copyFrom(expirableTxnRecord.getTxHash()));
 			}
-			if (expirableTxnRecord.getjTransferList() != null) {
-				List<AccountAmount> accountAmounts = expirableTxnRecord.getjTransferList()
-						.getjAccountAmountsList().stream()
-						.map(JTransferList::convert)
-						.collect(toList());
-				TransferList transferList = TransferList.newBuilder().addAllAccountAmounts(accountAmounts)
-						.build();
-				builder.setTransferList(transferList);
+			if (expirableTxnRecord.getHbarAdjustments() != null) {
+				builder.setTransferList(expirableTxnRecord.getHbarAdjustments().toGrpc());
 			}
 
 			if (expirableTxnRecord.getContractCallResult() != null) {
