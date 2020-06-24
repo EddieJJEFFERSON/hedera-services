@@ -111,7 +111,7 @@ public class JTransactionReceiptTest {
             () -> assertNull(cut.getAccountID()),
             () -> assertNull(cut.getFileID()),
             () -> assertNull(cut.getContractID()),
-            () -> assertNull(cut.getExchangeRate()),
+            () -> assertNull(cut.getExchangeRates()),
             () -> assertEquals(0L, cut.getTopicSequenceNumber()),
             () -> assertNull(cut.getTopicRunningHash())
     );

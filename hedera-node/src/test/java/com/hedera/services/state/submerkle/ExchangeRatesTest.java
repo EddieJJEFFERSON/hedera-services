@@ -2,6 +2,7 @@ package com.hedera.services.state.submerkle;
 
 import com.hederahashgraph.api.proto.java.ExchangeRate;
 import com.hederahashgraph.api.proto.java.ExchangeRateSet;
+import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TimestampSeconds;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
@@ -31,6 +32,17 @@ class ExchangeRatesTest {
 	private int expNextHbarEquiv = 45;
 	private int expNextCentEquiv = 2;
 	private long expNextExpiry = Instant.now().getEpochSecond() + 5_678L;
+
+	ExchangeRateSet grpc = ExchangeRateSet.newBuilder()
+			.setCurrentRate(ExchangeRate.newBuilder()
+					.setHbarEquiv(expCurrentHbarEquiv)
+					.setCentEquiv(expCurrentCentEquiv)
+					.setExpirationTime(TimestampSeconds.newBuilder().setSeconds(expCurrentExpiry)))
+			.setNextRate(ExchangeRate.newBuilder()
+					.setHbarEquiv(expNextHbarEquiv)
+					.setCentEquiv(expNextCentEquiv)
+					.setExpirationTime(TimestampSeconds.newBuilder().setSeconds(expNextExpiry)))
+			.build();
 
 	DataInputStream din;
 
@@ -189,5 +201,17 @@ class ExchangeRatesTest {
 						", nextCentEquiv=" + expNextCentEquiv +
 						", nextExpiry=" + expNextExpiry + "}",
 			subject.toString());
+	}
+
+	@Test
+	public void viewWorks() {
+		// expect:
+		assertEquals(grpc, subject.toGrpc());
+	}
+
+	@Test
+	public void factoryWorks() {
+		// expect:
+		assertEquals(subject, ExchangeRates.fromGrpc(grpc));
 	}
 }

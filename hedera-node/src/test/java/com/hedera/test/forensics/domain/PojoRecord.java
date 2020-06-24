@@ -183,16 +183,15 @@ public class PojoRecord {
 		}
 
 		var rates = "N/A";
-		if (receipt.getExchangeRate() != null) {
+		if (receipt.getExchangeRates() != null) {
 			rates = String.format(
 					"%d <-> %d til %d | %d <-> %d til %d",
-					receipt.getExchangeRate().getCurrentRate().getHbarEquiv(),
-					receipt.getExchangeRate().getCurrentRate().getCentEquiv(),
-					receipt.getExchangeRate().getCurrentRate().getExpirationTime(),
-					receipt.getExchangeRate().getNextRate().getHbarEquiv(),
-					receipt.getExchangeRate().getNextRate().getCentEquiv(),
-					receipt.getExchangeRate().getNextRate().getExpirationTime()
-			);
+					receipt.getExchangeRates().getCurrHbarEquiv(),
+					receipt.getExchangeRates().getCurrCentEquiv(),
+					receipt.getExchangeRates().getCurrExpiry(),
+					receipt.getExchangeRates().getNextHbarEquiv(),
+					receipt.getExchangeRates().getNextCentEquiv(),
+					receipt.getExchangeRates().getNextExpiry());
 		}
 
 		return String.format("%s (%s, %s)", receipt.getStatus(), createdId, rates);

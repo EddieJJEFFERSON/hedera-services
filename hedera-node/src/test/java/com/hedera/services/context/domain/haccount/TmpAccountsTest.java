@@ -68,10 +68,19 @@ class TmpAccountsTest {
 
 			System.out.println("--- Expected ---");
 			System.out.println(expected.toString());
+			System.out.println("-> Records");
+			for (ExpirableTxnRecord record : expected.records()) {
+				System.out.println(record.toString());
+			}
 			System.out.println("--- Actual ---");
 			System.out.println(actual.toString());
+			System.out.println("-> Records");
+			for (ExpirableTxnRecord record : actual.records()) {
+				System.out.println(record.toString());
+			}
 
-			assertEquals(expected, actual);
+			assertEquals(expected.state(), actual.state());
+			assertEquals(expected.recordList(), actual.recordList());
 		}
 	}
 

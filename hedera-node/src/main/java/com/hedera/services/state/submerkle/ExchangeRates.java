@@ -21,7 +21,9 @@ package com.hedera.services.state.submerkle;
  */
 
 import com.google.common.base.MoreObjects;
+import com.hederahashgraph.api.proto.java.ExchangeRate;
 import com.hederahashgraph.api.proto.java.ExchangeRateSet;
+import com.hederahashgraph.api.proto.java.TimestampSeconds;
 import com.swirlds.common.io.SelfSerializable;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
@@ -226,5 +228,28 @@ public class ExchangeRates implements SelfSerializable {
 		return new ExchangeRates(
 				currHbarEquiv, currCentEquiv, currExpiry,
 				nextHbarEquiv, nextCentEquiv, nextExpiry);
+	}
+
+	public ExchangeRateSet toGrpc() {
+		return ExchangeRateSet.newBuilder()
+				.setCurrentRate(ExchangeRate.newBuilder()
+						.setHbarEquiv(currHbarEquiv)
+						.setCentEquiv(currCentEquiv)
+						.setExpirationTime(TimestampSeconds.newBuilder().setSeconds(currExpiry)))
+				.setNextRate(ExchangeRate.newBuilder()
+						.setHbarEquiv(nextHbarEquiv)
+						.setCentEquiv(nextCentEquiv)
+						.setExpirationTime(TimestampSeconds.newBuilder().setSeconds(nextExpiry)))
+				.build();
+	}
+
+	public static ExchangeRates fromGrpc(ExchangeRateSet grpc) {
+		return new ExchangeRates(
+				grpc.getCurrentRate().getHbarEquiv(),
+				grpc.getCurrentRate().getCentEquiv(),
+				grpc.getCurrentRate().getExpirationTime().getSeconds(),
+				grpc.getNextRate().getHbarEquiv(),
+				grpc.getNextRate().getCentEquiv(),
+				grpc.getNextRate().getExpirationTime().getSeconds());
 	}
 }

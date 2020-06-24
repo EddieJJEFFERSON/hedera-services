@@ -130,6 +130,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	/* --- Object --- */
 	@Override
 	public boolean equals(Object o) {
+		System.out.println("In equals!");
 		if (this == o) {
 			return true;
 		}
@@ -137,6 +138,7 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			return false;
 		}
 		var that = (ExpirableTxnRecord) o;
+		System.out.println("Receipts match? " + txReceipt.equals(that.txReceipt));
 		return transactionFee == that.transactionFee &&
 				txReceipt.equals(that.txReceipt) &&
 				Arrays.equals(txHash, that.txHash) &&
