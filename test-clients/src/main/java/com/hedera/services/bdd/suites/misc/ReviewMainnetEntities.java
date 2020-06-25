@@ -22,7 +22,10 @@ package com.hedera.services.bdd.suites.misc;
 
 import com.hedera.services.bdd.spec.HapiApiSpec;
 import com.hedera.services.bdd.spec.queries.QueryVerbs;
+import com.hedera.services.bdd.spec.transactions.TxnVerbs;
+import com.hedera.services.bdd.spec.transactions.crypto.HapiCryptoTransfer;
 import com.hedera.services.bdd.suites.HapiApiSuite;
+import com.hederahashgraph.api.proto.java.CryptoTransfer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,6 +55,8 @@ public class ReviewMainnetEntities extends HapiApiSuite {
 	}
 
 	private HapiApiSpec reviewObjects() {
+		long TINYBARS_PER_HBAR = 100_000_000L;
+
 		return customHapiSpec("ReviewObjects")
 				.withProperties(Map.of(
 						"nodes", "35.237.200.180:0.0.3,35.186.191.247:0.0.4," +
@@ -67,11 +72,15 @@ public class ReviewMainnetEntities extends HapiApiSuite {
 						"client.feeSchedule.path", "system-files/feeSchedule.bin",
 						"client.exchangeRates.fromDisk", "true",
 						"client.exchangeRates.path", "system-files/exchangeRates.bin"
-				)).given( ).when( ).then(
-						getAccountBalance(GENESIS).logged(),
-						getAccountBalance("0.0.39280").logged(),
-						getAccountBalance("0.0.39281").logged(),
-						getAccountBalance("0.0.45385").logged()
+				)).given(
+//						TxnVerbs.cryptoTransfer(HapiCryptoTransfer.tinyBarsFromTo(
+//								GENESIS, ADDRESS_BOOK_CONTROL, 100 * TINYBARS_PER_HBAR))
+				).when( ).then(
+						getFileInfo("0.0.101").logged()
+//						getAccountBalance(GENESIS).logged(),
+//						getAccountBalance("0.0.55").logged()
+//						getAccountBalance("0.0.39281").logged(),
+//						getAccountBalance("0.0.45385").logged()
 //						/* File meta */
 //						getFileInfo("0.0.39283").logged(),
 //						/* Topic meta */

@@ -21,41 +21,43 @@ package com.hedera.services.context.domain.serdes;
  */
 
 import com.google.protobuf.ByteString;
+import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
+import com.hedera.services.legacy.core.jproto.JKey;
+import com.hedera.services.state.submerkle.EntityId;
+import com.hedera.services.state.submerkle.RichInstant;
 import com.hederahashgraph.api.proto.java.ContractFunctionResult;
 import com.hederahashgraph.api.proto.java.ContractLoginfo;
 import com.hederahashgraph.api.proto.java.Timestamp;
 import com.hederahashgraph.api.proto.java.TransactionID;
 import com.hederahashgraph.api.proto.java.TransactionReceipt;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
-import com.hedera.services.state.submerkle.EntityId;
-import com.hedera.services.legacy.core.jproto.JKey;
-import com.hedera.services.legacy.core.jproto.ExpirableTxnRecord;
 import com.swirlds.common.constructable.ClassConstructorPair;
 import com.swirlds.common.constructable.ConstructableRegistry;
 import com.swirlds.common.constructable.ConstructableRegistryException;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
-import com.swirlds.fcqueue.FCQueue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
+import static com.hedera.test.factories.scenarios.TxnHandlingScenario.COMPLEX_KEY_ACCOUNT_KT;
+import static com.hedera.test.utils.IdUtils.asAccount;
+import static com.hedera.test.utils.IdUtils.asContract;
+import static com.hedera.test.utils.SerdeUtils.deOutcome;
+import static com.hedera.test.utils.SerdeUtils.serOutcome;
+import static com.hedera.test.utils.TxnUtils.withAdjustments;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_ACCOUNT_ID;
 import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.INVALID_CONTRACT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static com.hedera.test.utils.TxnUtils.withAdjustments;
-import static com.hedera.test.factories.scenarios.TxnHandlingScenario.COMPLEX_KEY_ACCOUNT_KT;
-import static com.hedera.test.utils.SerdeUtils.*;
-import static com.hedera.test.utils.IdUtils.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.BDDMockito.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.mock;
+import static org.mockito.BDDMockito.verify;
+import static org.mockito.BDDMockito.verifyNoInteractions;
+import static org.mockito.BDDMockito.verifyNoMoreInteractions;
 
 @RunWith(JUnitPlatform.class)
 public class DomainSerdesTest {
@@ -66,6 +68,8 @@ public class DomainSerdesTest {
 		/* Per Cody, this will be unnecessary at some point. */
 		ConstructableRegistry.registerConstructable(
 				new ClassConstructorPair(ExpirableTxnRecord.class, ExpirableTxnRecord::new));
+		ConstructableRegistry.registerConstructable(
+				new ClassConstructorPair(EntityId.class, EntityId::new));
 	}
 
 	@Test
@@ -106,14 +110,74 @@ public class DomainSerdesTest {
 	}
 
 	@Test
+	public void writesFalseForNullString() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+
+		// when:
+		subject.writeNullableString(null, out);
+
+		// then:
+		verify(out).writeBoolean(false);
+		verifyNoMoreInteractions(out);
+	}
+
+	@Test
+	public void writesForNonNullString() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+
+		// given:
+		var msg = "Hi!";
+
+		// when:
+		subject.writeNullableString(msg, out);
+
+		// then:
+		verify(out).writeBoolean(true);
+		verify(out).writeNormalisedString(msg);
+	}
+
+	@Test
+	public void writesExpectedForNonNullInstant() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+
+		// given:
+		var at = new RichInstant(123L, 456);
+
+		// when:
+		subject.writeNullableInstant(at, out);
+
+		// then:
+		verify(out).writeBoolean(true);
+		verify(out).writeLong(123L);
+		verify(out).writeInt(456);
+		verifyNoMoreInteractions(out);
+	}
+
+	@Test
+	public void writesFalseForNullInstant() throws IOException {
+		// setup:
+		var out = mock(SerializableDataOutputStream.class);
+
+		// when:
+		subject.writeNullableInstant(null, out);
+
+		// then:
+		verify(out).writeBoolean(false);
+		verifyNoMoreInteractions(out);
+	}
+
+	@Test
 	public void writesFalseForNullWritable() throws IOException {
 		// setup:
 		var out = mock(SerializableDataOutputStream.class);
 		// and:
-		var writer = mock(BiConsumer.class);
+		var writer = mock(IoWritingConsumer.class);
 
 		// when:
-		subject.writeNullable(null, out, (BiConsumer<? extends Object, SerializableDataOutputStream>)writer);
+		subject.writeNullable(null, out, (IoWritingConsumer<? extends Object>)writer);
 
 		// then:
 		verify(out).writeBoolean(false);
@@ -122,11 +186,80 @@ public class DomainSerdesTest {
 	}
 
 	@Test
+	public void readsExpectedForNonNullString() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+		// and:
+		var msg = "Hi!";
+
+		given(in.readBoolean()).willReturn(true);
+		given(in.readNormalisedString(123)).willReturn(msg);
+
+		// when:
+		String data = subject.readNullableString(in, 123);
+
+		// then:
+		assertEquals(data, msg);
+	}
+
+	@Test
+	public void readsExpectedForNonNullInstant() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+		// and:
+		var expected = new RichInstant(123L, 456);
+
+		given(in.readBoolean()).willReturn(true);
+		given(in.readLong()).willReturn(123L);
+		given(in.readInt()).willReturn(456);
+
+		// when:
+		RichInstant data = subject.readNullableInstant(in);
+
+		// then:
+		assertEquals(expected, data);
+	}
+
+	@Test
+	public void readsNullForNullInstant() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+
+		given(in.readBoolean()).willReturn(false);
+
+		// when:
+		RichInstant data = subject.readNullableInstant(in);
+
+		// then:
+		verify(in).readBoolean();
+		verifyNoMoreInteractions(in);
+		// and:
+		assertNull(data);
+	}
+
+	@Test
+	public void readsNullForNullString() throws IOException {
+		// setup:
+		var in = mock(SerializableDataInputStream.class);
+
+		given(in.readBoolean()).willReturn(false);
+
+		// when:
+		String data = subject.readNullableString(in, 123);
+
+		// then:
+		verify(in).readBoolean();
+		verifyNoMoreInteractions(in);
+		// and:
+		assertNull(data);
+	}
+
+	@Test
 	public void readsNullForNullReadable() throws IOException {
 		// setup:
 		var in = mock(SerializableDataInputStream.class);
 		// and:
-		var reader = mock(Function.class);
+		var reader = mock(IoReadingFunction.class);
 
 		given(in.readBoolean()).willReturn(false);
 
@@ -145,11 +278,11 @@ public class DomainSerdesTest {
 		// setup:
 		var in = mock(SerializableDataInputStream.class);
 		// and:
-		var reader = (Function<SerializableDataInputStream, EntityId>)mock(Function.class);
+		var reader = (IoReadingFunction<EntityId>)mock(IoReadingFunction.class);
 		var data = new EntityId(1L, 2L, 3L);
 
 		given(in.readBoolean()).willReturn(true);
-		given(reader.apply(in)).willReturn(data);
+		given(reader.read(in)).willReturn(data);
 
 		// when:
 		EntityId dataIn = subject.readNullable(in, reader);
@@ -164,7 +297,7 @@ public class DomainSerdesTest {
 		// setup:
 		var out = mock(SerializableDataOutputStream.class);
 		// and:
-		var writer = mock(BiConsumer.class);
+		var writer = mock(IoWritingConsumer.class);
 
 		// given:
 		var data = new EntityId(1L, 2L, 3L);
@@ -174,7 +307,7 @@ public class DomainSerdesTest {
 
 		// then:
 		verify(out).writeBoolean(true);
-		verify(writer).accept(data, out);
+		verify(writer).write(data, out);
 	}
 
 	@Test

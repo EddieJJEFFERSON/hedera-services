@@ -80,6 +80,9 @@ import static com.hederahashgraph.api.proto.java.ResponseCodeEnum.SUCCESS;
 public class SysFilesUpdate extends HapiApiSuite {
 	private static final Logger log = LogManager.getLogger(SysFilesUpdate.class);
 
+	final static long TINYBARS_PER_HBAR = 100_000_000L;
+	final static long DEFAULT_FEE_IN_HBARS = 100L;
+
 	final static String DEV_TARGET_DIR = "/Users/tinkerm/Dev/misc/tools/scratch";
 
 	static Action action;
@@ -146,6 +149,12 @@ public class SysFilesUpdate extends HapiApiSuite {
 				dumpAvailPubKeys();
 			}
 		}
+	}
+
+	public static long feeToOffer() {
+		return Optional.ofNullable(System.getenv("TXN_FEE"))
+				.map(s -> Long.parseLong(s) * TINYBARS_PER_HBAR)
+				.orElse(DEFAULT_FEE_IN_HBARS * TINYBARS_PER_HBAR);
 	}
 
 	private static void writeDefaultSysFilesPem() throws IOException {
@@ -262,6 +271,7 @@ public class SysFilesUpdate extends HapiApiSuite {
 						withOpContext((spec, opLog) -> {
 							if (toUpload.length < (6 * 1024)) {
 								var singleOp = fileUpdate(registryNames.get(target))
+										.fee(feeToOffer())
 										.contents(toUpload)
 										.signedBy(GENESIS, DEFAULT_SYSFILE_KEY);
 								CustomSpecAssert.allRunFor(spec, singleOp);
@@ -273,12 +283,14 @@ public class SysFilesUpdate extends HapiApiSuite {
 									HapiSpecOperation subOp;
 									if (n == 0) {
 										subOp = fileUpdate(registryNames.get(target))
+												.fee(feeToOffer())
 												.wacl("insurance")
 												.contents(thisChunk)
 												.signedBy(GENESIS, DEFAULT_SYSFILE_KEY)
 												.hasKnownStatusFrom(SUCCESS, FEE_SCHEDULE_FILE_PART_UPLOADED);
 									} else {
 										subOp = fileAppend(registryNames.get(target))
+												.fee(feeToOffer())
 												.content(thisChunk)
 												.signedBy(GENESIS, DEFAULT_SYSFILE_KEY)
 												.hasKnownStatusFrom(SUCCESS, FEE_SCHEDULE_FILE_PART_UPLOADED);

@@ -103,13 +103,7 @@ public class MerkleAccountState extends AbstractMerkleNode implements MerkleLeaf
 
 	@Override
 	public void deserialize(SerializableDataInputStream in, int version) throws IOException {
-		key = serdes.readNullable(in, (_in) -> {
-			try {
-				return serdes.deserializeKey(_in);
-			} catch (IOException e)	 {
-				throw new UncheckedIOException(e);
-			}
-		});
+		key = serdes.readNullable(in, serdes::deserializeKey);
 		expiry = in.readLong();
 		balance = in.readLong();
 		autoRenewSecs = in.readLong();
@@ -124,13 +118,7 @@ public class MerkleAccountState extends AbstractMerkleNode implements MerkleLeaf
 
 	@Override
 	public void serialize(SerializableDataOutputStream out) throws IOException {
-		serdes.writeNullable(key, out, (_key, _out) -> {
-			try {
-				serdes.serializeKey(_key, _out);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		});
+		serdes.writeNullable(key, out, serdes::serializeKey);
 		out.writeLong(expiry);
 		out.writeLong(balance);
 		out.writeLong(autoRenewSecs);

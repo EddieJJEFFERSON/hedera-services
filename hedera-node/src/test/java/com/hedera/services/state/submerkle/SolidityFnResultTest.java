@@ -2,6 +2,8 @@ package com.hedera.services.state.submerkle;
 
 import com.google.protobuf.ByteString;
 import com.hedera.services.context.domain.serdes.DomainSerdes;
+import com.hedera.services.context.domain.serdes.IoReadingFunction;
+import com.hedera.services.context.domain.serdes.IoWritingConsumer;
 import com.hederahashgraph.api.proto.java.ContractFunctionResult;
 import com.swirlds.common.CommonUtils;
 import com.swirlds.common.io.SerializableDataInputStream;
@@ -119,7 +121,7 @@ class SolidityFnResultTest {
 		assertEquals(one, one);
 		// and:
 		assertEquals(one.hashCode(), three.hashCode());
-		assertEquals(one.hashCode(), two.hashCode());
+		assertNotEquals(one.hashCode(), two.hashCode());
 	}
 
 	@Test
@@ -197,12 +199,12 @@ class SolidityFnResultTest {
 		// and:
 		var readSubject = new SolidityFnResult();
 		// and:
-		ArgumentCaptor<Function> captor = ArgumentCaptor.forClass(Function.class);
+		ArgumentCaptor<IoReadingFunction> captor = ArgumentCaptor.forClass(IoReadingFunction.class);
 
 		given(in.readLong()).willReturn(gasUsed);
 		given(in.readByteArray(SolidityLog.MAX_BLOOM_BYTES)).willReturn(bloom);
 		given(in.readByteArray(SolidityFnResult.MAX_RESULT_BYTES)).willReturn(result);
-		given(serdes.readNullable(argThat(in::equals), captor.capture())).willReturn(error);
+		given(serdes.readNullableString(in, SolidityFnResult.MAX_ERROR_BYTES)).willReturn(error);
 		given(serdes.readNullableSerializable(in)).willReturn(contractId);
 		given(in.readSerializableList(
 				intThat(i -> i == SolidityFnResult.MAX_LOGS),
@@ -218,14 +220,6 @@ class SolidityFnResultTest {
 
 		// then:
 		assertEquals(subject, readSubject);
-		// and:
-		var errorReader = captor.getValue();
-		given(in.readByteArray(SolidityFnResult.MAX_ERROR_BYTES))
-				.willReturn(CommonUtils.getNormalisedStringBytes(error));
-		assertEquals(error, errorReader.apply(in));
-		// and:
-		willThrow(IOException.class).given(in).readByteArray(anyInt());
-		assertThrows(UncheckedIOException.class, () -> errorReader.apply(in));
 	}
 
 	@Test
@@ -233,7 +227,7 @@ class SolidityFnResultTest {
 		// setup:
 		var out = mock(SerializableDataOutputStream.class);
 		// and:
-		ArgumentCaptor<BiConsumer> captor = ArgumentCaptor.forClass(BiConsumer.class);
+		ArgumentCaptor<IoWritingConsumer> captor = ArgumentCaptor.forClass(IoWritingConsumer.class);
 		InOrder inOrder = inOrder(serdes, out);
 
 		// when:
@@ -243,17 +237,10 @@ class SolidityFnResultTest {
 		inOrder.verify(out).writeLong(gasUsed);
 		inOrder.verify(out).writeByteArray(bloom);
 		inOrder.verify(out).writeByteArray(result);
-		inOrder.verify(serdes).writeNullable(argThat(error::equals), argThat(out::equals), captor.capture());
-		var errorWriter = captor.getValue();
+		inOrder.verify(serdes).writeNullableString(error, out);
 		inOrder.verify(serdes).writeNullableSerializable(contractId, out);
 		inOrder.verify(out).writeSerializableList(logs, true, true);
 		inOrder.verify(out).writeSerializableList(createdContractIds, true, true);
-		// and:
-		errorWriter.accept(error, out);
-		verify(out).writeNormalisedString(error);
-		// and:
-		willThrow(IOException.class).given(out).writeNormalisedString(any());
-		assertThrows(UncheckedIOException.class, () -> errorWriter.accept(error, out));
 	}
 
 	@Test
@@ -269,7 +256,7 @@ class SolidityFnResultTest {
 		var readCount = new AtomicInteger(0);
 
 		given(din.readLong())
-				.willReturn(1L)
+				.willReturn(3L)
 				.willReturn(2L)
 				.willReturn(gasUsed);
 		given(din.readBoolean())

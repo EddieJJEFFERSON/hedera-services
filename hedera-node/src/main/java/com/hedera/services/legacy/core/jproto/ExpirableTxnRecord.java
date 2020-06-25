@@ -34,6 +34,7 @@ import com.hederahashgraph.api.proto.java.TransactionRecord;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -48,6 +49,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.util.encoders.Hex;
 
+import static com.swirlds.common.CommonUtils.getNormalisedStringFromBytes;
 import static java.util.stream.Collectors.toList;
 
 public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
@@ -56,6 +58,8 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	private static final byte[] MISSING_TXN_HASH = new byte[0];
 
 	static final int MERKLE_VERSION = 1;
+	static final int MAX_MEMO_BYTES = 32 * 1_024;
+	static final int MAX_TXN_HASH_BYTES = 1_024;
 	static final long RUNTIME_CONSTRUCTABLE_ID = 0x8b9ede7ca8d8db93L;
 
 	@Deprecated
@@ -67,10 +71,6 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	static RichInstant.Provider legacyInstantProvider = RichInstant.LEGACY_PROVIDER;
 	static HbarAdjustments.Provider legacyAdjustmentsProvider = HbarAdjustments.LEGACY_PROVIDER;
 	static SolidityFnResult.Provider legacyFnResultProvider = SolidityFnResult.LEGACY_PROVIDER;
-
-	private static final long LEGACY_VERSION_1 = 1;
-	private static final long LEGACY_VERSION_2 = 2;
-	private static final long CURRENT_VERSION = 3;
 
 	private long fee;
 	private long expiry;
@@ -98,7 +98,6 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 			}
 			System.out.println(record.receipt);
 			int numHashBytes = in.readInt();
-			System.out.println("numHashBytes = " + numHashBytes);
 			if (numHashBytes > 0) {
 				record.txnHash = new byte[numHashBytes];
 				in.readFully(record.txnHash);
@@ -236,29 +235,11 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 	public void serialize(final SerializableDataOutputStream out) throws IOException {
 		serdes.writeNullableSerializable(receipt, out);
 
-		if (this.txnHash != null && this.txnHash.length > 0) {
-			out.writeInt(this.txnHash.length);
-			out.write(this.txnHash);
-		} else {
-			out.writeInt(0);
-		}
+		out.writeByteArray(txnHash);
 
 		serdes.writeNullableSerializable(txnId, out);
-
-		if (this.consensusTimestamp != null) {
-			out.writeBoolean(true);
-			this.consensusTimestamp.serialize(out);
-		} else {
-			out.writeBoolean(false);
-		}
-
-		if (this.memo != null) {
-			byte[] bytes = StringUtils.getBytesUtf8(this.memo);
-			out.writeInt(bytes.length);
-			out.write(bytes);
-		} else {
-			out.writeInt(0);
-		}
+		serdes.writeNullableInstant(consensusTimestamp, out);
+		serdes.writeNullableString(memo, out);
 
 		out.writeLong(this.fee);
 
@@ -271,39 +252,16 @@ public class ExpirableTxnRecord implements FCQueueElement<ExpirableTxnRecord> {
 
 	@Override
 	public void deserialize(SerializableDataInputStream in, int version) throws IOException {
-//		serdes.writeNullableSerializable(txReceipt, out);
-//
-//		if (this.txnHash != null && this.txnHash.length > 0) {
-//			out.writeInt(this.txnHash.length);
-//			out.write(this.txnHash);
-//		} else {
-//			out.writeInt(0);
-//		}
-//
-//		serdes.writeNullableSerializable(txnId, out);
-//
-//		if (this.consensusTimestamp != null) {
-//			out.writeBoolean(true);
-//			this.consensusTimestamp.serialize(out);
-//		} else {
-//			out.writeBoolean(false);
-//		}
-//
-//		if (this.memo != null) {
-//			byte[] bytes = StringUtils.getBytesUtf8(this.memo);
-//			out.writeInt(bytes.length);
-//			out.write(bytes);
-//		} else {
-//			out.writeInt(0);
-//		}
-//
-//		out.writeLong(this.fee);
-//
-//		serdes.writeNullableSerializable(hbarAdjustments, out);
-//		serdes.writeNullableSerializable(contractCallResult, out);
-//		serdes.writeNullableSerializable(contractCreateResult, out);
-//
-//		out.writeLong(expiry);
+		receipt = serdes.readNullableSerializable(in);
+		txnHash = in.readByteArray(MAX_TXN_HASH_BYTES);
+		txnId = serdes.readNullableSerializable(in);
+		consensusTimestamp = serdes.readNullableInstant(in);
+		memo = serdes.readNullableString(in, MAX_MEMO_BYTES);
+		fee = in.readLong();
+		hbarAdjustments = serdes.readNullableSerializable(in);
+		contractCallResult = serdes.readNullableSerializable(in);
+		contractCreateResult = serdes.readNullableSerializable(in);
+		expiry = in.readLong();
 	}
 
 	@Override

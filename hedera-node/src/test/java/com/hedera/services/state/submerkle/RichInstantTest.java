@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -150,5 +151,17 @@ class RichInstantTest {
 		assertTrue(subject.isAfter(new RichInstant(seconds - 1, nanos)));
 		assertTrue(subject.isAfter(new RichInstant(seconds, nanos - 1)));
 		assertFalse(subject.isAfter(new RichInstant(seconds, nanos + 1)));
+	}
+
+	@Test
+	public void javaFactoryWorks() {
+		// expect:
+		assertEquals(subject, RichInstant.fromJava(Instant.ofEpochSecond(subject.getSeconds(), subject.getNanos())));
+	}
+
+	@Test
+	public void javaViewWorks() {
+		// expect:
+		assertEquals(Instant.ofEpochSecond(subject.getSeconds(), subject.getNanos()), subject.toJava());
 	}
 }

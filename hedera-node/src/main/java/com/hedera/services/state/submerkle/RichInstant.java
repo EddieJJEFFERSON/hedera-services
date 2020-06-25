@@ -26,6 +26,7 @@ import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
@@ -117,11 +118,16 @@ public class RichInstant {
 				? Timestamp.getDefaultInstance() :
 				Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos) .build();
 	}
-
-	/* --- Helpers --- */
-
 	public boolean isAfter(RichInstant other) {
 		return (seconds > other.seconds) || (seconds == other.seconds && (nanos > other.nanos));
+	}
+
+	public Instant toJava() {
+		return Instant.ofEpochSecond(seconds, nanos);
+	}
+
+	public static RichInstant fromJava(Instant when) {
+		return new RichInstant(when.getEpochSecond(), when.getNano());
 	}
 
 	public boolean isMissing() {

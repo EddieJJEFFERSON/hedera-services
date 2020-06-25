@@ -1,10 +1,12 @@
 package com.hedera.services.state.merkle;
 
-import com.hedera.services.state.merkle.MerkleNetworkContext;
+import com.hedera.services.context.domain.serdes.DomainSerdes;
 import com.hedera.services.state.submerkle.ExchangeRates;
+import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.swirlds.common.io.SerializableDataInputStream;
 import com.swirlds.common.io.SerializableDataOutputStream;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -27,17 +29,19 @@ import static org.mockito.BDDMockito.mock;
 
 @RunWith(JUnitPlatform.class)
 class MerkleNetworkContextTest {
-	Instant consensusTimeOfLastHandledTxn;
+	RichInstant consensusTimeOfLastHandledTxn;
 	SequenceNumber seqNo;
 	SequenceNumber seqNoCopy;
 	ExchangeRates midnightRateSet;
 	ExchangeRates midnightRateSetCopy;
 
+	DomainSerdes serdes;
+
 	MerkleNetworkContext subject;
 
 	@BeforeEach
-	private void setup() {
-		consensusTimeOfLastHandledTxn = Instant.now();
+	public void setup() {
+		consensusTimeOfLastHandledTxn = RichInstant.fromJava(Instant.now());
 
 		seqNo = mock(SequenceNumber.class);
 		seqNoCopy = mock(SequenceNumber.class);
@@ -46,7 +50,15 @@ class MerkleNetworkContextTest {
 		midnightRateSetCopy = mock(ExchangeRates.class);
 		given(midnightRateSet.copy()).willReturn(midnightRateSetCopy);
 
+		serdes = mock(DomainSerdes.class);
+		MerkleNetworkContext.serdes = serdes;
+
 		subject = new MerkleNetworkContext(consensusTimeOfLastHandledTxn, seqNo, midnightRateSet);
+	}
+
+	@AfterEach
+	public void cleanup() {
+		MerkleNetworkContext.serdes = new DomainSerdes();
 	}
 
 	@Test
@@ -57,7 +69,7 @@ class MerkleNetworkContextTest {
 		// expect:
 		assertTrue(subjectCopy.consensusTimeOfLastHandledTxn == subject.consensusTimeOfLastHandledTxn);
 		assertEquals(seqNoCopy, subjectCopy.seqNo);
-		assertEquals(midnightRateSetCopy, subjectCopy.midnightRateSet);
+		assertEquals(midnightRateSetCopy, subjectCopy.midnightRates);
 	}
 
 	@Test
@@ -68,8 +80,7 @@ class MerkleNetworkContextTest {
 		MerkleNetworkContext.seqNoSupplier = () -> seqNo;
 		InOrder inOrder = inOrder(in, midnightRateSet, seqNo);
 
-		given(in.readLong()).willReturn(consensusTimeOfLastHandledTxn.getEpochSecond());
-		given(in.readInt()).willReturn(consensusTimeOfLastHandledTxn.getNano());
+		given(serdes.readNullableInstant(in)).willReturn(consensusTimeOfLastHandledTxn);
 
 		// when:
 		subject.deserialize(in, MerkleNetworkContext.MERKLE_VERSION);
@@ -85,16 +96,15 @@ class MerkleNetworkContextTest {
 	public void serializeWorks() throws IOException {
 		// setup:
 		var out = mock(SerializableDataOutputStream.class);
-		InOrder inOrder = inOrder(out, seqNo, midnightRateSet);
+		InOrder inOrder = inOrder(out, seqNo, midnightRateSet, serdes);
 
 		// when:
 		subject.serialize(out);
 
 		// expect:
-		inOrder.verify(out).writeLong(consensusTimeOfLastHandledTxn.getEpochSecond());
-		inOrder.verify(out).writeInt(consensusTimeOfLastHandledTxn.getNano());
+		inOrder.verify(serdes).writeNullableInstant(consensusTimeOfLastHandledTxn, out);
 		inOrder.verify(seqNo).serialize(out);
-		inOrder.verify(midnightRateSet).serialize(out);
+		inOrder.verify(out).writeSerializable(midnightRateSet, true);
 	}
 
 	@Test

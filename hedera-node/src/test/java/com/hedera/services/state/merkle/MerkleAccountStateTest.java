@@ -1,6 +1,8 @@
 package com.hedera.services.state.merkle;
 
 import com.hedera.services.context.domain.serdes.DomainSerdes;
+import com.hedera.services.context.domain.serdes.IoReadingFunction;
+import com.hedera.services.context.domain.serdes.IoWritingConsumer;
 import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.legacy.core.jproto.JEd25519Key;
 import com.hedera.services.legacy.core.jproto.JKey;
@@ -85,24 +87,6 @@ class MerkleAccountStateTest {
 	}
 
 	@Test
-	public void serializePropagatesException() throws IOException {
-		// setup:
-		var out = mock(SerializableDataOutputStream.class);
-		// and:
-		ArgumentCaptor<BiConsumer> captor = ArgumentCaptor.forClass(BiConsumer.class);
-
-		// given:
-		willThrow(IOException.class).given(serdes).serializeKey(any(), any());
-		willDoNothing().given(serdes).writeNullable(any(), any(), captor.capture());
-
-		// when:
-		subject.serialize(out);
-
-		// expect:
-		assertThrows(UncheckedIOException.class, () -> captor.getValue().accept(key, out));
-	}
-
-	@Test
 	public void toStringWorks() {
 		// expect:
 		assertEquals("MerkleAccountState{" +
@@ -127,7 +111,7 @@ class MerkleAccountStateTest {
 		// and:
 		var newSubject = new MerkleAccountState();
 
-		given(serdes.readNullable(argThat(in::equals), any(Function.class))).willReturn(key);
+		given(serdes.readNullable(argThat(in::equals), any(IoReadingFunction.class))).willReturn(key);
 		given(in.readLong())
 				.willReturn(expiry)
 				.willReturn(balance)
@@ -159,7 +143,7 @@ class MerkleAccountStateTest {
 		subject.serialize(out);
 
 		// then:
-		inOrder.verify(serdes).writeNullable(argThat(key::equals), argThat(out::equals), any(BiConsumer.class));
+		inOrder.verify(serdes).writeNullable(argThat(key::equals), argThat(out::equals), any(IoWritingConsumer.class));
 		inOrder.verify(out).writeLong(expiry);
 		inOrder.verify(out).writeLong(balance);
 		inOrder.verify(out).writeLong(autoRenewSecs);

@@ -35,7 +35,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class DomainSerdes {
@@ -49,24 +48,40 @@ public class DomainSerdes {
 		out.write(key.serialize());
 	}
 
+	public void writeNullableInstant(RichInstant at, SerializableDataOutputStream out) throws IOException {
+		writeNullable(at, out, RichInstant::serialize);
+	}
+
+	public RichInstant readNullableInstant(SerializableDataInputStream in) throws IOException {
+		return readNullable(in, RichInstant::from);
+	}
+
+	public void writeNullableString(String msg, SerializableDataOutputStream out) throws IOException {
+		writeNullable(msg, out, (_msg, _out) -> _out.writeNormalisedString(_msg));
+	}
+
+	public String readNullableString(SerializableDataInputStream in, int maxLen) throws IOException {
+		return readNullable(in, (_in) -> _in.readNormalisedString(maxLen));
+	}
+
 	public <T> void writeNullable(
 			T data,
 			SerializableDataOutputStream out,
-			BiConsumer<T, SerializableDataOutputStream> writer
+			IoWritingConsumer<T> writer
 	) throws IOException {
 		if (data == null) {
 			out.writeBoolean(false);
 		} else {
 			out.writeBoolean(true);
-			writer.accept(data, out);
+			writer.write(data, out);
 		}
 	}
 
 	public <T> T readNullable(
 			SerializableDataInputStream in,
-			Function<SerializableDataInputStream, T> reader
+			IoReadingFunction<T> reader
 	) throws IOException {
-		return in.readBoolean() ? reader.apply(in) : null;
+		return in.readBoolean() ? reader.read(in) : null;
 	}
 
 	public <T extends SelfSerializable> void writeNullableSerializable(

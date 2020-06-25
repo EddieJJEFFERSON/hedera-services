@@ -72,6 +72,8 @@ public class SolidityFnResult implements SelfSerializable {
 
 	@Deprecated
 	public static class Provider {
+		private static final long VERSION_WITH_CREATED_IDS = 3L;
+
 		public SolidityFnResult deserialize(DataInputStream in) throws IOException {
 			var fnResult = new SolidityFnResult();
 
@@ -108,7 +110,7 @@ public class SolidityFnResult implements SelfSerializable {
 				fnResult.logs.add(legacyLogProvider.deserialize(in));
 			}
 
-			if (version == 3) {
+			if (version == VERSION_WITH_CREATED_IDS) {
 				int numCreatedContracts = in.readInt();
 				for (int i = 0; i < numCreatedContracts; i++) {
 					fnResult.createdContractIds.add(legacyIdProvider.deserialize(in));
@@ -156,14 +158,7 @@ public class SolidityFnResult implements SelfSerializable {
 		gasUsed = in.readLong();
 		bloom = in.readByteArray(SolidityLog.MAX_BLOOM_BYTES);
 		result = in.readByteArray(MAX_RESULT_BYTES);
-		error = serdes.readNullable(in, (_in) -> {
-			try {
-				byte[] errorBytes = _in.readByteArray(MAX_ERROR_BYTES);
-				return getNormalisedStringFromBytes(errorBytes);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		});
+		error = serdes.readNullableString(in, MAX_ERROR_BYTES);
 		contractId = serdes.readNullableSerializable(in);
 		logs = in.readSerializableList(MAX_LOGS, true, SolidityLog::new);
 		createdContractIds = in.readSerializableList(MAX_CREATED_IDS, true, EntityId::new);
@@ -174,13 +169,7 @@ public class SolidityFnResult implements SelfSerializable {
 		out.writeLong(gasUsed);
 		out.writeByteArray(bloom);
 		out.writeByteArray(result);
-		serdes.writeNullable(error, out, (_error, _out) -> {
-			try {
-				_out.writeNormalisedString(_error);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		});
+		serdes.writeNullableString(error, out);
 		serdes.writeNullableSerializable(contractId, out);
 		out.writeSerializableList(logs, true, true);
 		out.writeSerializableList(createdContractIds, true, true);

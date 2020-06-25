@@ -60,6 +60,7 @@ import com.hedera.services.queries.consensus.HcsAnswers;
 import com.hedera.services.queries.validation.QueryFeeCheck;
 import com.hedera.services.state.initialization.HfsSystemFilesManager;
 import com.hedera.services.state.submerkle.ExchangeRates;
+import com.hedera.services.state.submerkle.RichInstant;
 import com.hedera.services.state.submerkle.SequenceNumber;
 import com.hedera.services.throttling.BucketThrottling;
 import com.hedera.services.throttling.TransactionThrottling;
@@ -129,7 +130,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ServicesContextTest {
 	private final NodeId id = new NodeId(false, 1L);
 
-	Instant consensusTimeOfLastHandledTxn = Instant.now();
+	RichInstant consensusTimeOfLastHandledTxn = RichInstant.fromJava(Instant.now());
 	Platform platform;
 	SequenceNumber seqNo;
 	ExchangeRates midnightRates;
