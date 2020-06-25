@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class MerkleNetworkContext extends AbstractMerkleNode implements MerkleLeaf {
@@ -67,7 +68,7 @@ public class MerkleNetworkContext extends AbstractMerkleNode implements MerkleLe
 	}
 
 	public Instant consensusTimeOfLastHandledTxn() {
-		return consensusTimeOfLastHandledTxn.toJava();
+		return Optional.ofNullable(consensusTimeOfLastHandledTxn).map(RichInstant::toJava).orElse(null);
 	}
 
 	public SequenceNumber seqNo() {

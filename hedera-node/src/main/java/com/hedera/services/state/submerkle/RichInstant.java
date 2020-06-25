@@ -28,6 +28,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,7 +128,9 @@ public class RichInstant {
 	}
 
 	public static RichInstant fromJava(Instant when) {
-		return new RichInstant(when.getEpochSecond(), when.getNano());
+		return Optional.ofNullable(when)
+				.map(at -> new RichInstant(at.getEpochSecond(), at.getNano()))
+				.orElse(null);
 	}
 
 	public boolean isMissing() {
