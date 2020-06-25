@@ -532,7 +532,7 @@ public class HederaLedgerTest {
 	@Test
 	public void purgesExpiredRecords() {
 		// setup:
-		FCQueue<ExpirableTxnRecord> records = asJTxnRecords(50L, 100L, 200L, 311L, 500L);
+		FCQueue<ExpirableTxnRecord> records = asExpirableRecords(50L, 100L, 200L, 311L, 500L);
 		addRecords(misc, records);
 
 		// when:
@@ -558,7 +558,7 @@ public class HederaLedgerTest {
 	@Test
 	public void returnsMinusOneIfAllRecordsPurged() {
 		// setup:
-		FCQueue<ExpirableTxnRecord> records = asJTxnRecords(50L, 100L, 200L, 311L, 500L);
+		FCQueue<ExpirableTxnRecord> records = asExpirableRecords(50L, 100L, 200L, 311L, 500L);
 		addRecords(misc, records);
 		HederaLedger.LedgerTxnEvictionStats.INSTANCE.reset();
 
@@ -583,10 +583,10 @@ public class HederaLedgerTest {
 	@Test
 	public void addsNewRecordLast() {
 		// setup:
-		FCQueue<ExpirableTxnRecord> records = asJTxnRecords(100L, 50L, 200L, 311L);
+		FCQueue<ExpirableTxnRecord> records = asExpirableRecords(100L, 50L, 200L, 311L);
 		addRecords(misc, records);
 		// and:
-		ExpirableTxnRecord newRecord = asJTxnRecords(1L).peek();
+		ExpirableTxnRecord newRecord = asExpirableRecords(1L).peek();
 
 		// when:
 		long newEarliestExpiry = subject.addRecord(misc, newRecord);
@@ -856,8 +856,8 @@ public class HederaLedgerTest {
 	private void addRecords(AccountID id, FCQueue<ExpirableTxnRecord> records) {
 		when(ledger.get(id, TRANSACTION_RECORDS)).thenReturn(records);
 	}
-	FCQueue<ExpirableTxnRecord> asJTxnRecords(long... expiries) {
-		FCQueue<ExpirableTxnRecord> records = new FCQueue<>(ExpirableTxnRecord::deserialize);
+	FCQueue<ExpirableTxnRecord> asExpirableRecords(long... expiries) {
+		FCQueue<ExpirableTxnRecord> records = new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER);
 		for (int i = 0; i < expiries.length; i++) {
 			ExpirableTxnRecord record = new ExpirableTxnRecord();
 			record.setExpiry(expiries[i]);

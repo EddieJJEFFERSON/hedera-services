@@ -58,8 +58,8 @@ public class PojoRecord {
 	public static PojoRecord from(ExpirableTxnRecord value) {
 		var pojo = new PojoRecord();
 		pojo.setTxnId(asString(value.getTxnId()));
-		pojo.setReceipt(asString(value.getTxReceipt()));
-		pojo.setHash(Hex.encodeHexString(value.getTxHash()));
+		pojo.setReceipt(asString(value.getReceipt()));
+		pojo.setHash(Hex.encodeHexString(value.getTxnHash()));
 		pojo.setTimestamp(asString(value.getConsensusTimestamp()));
 		pojo.setMemo(value.getMemo());
 		pojo.setFee(value.getFee());

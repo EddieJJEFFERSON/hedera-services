@@ -87,7 +87,7 @@ public class RecordCache {
 		if (record == null) {
 			return null;
 		}
-		return record.map(r -> TxnReceipt.convert(r.getTxReceipt())).orElse(UNKNOWN_RECEIPT);
+		return record.map(r -> TxnReceipt.convert(r.getReceipt())).orElse(UNKNOWN_RECEIPT);
 	}
 
 	public TransactionRecord getRecord(TransactionID txnId) {

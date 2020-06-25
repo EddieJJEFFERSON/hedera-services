@@ -69,8 +69,8 @@ public class MerkleAccountPropertyTest {
 		String origMemo = "a";
 		AccountID origProxy = AccountID.getDefaultInstance();
 		List<ExpirableTxnRecord> origRecords = new ArrayList<>();
-		origRecords.add(jRecordWith(ResponseCodeEnum.MODIFYING_IMMUTABLE_CONTRACT));
-		origRecords.add(jRecordWith(ResponseCodeEnum.INVALID_PAYER_SIGNATURE));
+		origRecords.add(expirableRecord(ResponseCodeEnum.MODIFYING_IMMUTABLE_CONTRACT));
+		origRecords.add(expirableRecord(ResponseCodeEnum.INVALID_PAYER_SIGNATURE));
 		// and:
 		boolean newIsDeleted = true;
 		boolean newIsReceiverSigReq = true;
@@ -83,8 +83,8 @@ public class MerkleAccountPropertyTest {
 		JKey newKey = new JKeyList();
 		String newMemo = "b";
 		EntityId newProxy = new EntityId(0, 0, 2);
-		FCQueue<ExpirableTxnRecord> newRecords = new FCQueue<>(ExpirableTxnRecord::deserialize);
-		newRecords.offer(jRecordWith(ResponseCodeEnum.SUCCESS));
+		FCQueue<ExpirableTxnRecord> newRecords = new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER);
+		newRecords.offer(expirableRecord(ResponseCodeEnum.SUCCESS));
 		// and:
 		MerkleAccount account = new HederaAccountCustomizer()
 				.fundsReceivedRecordThreshold(origReceivedRecordThresh)
@@ -131,7 +131,7 @@ public class MerkleAccountPropertyTest {
 		assertEquals(newRecords, TRANSACTION_RECORDS.getter().apply(account));
 	}
 
-	private ExpirableTxnRecord jRecordWith(ResponseCodeEnum status) {
+	private ExpirableTxnRecord expirableRecord(ResponseCodeEnum status) {
 		return ExpirableTxnRecord.fromGprc(
 				TransactionRecord.newBuilder()
 					.setReceipt(TransactionReceipt.newBuilder().setStatus(status))

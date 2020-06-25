@@ -107,7 +107,7 @@ class RichInstantTest {
 	public void knowsIfMissing() {
 		// expect:
 		assertFalse(subject.isMissing());
-		assertTrue(RichInstant.MISSING.isMissing());
+		assertTrue(RichInstant.MISSING_INSTANT.isMissing());
 	}
 
 	@Test
@@ -121,7 +121,7 @@ class RichInstantTest {
 	@Test
 	public void factoryWorksForMissing() {
 		// expect:
-		assertTrue(RichInstant.MISSING == RichInstant.fromGrpc(Timestamp.getDefaultInstance()));
+		assertTrue(RichInstant.MISSING_INSTANT == RichInstant.fromGrpc(Timestamp.getDefaultInstance()));
 		assertEquals(subject, RichInstant.fromGrpc(subject.toGrpc()));
 	}
 

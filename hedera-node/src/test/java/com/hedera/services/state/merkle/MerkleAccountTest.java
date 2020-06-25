@@ -253,7 +253,7 @@ public class MerkleAccountTest {
 	public void recordsHelpersWork() {
 		// setup:
 		var defaultAccount = new MerkleAccount();
-		defaultAccount.setRecords(new FCQueue<>(ExpirableTxnRecord::deserialize));
+		defaultAccount.setRecords(new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER));
 
 		// given:
 		offerRecordsInOrder(defaultAccount, List.of(recordOne(), recordTwo()));

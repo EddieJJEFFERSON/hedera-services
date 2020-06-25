@@ -21,6 +21,7 @@ package com.hedera.services.legacy.core.jproto;
  */
 
 import com.google.common.base.MoreObjects;
+import com.hedera.services.legacy.logic.ApplicationConstants;
 import com.hedera.services.state.submerkle.EntityId;
 import com.hedera.services.state.submerkle.RichInstant;
 import com.hederahashgraph.api.proto.java.TransactionID;
@@ -35,7 +36,10 @@ import com.swirlds.common.io.SerializableDataOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import static com.hedera.services.legacy.logic.ApplicationConstants.P;
+import static com.hedera.services.state.submerkle.EntityId.MISSING_ENTITY_ID;
 import static com.hedera.services.state.submerkle.EntityId.ofNullableAccountId;
+import static com.hedera.services.state.submerkle.RichInstant.MISSING_INSTANT;
 import static com.hedera.services.utils.EntityIdUtils.asAccount;
 
 public class TxnId implements SelfSerializable {
@@ -52,20 +56,24 @@ public class TxnId implements SelfSerializable {
 	@Deprecated
 	public static class Provider {
 		public TxnId deserialize(DataInputStream in) throws IOException {
-			in.readLong();
-			in.readLong();
+			var txnId = new TxnId();
 
-			in.readChar();
-			var payerId = legacyIdProvider.deserialize(in);
-			in.readBoolean();
-			var validStart = legacyInstantProvider.deserialize(in);
+			System.out.println("[TxnId] " + in.readLong());
+			System.out.println("[TxnId] " + in.readLong());
 
-			return new TxnId(payerId, validStart);
+			if (in.readChar() == P) {
+				txnId.payerAccount = legacyIdProvider.deserialize(in);
+			}
+			if (in.readBoolean()) {
+				txnId.validStart = legacyInstantProvider.deserialize(in);
+			}
+
+			return txnId;
 		}
 	}
 
-	private EntityId payerAccount;
-	private RichInstant validStart;
+	private EntityId payerAccount = MISSING_ENTITY_ID;
+	private RichInstant validStart = MISSING_INSTANT;
 
 	public TxnId() { }
 

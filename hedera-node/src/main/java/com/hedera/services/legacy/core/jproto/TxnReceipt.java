@@ -65,10 +65,12 @@ public class TxnReceipt implements SelfSerializable {
 
 	@Deprecated
 	public static class Provider {
+		private static final long VERSION_WITHOUT_FINAL_RUNNING_HASH = 3;
+
 		public TxnReceipt deserialize(DataInputStream in) throws IOException {
 			var receipt = new TxnReceipt();
 
-			in.readLong();
+			var version = in.readLong();
 			in.readLong();
 			if (in.readBoolean()) {
 				receipt.accountId = legacyIdProvider.deserialize(in);
@@ -100,7 +102,9 @@ public class TxnReceipt implements SelfSerializable {
 					in.readFully(receipt.topicRunningHash);
 				}
 			}
-			receipt.runningHashVersion = in.readLong();
+			if (version != VERSION_WITHOUT_FINAL_RUNNING_HASH) {
+				receipt.runningHashVersion = in.readLong();
+			}
 
 			return receipt;
 		}

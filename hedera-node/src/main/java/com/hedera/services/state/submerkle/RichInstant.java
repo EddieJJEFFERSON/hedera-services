@@ -34,7 +34,7 @@ import org.apache.logging.log4j.Logger;
 public class RichInstant {
 	private static final Logger log = LogManager.getLogger(RichInstant.class);
 
-	public static final RichInstant MISSING = new RichInstant(0L, 0);
+	public static final RichInstant MISSING_INSTANT = new RichInstant(0L, 0);
 	public static final RichInstant.Provider LEGACY_PROVIDER = new Provider();
 
 	private int nanos;
@@ -43,8 +43,8 @@ public class RichInstant {
 	@Deprecated
 	public static class Provider {
 		public RichInstant deserialize(DataInputStream in) throws IOException {
-			in.readLong();
-			in.readLong();
+			System.out.println("[RichInstant] " + in.readLong());
+			System.out.println("[RichInstant] " + in.readLong());
 
 			return new RichInstant(in.readLong(), in.readInt());
 		}
@@ -108,7 +108,7 @@ public class RichInstant {
 
 	public static RichInstant fromGrpc(Timestamp grpc) {
 		return grpc.equals(Timestamp.getDefaultInstance())
-				? MISSING
+				? MISSING_INSTANT
 				: new RichInstant(grpc.getSeconds(), grpc.getNanos());
 	}
 
@@ -125,6 +125,6 @@ public class RichInstant {
 	}
 
 	public boolean isMissing() {
-		return this == MISSING;
+		return this == MISSING_INSTANT;
 	}
 }

@@ -72,8 +72,8 @@ public class MerkleAccount extends AbstractMerkleInternal implements FCMValue, M
 	public MerkleAccount() {
 		this(List.of(
 				new MerkleAccountState(),
-				new FCQueue<ExpirableTxnRecord>(ExpirableTxnRecord::deserialize),
-				new FCQueue<ExpirableTxnRecord>(ExpirableTxnRecord::deserialize)));
+				new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER),
+				new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER)));
 	}
 
 	public MerkleAccount(MerkleAccount that, boolean fastCopy) {

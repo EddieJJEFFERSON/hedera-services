@@ -547,7 +547,7 @@ public class FeePayingRecordsHistorianTest {
 	}
 
 	private FCQueue<ExpirableTxnRecord> asFcq(LinkedList<ExpirableTxnRecord> ll) {
-		FCQueue<ExpirableTxnRecord> fcq = new FCQueue<>(ExpirableTxnRecord::deserialize);
+		FCQueue<ExpirableTxnRecord> fcq = new FCQueue<>(ExpirableTxnRecord.LEGACY_PROVIDER);
 		for (ExpirableTxnRecord record : ll) {
 			fcq.offer(record);
 		}

@@ -239,9 +239,9 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	}
 
 	private ExpirableTxnRecord asExpirableRecord(TransactionRecord record, long expiry) {
-		ExpirableTxnRecord jRecord = ExpirableTxnRecord.fromGprc(record);
-		jRecord.setExpiry(expiry);
-		return jRecord;
+		var expirableRecord = ExpirableTxnRecord.fromGprc(record);
+		expirableRecord.setExpiry(expiry);
+		return expirableRecord;
 	}
 
 	private boolean isCallableContract(AccountID id) {
