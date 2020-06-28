@@ -73,6 +73,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 
 	static Supplier<AddressBook> legacyTmpBookSupplier = AddressBook::new;
 
+	boolean immutable = true;
 	NodeId nodeId = ID_WITH_INACTIVE_CONTEXT;
 
 	/* Order of v1 Merkle node children */
@@ -91,6 +92,11 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 	public ServicesState(List<MerkleNode> children) {
 		super(NUM_V1_CHILDREN);
 		addDeserializedChildren(children, MERKLE_VERSION);
+	}
+
+	public ServicesState(NodeId nodeId, List<MerkleNode> children) {
+		this(children);
+		this.nodeId = nodeId;
 	}
 
 	/* --- MerkleInternal --- */
@@ -112,11 +118,8 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 	/* --- SwirldState --- */
 	@Override
 	public void init(Platform platform, AddressBook addressBook) {
+		immutable = false;
 		nodeId = platform.getSelfId();
-		if (CONTEXTS.isInitialized(nodeId.getId())) {
-			log.error("Services node {} re-initialized, indicating failure to load saved state. Exiting!", nodeId);
-			systemExits.fail(1);
-		}
 
 		/* Note this overrides the address book from the saved state if it is present. */
 		setChild(ADDRESS_BOOK_CHILD_INDEX, addressBook);
@@ -130,16 +133,18 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 			setChild(TOPICS_CHILD_INDEX, new FCMap<>(new MerkleEntityId.Provider(), new MerkleTopic.Provider()));
 			setChild(STORAGE_CHILD_INDEX, new FCMap<>(new MerkleBlobMeta.Provider(), new MerkleOptionalBlob.Provider()));
 			setChild(ACCOUNTS_CHILD_INDEX, new FCMap<>(new MerkleEntityId.Provider(), MerkleAccount.LEGACY_PROVIDER));
+			log.info("Init called on Services node {} WITHOUT Merkle saved state", nodeId);
+		} else {
+			log.info("Init called on Services node {} WITH Merkle saved state", nodeId);
 		}
 
-		log.info("Initializing context of Services node {} with platform and address book...", nodeId);
 		ctx = new ServicesContext(
 				nodeId,
 				platform,
 				this,
 				new StandardizedPropertySources(PropertiesLoader::getFileExistenceCheck));
 		CONTEXTS.store(ctx);
-		log.info("...done, context is set for Services node {}!", nodeId);
+		log.info("  --> Context initialized accordingly", nodeId);
 	}
 
 	@Override
@@ -177,7 +182,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 	/* --- FastCopyable --- */
 	@Override
 	public synchronized FastCopyable copy() {
-		return new ServicesState(List.of(
+		return new ServicesState(nodeId, List.of(
 				addressBook().copy(),
 				networkCtx().copy(),
 				topics().copy(),
@@ -192,7 +197,7 @@ public class ServicesState extends AbstractMerkleInternal implements SwirldState
 
 	@Override
 	public boolean isImmutable() {
-		return (nodeId == ID_WITH_INACTIVE_CONTEXT);
+		return immutable;
 	}
 
 	@Override

@@ -167,21 +167,6 @@ class ServicesStateTest {
 	}
 
 	@Test
-	public void failsFastOnReinitializationAttempt() {
-		// setup:
-		subject.systemExits = systemExits;
-
-		// given:
-		CONTEXTS.store(ctx);
-
-		// when:
-		subject.init(platform, book);
-
-		// then:
-		verify(systemExits).fail(1);
-	}
-
-	@Test
 	public void initsAsExpected() {
 		// when:
 		subject.init(platform, book);
@@ -189,6 +174,7 @@ class ServicesStateTest {
 		// then:
 		ServicesContext actualCtx = CONTEXTS.lookup(self.getId());
 		// and:
+		assertFalse(subject.isImmutable());
 		assertNotNull(subject.topics());
 		assertNotNull(subject.storage());
 		assertNotNull(subject.accounts());
@@ -218,24 +204,13 @@ class ServicesStateTest {
 		ServicesState copy = (ServicesState)subject.copy();
 
 		// then:
-		assertEquals(ServicesState.ID_WITH_INACTIVE_CONTEXT, copy.nodeId);
+		assertTrue(copy.isImmutable());
+		assertEquals(self, copy.nodeId);
 		assertEquals(bookCopy, copy.addressBook());
 		assertEquals(networkCtxCopy, copy.networkCtx());
 		assertEquals(topicsCopy, copy.topics());
 		assertEquals(storageCopy, copy.storage());
 		assertEquals(accountsCopy, copy.accounts());
-	}
-
-	@Test
-	public void immutableIffNoActiveContext() {
-		// expect:
-		assertTrue(subject.isImmutable());
-
-		// and given:
-		subject.nodeId = self;
-
-		// expect:
-		assertFalse(subject.isImmutable());
 	}
 
 	@Test

@@ -200,4 +200,8 @@ public class MerkleEntityId extends AbstractMerkleNode implements FCMKey, Merkle
 				.add("entity", num)
 				.toString();
 	}
+
+	public String toAbbrevString() {
+		return String.format("%d.%d.%d", shard, realm, num);
+	}
 }

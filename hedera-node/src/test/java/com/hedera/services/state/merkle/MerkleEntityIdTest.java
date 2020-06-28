@@ -52,6 +52,12 @@ class MerkleEntityIdTest {
 	}
 
 	@Test
+	public void toAbbrevStringWorks() {
+		// expect:
+		assertEquals("13.25.7", subject.toAbbrevString());
+	}
+
+	@Test
 	public void objectContractMet() {
 		// given:
 		var one = new MerkleEntityId();
