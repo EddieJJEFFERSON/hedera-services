@@ -265,6 +265,8 @@ public class RecordStream implements Runnable {
 				output.write(TYPE_SIGNATURE);
 				output.write(Ints.toByteArray(signature.length));
 				output.write(signature);
+				output.getChannel().force(true);
+				output.getFD().sync();
 				return newFileName;
 			}
 		} catch (IOException e) {
@@ -321,7 +323,7 @@ public class RecordStream implements Runnable {
 			startSigFileWatch();
 			generateSigFile(fileName, signature, prevFileHash);
 			stopSigFileWatch();
-			infoLog("  - Sig file creation took {}ms",
+			infoLog("  - Sig file creation + flush took {}ms",
 					sigFileWatch.elapsed(TimeUnit.MILLISECONDS) - lastSigFile);
 
 			file = null;
@@ -349,21 +351,24 @@ public class RecordStream implements Runnable {
 	}
 
 	private void infoLog(String specifier, Object arg1) {
-		if (CONTEXTS.lookup(0).recordStream() == this) {
-			ServicesMain.log.info(specifier, arg1);
-		}
+//		if (CONTEXTS.lookup(0).recordStream() == this) {
+//			ServicesMain.log.info(specifier, arg1);
+//		}
+		ServicesMain.log.info(specifier, arg1);
 	}
 
 	private void infoLog(String specifier, Object arg1, Object arg2) {
-		if (CONTEXTS.lookup(0).recordStream() == this) {
-			ServicesMain.log.info(specifier, arg1, arg2);
-		}
+//		if (CONTEXTS.lookup(0).recordStream() == this) {
+//			ServicesMain.log.info(specifier, arg1, arg2);
+//		}
+		ServicesMain.log.info(specifier, arg1, arg2);
 	}
 
 	private void infoLog(String specifier, Object arg1, Object arg2, Object arg3) {
-		if (CONTEXTS.lookup(0).recordStream() == this) {
-			ServicesMain.log.info(specifier, arg1, arg2, arg3);
-		}
+//		if (CONTEXTS.lookup(0).recordStream() == this) {
+//			ServicesMain.log.info(specifier, arg1, arg2, arg3);
+//		}
+		ServicesMain.log.info(specifier, arg1, arg2, arg3);
 	}
 
 	/**
@@ -606,9 +611,9 @@ public class RecordStream implements Runnable {
 	}
 
 	private void logCumulativeTimes() {
-		if (CONTEXTS.lookup(0).recordStream() != this) {
-			return;
-		}
+//		if (CONTEXTS.lookup(0).recordStream() != this) {
+//			return;
+//		}
 		long totalMillis = runWatch.elapsed(TimeUnit.MILLISECONDS);
 		long closeMillis = closeWatch.elapsed(TimeUnit.MILLISECONDS);
 		long flushMillis = flushWatch.elapsed(TimeUnit.MILLISECONDS);
@@ -622,7 +627,7 @@ public class RecordStream implements Runnable {
 		ServicesMain.log.info("-- Total time spent finalizing files :: {}ms", closeMillis);
 		ServicesMain.log.info("---- Flushing record files           :: {}ms", flushMillis);
 		ServicesMain.log.info("---- Signing hashes                  :: {}ms", signingMillis);
-		ServicesMain.log.info("---- Creating sig files              :: {}ms", sigFileMillis);
+		ServicesMain.log.info("---- Creating + flushing sig files   :: {}ms", sigFileMillis);
 		ServicesMain.log.info("---- Checking hashes                 :: {}ms", hashCheckMillis);
 		ServicesMain.log.info("************************");
 	}
