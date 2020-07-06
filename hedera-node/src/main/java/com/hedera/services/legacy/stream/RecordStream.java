@@ -20,7 +20,10 @@ package com.hedera.services.legacy.stream;
  * ‍
  */
 
+import com.google.common.base.Stopwatch;
+import com.google.common.math.Stats;
 import com.google.common.primitives.Ints;
+import com.hedera.services.ServicesMain;
 import com.hedera.services.utils.EntityIdUtils;
 import com.hederahashgraph.api.proto.java.AccountID;
 import com.hederahashgraph.api.proto.java.Transaction;
@@ -47,11 +50,14 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import static com.hedera.services.context.SingletonContextsManager.CONTEXTS;
 
 public class RecordStream implements Runnable {
 
@@ -85,7 +91,13 @@ public class RecordStream implements Runnable {
 	HederaNodeStats stats;
 	boolean inFreeze;
 	String recordStreamsDirectory;
-  
+
+	long lastRun, lastSig, lastClose, lastHashChecked, lastSigFile, lastFlush, lastHash;
+	Stopwatch runWatch, sigWatch, closeWatch, hashCheckWatch, sigFileWatch, flushWatch, hashWatch;
+	Integer filesSoFar = 0;
+	Integer recordsSoFar = 0;
+	List<Integer> recordCounts = new ArrayList<>();
+
 	public RecordStream(
 			Platform platform,
 			HederaNodeStats stats,
@@ -159,7 +171,8 @@ public class RecordStream implements Runnable {
 			}
 
 			// replace ":" with "_" so that the file can also be created in Windows OS
-			fileName = recordStreamsDirectory + File.separator + timestamp.toString().replace(":", "_") + ".rcd";
+			fileName = recordStreamsDirectory + File.separator
+					+ timestamp.toString().replace(":", "_") + ".rcd";
 			try {
 				file = new File(fileName);
 
@@ -197,7 +210,7 @@ public class RecordStream implements Runnable {
 				}
 
 			} catch (IOException e) {
-				log.error("createFile - Exception {} - {}", ExceptionUtils.getStackTrace(e), e.getMessage());
+				log.error("Exception {} - {}", ExceptionUtils.getStackTrace(e), e.getMessage());
 			}
 		}
 	}
@@ -233,7 +246,6 @@ public class RecordStream implements Runnable {
 
 	}
 
-
 	/**
 	 * Create a signature file for a RecordStream/AccountBalance file;
 	 * This signature file contains the Hash of the file to be signed, and a signature signed by the node's Key
@@ -262,9 +274,9 @@ public class RecordStream implements Runnable {
 		}
 	}
 
-
 	private void closeFile() {
 		try {
+			startFlushWatch();
 			dos.flush();
 			stream.flush();
 
@@ -273,6 +285,8 @@ public class RecordStream implements Runnable {
 
 			dos.close();
 			stream.close();
+			stopFlushWatch();
+			infoLog("  - Flushing took {}ms", flushWatch.elapsed(TimeUnit.MILLISECONDS) - lastFlush);
 
 			// Update the hash calculation to do h[i] = hash(p[i-1] || h[i-1] || hash(c[i-1])) where
 			// h[i] is the hash of the current file
@@ -280,21 +294,35 @@ public class RecordStream implements Runnable {
 			// h[i-1] is the previousHash
 			// c[i-1] is the contents of the file after previousHash
 
+			startHashWatch();
 			md.update(mdForContent.digest());
 			prevFileHash = md.digest();
+			stopHashWatch();
+			infoLog("  - Hashing took {}ms", hashWatch.elapsed(TimeUnit.MILLISECONDS) - lastHash);
 			log.info("Hash of current record stream file after closing {}", Hex.encodeHexString(prevFileHash));
 
+			startSigningWatch();
 			byte[] signature = platform.sign(prevFileHash);
-      
+			stopSigningWatch();
+			infoLog("  - Signing took {}ms", sigWatch.elapsed(TimeUnit.MILLISECONDS) - lastSig);
+
 			if (log.isDebugEnabled()) {
 				log.debug("Signature: " + Hex.encodeHexString(signature));
 			}
 			mdForContent.reset();
 			md.reset();
 
+			startHashCheckWatch();
 			fileHashCheck(fileName);
+			stopHashCheckWatch();
+			infoLog("  - Hash checking took {}ms",
+					hashCheckWatch.elapsed(TimeUnit.MILLISECONDS) - lastHashChecked);
 
+			startSigFileWatch();
 			generateSigFile(fileName, signature, prevFileHash);
+			stopSigFileWatch();
+			infoLog("  - Sig file creation took {}ms",
+					sigFileWatch.elapsed(TimeUnit.MILLISECONDS) - lastSigFile);
 
 			file = null;
 			stream = null;
@@ -304,22 +332,46 @@ public class RecordStream implements Runnable {
 		}
 	}
 
-
 	private void close() {
 		if (stream != null) {
-			log.info("Start to close File {} at {}", fileName, Instant.now());
+			infoLog(">> Beginning to close {}... ", fileName);
+			startCloseWatch();
 			closeFile();
-			log.info("Finish closing File {} at {}", fileName, Instant.now());
+			stopCloseWatch();
+			infoLog("<< Finished closing {} in {}ms, should be available at epoch time {}.",
+					fileName,
+					closeWatch.elapsed(TimeUnit.MILLISECONDS) - lastClose,
+					System.currentTimeMillis());
+			filesSoFar++;
+			recordCounts.add(recordsSoFar);
+			recordsSoFar = 0;
 		}
 	}
 
+	private void infoLog(String specifier, Object arg1) {
+		if (CONTEXTS.lookup(0).recordStream() == this) {
+			ServicesMain.log.info(specifier, arg1);
+		}
+	}
+
+	private void infoLog(String specifier, Object arg1, Object arg2) {
+		if (CONTEXTS.lookup(0).recordStream() == this) {
+			ServicesMain.log.info(specifier, arg1, arg2);
+		}
+	}
+
+	private void infoLog(String specifier, Object arg1, Object arg2, Object arg3) {
+		if (CONTEXTS.lookup(0).recordStream() == this) {
+			ServicesMain.log.info(specifier, arg1, arg2, arg3);
+		}
+	}
 
 	/**
 	 * Main thread to write record to file
 	 */
 	@Override
 	public void run() {
-
+		runWatch = Stopwatch.createStarted();
 		while (true) {
 			try {
 				// when the platform is in freeze period, and recordBuffer is empty, and stream is not null, which means the last record has been written into current RecordStream file, we should close and sign it.
@@ -328,10 +380,8 @@ public class RecordStream implements Runnable {
 					close();
 				}
 
-				Triple<Transaction, TransactionRecord, Instant> record = recordBuffer.poll(STREAM_DELAY,
-						TimeUnit.MILLISECONDS);
+				Triple<Transaction, TransactionRecord, Instant> record = recordBuffer.poll(STREAM_DELAY, TimeUnit.MILLISECONDS);
 				stats.updateRecordStreamQueueSize(getRecordStreamQueueSize());
-
 				if (record != null) {
 					Instant currentCensusesTimeStamp = record.getRight();
 
@@ -344,6 +394,10 @@ public class RecordStream implements Runnable {
 							close();
 							// a new day start
 							createFile(currentCensusesTimeStamp);
+
+							if (filesSoFar % 30 == 0) {
+								logCumulativeTimes();
+							}
 						}
 
 					} else if (stream == null) {
@@ -358,19 +412,16 @@ public class RecordStream implements Runnable {
 					byte[] rawBytes = record.getLeft().toByteArray();
 					dos.writeInt(rawBytes.length);
 					dos.write(rawBytes);
-
 					mdForContent.update(TYPE_RECORD);
 					mdForContent.update(Ints.toByteArray(rawBytes.length));
 					mdForContent.update(rawBytes);
-
 					rawBytes = record.getMiddle().toByteArray();
 					dos.writeInt(rawBytes.length);
 					dos.write(rawBytes);
-
 					mdForContent.update(Ints.toByteArray(rawBytes.length));
 					mdForContent.update(rawBytes);
-
 					dos.flush();
+					recordsSoFar++;
 
 					lastRecordConsensusTimeStamp = currentCensusesTimeStamp;
 				}
@@ -474,6 +525,106 @@ public class RecordStream implements Runnable {
 			return getFileHashFromSigFile(lastSigFile);
 		}
 		return null;
+	}
+
+	private void startSigningWatch() {
+		if (sigWatch == null) {
+			sigWatch = Stopwatch.createStarted();
+		} else {
+			sigWatch.start();
+		}
+		lastSig = sigWatch.elapsed(TimeUnit.MILLISECONDS);
+	}
+
+	private void stopSigningWatch() {
+		sigWatch.stop();
+	}
+
+	private void startCloseWatch() {
+		if (closeWatch == null) {
+			closeWatch = Stopwatch.createStarted();
+		} else {
+			closeWatch.start();
+		}
+		lastClose = closeWatch.elapsed(TimeUnit.MILLISECONDS);
+	}
+
+	private void stopCloseWatch() {
+		closeWatch.stop();
+	}
+
+	private void startHashCheckWatch() {
+		if (hashCheckWatch == null) {
+			hashCheckWatch = Stopwatch.createStarted();
+		} else {
+			hashCheckWatch.start();
+		}
+		lastHashChecked = hashCheckWatch.elapsed(TimeUnit.MILLISECONDS);
+	}
+
+	private void stopHashCheckWatch() {
+		hashCheckWatch.stop();
+	}
+
+	private void startSigFileWatch() {
+		if (sigFileWatch == null) {
+			sigFileWatch = Stopwatch.createStarted();
+		} else {
+			sigFileWatch.start();
+		}
+		lastSigFile = sigFileWatch.elapsed(TimeUnit.MILLISECONDS);
+	}
+
+	private void stopSigFileWatch() {
+		sigFileWatch.stop();
+	}
+
+	private void startHashWatch() {
+		if (hashWatch == null) {
+			hashWatch = Stopwatch.createStarted();
+		} else {
+			hashWatch.start();
+		}
+		lastHash = hashWatch.elapsed(TimeUnit.MILLISECONDS);
+	}
+
+	private void stopHashWatch() {
+		hashWatch.stop();
+	}
+
+	private void startFlushWatch() {
+		if (flushWatch == null) {
+			flushWatch = Stopwatch.createStarted();
+		} else {
+			flushWatch.start();
+		}
+		lastFlush = flushWatch.elapsed(TimeUnit.MILLISECONDS);
+	}
+
+	private void stopFlushWatch() {
+		flushWatch.stop();
+	}
+
+	private void logCumulativeTimes() {
+		if (CONTEXTS.lookup(0).recordStream() != this) {
+			return;
+		}
+		long totalMillis = runWatch.elapsed(TimeUnit.MILLISECONDS);
+		long closeMillis = closeWatch.elapsed(TimeUnit.MILLISECONDS);
+		long flushMillis = flushWatch.elapsed(TimeUnit.MILLISECONDS);
+		long signingMillis = sigWatch.elapsed(TimeUnit.MILLISECONDS);
+		long sigFileMillis = sigFileWatch.elapsed(TimeUnit.MILLISECONDS);
+		long hashCheckMillis = hashCheckWatch.elapsed(TimeUnit.MILLISECONDS);
+
+		ServicesMain.log.info("*** CUMULATIVE STATS ***");
+		ServicesMain.log.info("Created {} record stream files in {}ms", filesSoFar, totalMillis);
+		ServicesMain.log.info("Record count summary {}", Stats.of(recordCounts));
+		ServicesMain.log.info("-- Total time spent finalizing files :: {}ms", closeMillis);
+		ServicesMain.log.info("---- Flushing record files           :: {}ms", flushMillis);
+		ServicesMain.log.info("---- Signing hashes                  :: {}ms", signingMillis);
+		ServicesMain.log.info("---- Creating sig files              :: {}ms", sigFileMillis);
+		ServicesMain.log.info("---- Checking hashes                 :: {}ms", hashCheckMillis);
+		ServicesMain.log.info("************************");
 	}
 }
 
