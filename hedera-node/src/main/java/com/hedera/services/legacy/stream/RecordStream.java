@@ -292,7 +292,9 @@ public class RecordStream implements Runnable {
 			mdForContent.reset();
 			md.reset();
 
+/*
 			fileHashCheck(fileName);
+*/
 
 			generateSigFile(fileName, signature, prevFileHash);
 
