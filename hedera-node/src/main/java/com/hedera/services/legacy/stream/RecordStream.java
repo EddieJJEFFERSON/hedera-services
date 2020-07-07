@@ -618,7 +618,6 @@ public class RecordStream implements Runnable {
 		long flushMillis = flushWatch.elapsed(TimeUnit.MILLISECONDS);
 		long signingMillis = sigWatch.elapsed(TimeUnit.MILLISECONDS);
 		long sigFileMillis = sigFileWatch.elapsed(TimeUnit.MILLISECONDS);
-		long hashCheckMillis = hashCheckWatch.elapsed(TimeUnit.MILLISECONDS);
 
 		ServicesMain.log.info("*** CUMULATIVE STATS ***");
 		ServicesMain.log.info("Created {} record stream files in {}ms", filesSoFar, totalMillis);
@@ -626,7 +625,6 @@ public class RecordStream implements Runnable {
 		ServicesMain.log.info("---- Flushing record files           :: {}ms", flushMillis);
 		ServicesMain.log.info("---- Signing hashes                  :: {}ms", signingMillis);
 		ServicesMain.log.info("---- Creating + flushing sig files   :: {}ms", sigFileMillis);
-		ServicesMain.log.info("---- Checking hashes                 :: {}ms", hashCheckMillis);
 		ServicesMain.log.info("************************");
 	}
 }
