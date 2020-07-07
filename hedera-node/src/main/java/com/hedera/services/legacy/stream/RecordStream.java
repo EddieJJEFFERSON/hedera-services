@@ -92,11 +92,10 @@ public class RecordStream implements Runnable {
 	boolean inFreeze;
 	String recordStreamsDirectory;
 
-	long lastRun, lastSig, lastClose, lastHashChecked, lastSigFile, lastFlush, lastHash;
+	long lastSig, lastClose, lastHashChecked, lastSigFile, lastFlush, lastHash;
 	Stopwatch runWatch, sigWatch, closeWatch, hashCheckWatch, sigFileWatch, flushWatch, hashWatch;
 	Integer filesSoFar = 0;
 	Integer recordsSoFar = 0;
-	List<Integer> recordCounts = new ArrayList<>();
 
 	public RecordStream(
 			Platform platform,
@@ -345,7 +344,6 @@ public class RecordStream implements Runnable {
 					closeWatch.elapsed(TimeUnit.MILLISECONDS) - lastClose,
 					System.currentTimeMillis());
 			filesSoFar++;
-			recordCounts.add(recordsSoFar);
 			recordsSoFar = 0;
 		}
 	}
@@ -376,7 +374,6 @@ public class RecordStream implements Runnable {
 	 */
 	@Override
 	public void run() {
-		runWatch = Stopwatch.createStarted();
 		while (true) {
 			try {
 				// when the platform is in freeze period, and recordBuffer is empty, and stream is not null, which means the last record has been written into current RecordStream file, we should close and sign it.
@@ -388,6 +385,7 @@ public class RecordStream implements Runnable {
 				Triple<Transaction, TransactionRecord, Instant> record = recordBuffer.poll(STREAM_DELAY, TimeUnit.MILLISECONDS);
 				stats.updateRecordStreamQueueSize(getRecordStreamQueueSize());
 				if (record != null) {
+					runWatch = Stopwatch.createStarted();
 					Instant currentCensusesTimeStamp = record.getRight();
 
 					//check timestamp decide whether to create new file
@@ -623,7 +621,6 @@ public class RecordStream implements Runnable {
 
 		ServicesMain.log.info("*** CUMULATIVE STATS ***");
 		ServicesMain.log.info("Created {} record stream files in {}ms", filesSoFar, totalMillis);
-		ServicesMain.log.info("Record count summary {}", Stats.of(recordCounts));
 		ServicesMain.log.info("-- Total time spent finalizing files :: {}ms", closeMillis);
 		ServicesMain.log.info("---- Flushing record files           :: {}ms", flushMillis);
 		ServicesMain.log.info("---- Signing hashes                  :: {}ms", signingMillis);
