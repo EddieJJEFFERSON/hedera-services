@@ -313,11 +313,12 @@ public class RecordStream implements Runnable {
 			mdForContent.reset();
 			md.reset();
 
+/*
 			startHashCheckWatch();
 			fileHashCheck(fileName);
 			stopHashCheckWatch();
-			infoLog("  - Hash checking took {}ms",
-					hashCheckWatch.elapsed(TimeUnit.MILLISECONDS) - lastHashChecked);
+			infoLog("  - Hash checking took {}ms", hashCheckWatch.elapsed(TimeUnit.MILLISECONDS) - lastHashChecked);
+*/
 
 			startSigFileWatch();
 			generateSigFile(fileName, signature, prevFileHash);
