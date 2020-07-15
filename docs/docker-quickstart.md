@@ -34,7 +34,7 @@ REGISTRY_PREFIX=gcr.io/hedera-registry/
 First, clone this repository:
 ```
 git clone git@github.com:hashgraph/hedera-services.git
-cd services-hedera
+cd hedera-services
 ```
 
 Second, choose a tag for your build. The tag will be added 
