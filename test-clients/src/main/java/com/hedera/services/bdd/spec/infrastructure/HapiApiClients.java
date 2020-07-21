@@ -46,6 +46,7 @@ import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +69,7 @@ public class HapiApiClients {
 	private final List<NodeConnectInfo> nodes;
 	private final Map<AccountID, String> stubIds;
 	private final Map<AccountID, String> tlsStubIds;
+	private List<ManagedChannel> channels;
 
 	private final ManagedChannel createNettyChannel(NodeConnectInfo node, boolean useTls) {
 		try {
@@ -103,6 +105,7 @@ public class HapiApiClients {
 	}
 
 	private HapiApiClients(List<NodeConnectInfo> nodes, AccountID defaultNode) {
+		this.channels = new ArrayList<>();
 		this.nodes = nodes;
 		stubIds = nodes
 				.stream()
@@ -186,5 +189,14 @@ public class HapiApiClients {
 				.add("default", HapiPropertySource.asAccountString(defaultNode))
 				.toString();
 
+	}
+	/**
+	 * Close all netty channels that are opened for clients
+	 */
+	public void closeChannels() {
+		if (channels.isEmpty()) {
+			return;
+		}
+		channels.forEach(channel -> channel.shutdown());
 	}
 }

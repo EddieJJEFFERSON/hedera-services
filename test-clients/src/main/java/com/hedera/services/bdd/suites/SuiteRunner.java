@@ -199,11 +199,47 @@ public class SuiteRunner {
 		String ciArgs = Optional.ofNullable(System.getenv("DSL_SUITE_RUNNER_ARGS")).orElse("");
 		log.info("Args from CircleCI environment: |" + ciArgs + "|");
 		return StringUtils.isNotEmpty(ciArgs)
-			? Stream.of(args, new Object[] { "-CI" }, ciArgs.split("\\s+"))
+			? Stream.of(args, new Object[] { "-CI" }, getEffectiveDSLSuiteRunnerArgs(ciArgs))
 				.flatMap(Stream::of)
 				.toArray(n -> new String[n])
 			: args;
 	}
+
+	/**
+	 * Check if the DSL_SUITE_RUNNER_ARGS contain ALL_SUITES.
+	 * If so, add all test suites from CATEGORY_MAP to args that should be run. If there are any tests mentioned with -
+	 * in the beginning while running ALL_SUITES, dont add them to effective args
+	 *
+	 * @param realArgs
+	 * 		DSL_SUITE_RUNNER_ARGS provided
+	 * @return effective args after examining DSL_SUITE_RUNNER_ARGS
+	 */
+	private static String[] getEffectiveDSLSuiteRunnerArgs(String realArgs) {
+		ArrayList<String> effectiveArgs = new ArrayList<>();
+		String[] ciArgs = realArgs.split("\\s+");
+
+		if (Stream.of(ciArgs).anyMatch("ALL_SUITES"::equals)) {
+			effectiveArgs.addAll(CATEGORY_MAP.keySet());
+			effectiveArgs.addAll(Stream.of(ciArgs).
+					filter(e -> !e.equals("ALL_SUITES")).
+					filter(e -> !checkIfSkipped(e, effectiveArgs)).
+					collect(Collectors.toList()));
+			log.info("Effective args when running ALL_SUITES : " + effectiveArgs.toString());
+			return effectiveArgs.toArray(new String[effectiveArgs.size()]);
+		}
+
+		return ciArgs;
+	}
+
+	private static boolean checkIfSkipped(String e, ArrayList<String> effectiveArgs) {
+		boolean isSkipped =  e.startsWith("skip:");
+		if(isSkipped){
+			log.info("Skipping test suite " + e);
+			effectiveArgs.remove(e.substring(e.indexOf(":")+1));
+		}
+		return isSkipped;
+	}
+
 
 	private static List<CategoryResult> runCategories(List<String> args) {
 		argSet = args.stream().collect(Collectors.toSet());

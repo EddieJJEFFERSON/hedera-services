@@ -64,6 +64,9 @@ public class RandomFileDeletion implements OpProvider {
 		if (tbd.isEmpty()) {
 			return Optional.empty();
 		}
+		if (tbd.get().endsWith("-bytecode")) {
+			return Optional.empty();
+		}
 
 		var op = fileDelete(tbd.get())
 				.purging()

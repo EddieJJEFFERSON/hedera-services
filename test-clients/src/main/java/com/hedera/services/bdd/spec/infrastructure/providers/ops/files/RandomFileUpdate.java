@@ -81,6 +81,9 @@ public class RandomFileUpdate implements OpProvider {
 		if (target.isEmpty()) {
 			return Optional.empty();
 		}
+		if (target.get().endsWith("-bytecode")) {
+			return Optional.empty();
+		}
 
 		var op = TxnVerbs.fileUpdate(target.get())
 				.hasPrecheckFrom(permissiblePrechecks)

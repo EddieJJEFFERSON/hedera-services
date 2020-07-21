@@ -209,6 +209,7 @@ public class HapiApiSpec implements Runnable {
 		} else {
 			if (finalizingExecutor != null) {
 				finalizingExecutor.shutdown();
+				this.clients().closeChannels();
 			}
 		}
 		log.info(logPrefix() + "final status: " + status + "!");
@@ -265,6 +266,7 @@ public class HapiApiSpec implements Runnable {
 		}
 		finalizingFuture.join();
 		finalizingExecutor.shutdown();
+		this.clients().closeChannels();
 	}
 
 	public void offerFinisher(HapiSpecOpFinisher finisher) {
