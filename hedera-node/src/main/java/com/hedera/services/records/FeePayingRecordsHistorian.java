@@ -120,7 +120,7 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 		feeCharging.setFor(THRESHOLD_RECORD, thresholdRecordFee);
 		payForThresholdRecords(qualifiers);
 		if (feeCharging.numThresholdFeesCharged() > 0 || cachingFeePaid > 0L) {
-			record = txnCtx.recordSoFar();
+			record = txnCtx.updatedToInclude(ledger.lastNetTransfers());
 		}
 		addNonThreshXQualifiers(record, qualifiers);
 
@@ -212,11 +212,15 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	}
 
 	private void payForThresholdRecords(Set<AccountID> ids) {
-		ids.forEach(id -> feeCharging.chargeParticipant(id, THRESHOLD_RECORD_FEE));
+		long price = feeCharging.getFor(THRESHOLD_RECORD);
+		ids.forEach(id -> {
+			feeCharging.chargeParticipant(id, THRESHOLD_RECORD_FEE);
+			ledger.updateLastNetTransfers(id, feeCharging.activeFunding(), price);
+		});
 	}
 
 	private Set<AccountID> getThreshXQualifiers(long recordFee) {
-		return ledger.netTransfersInTxn().getAccountAmountsList()
+		return ledger.lastNetTransfers().getAccountAmountsList()
 				.stream()
 				.filter(aa -> qualifiesForRecord(aa, recordFee))
 				.map(AccountAmount::getAccountID)
@@ -253,7 +257,14 @@ public class FeePayingRecordsHistorian implements AccountRecordsHistorian {
 	private long payForCaching(TransactionRecord record) {
 			feeCharging.setFor(CACHE_RECORD, fees.computeCachingFee(record));
 			feeCharging.chargePayerUpTo(CACHE_RECORD_FEE);
-			return feeCharging.chargedToPayer(CACHE_RECORD);
+			long charged = feeCharging.chargedToPayer(CACHE_RECORD);
+			if (charged > 0) {
+				ledger.updateLastNetTransfers(
+						feeCharging.activePayer(),
+						feeCharging.activeFunding(),
+						charged);
+			}
+			return charged;
 	}
 
 	private void addNonThreshXQualifiers(TransactionRecord record, Set<AccountID> qualifiers) {

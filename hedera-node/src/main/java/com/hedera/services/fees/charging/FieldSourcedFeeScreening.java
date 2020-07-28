@@ -59,6 +59,10 @@ public class FieldSourcedFeeScreening implements TxnScopedFeeScreening {
 		feeAmounts.put(fee, amount);
 	}
 
+	public long getFor(TxnFeeType fee) {
+		return feeAmounts.get(fee);
+	}
+
 	@Override
 	public boolean canPayerAfford(EnumSet<TxnFeeType> fees) {
 		return isPayerExempt() || check.canAfford(accessor.getPayer(), totalAmountOf(fees));

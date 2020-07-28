@@ -101,6 +101,14 @@ public class ItemizableFeeCharging extends FieldSourcedFeeScreening implements T
 		thresholdFeePayers.clear();
 	}
 
+	public AccountID activeFunding() {
+		return funding;
+	}
+
+	public AccountID activePayer() {
+		return accessor.getPayer();
+	}
+
 	/**
 	 * Fees for a correctly signed txn submitted by an a irresponsible node are itemized as:
 	 * <ol>

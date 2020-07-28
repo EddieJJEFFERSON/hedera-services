@@ -186,7 +186,8 @@ public class FeePayingRecordsHistorianTest {
 
 		// then:
 		verify(ledger).addRecord(argThat(asAccount(contract)::equals), any());
-		verify(txnCtx, times(2)).recordSoFar();
+		verify(txnCtx, times(1)).recordSoFar();
+		verify(txnCtx, times(1)).updatedToInclude(any());
 	}
 
 	@Test
@@ -283,8 +284,8 @@ public class FeePayingRecordsHistorianTest {
 		verify(recordCache).setPostConsensus(txnIdA, jFinalRecord);
 		verify(ledger).doTransfer(a, funding, aBalance);
 		// and:
-		verify(ledger).netTransfersInTxn();
-		verify(txnCtx, times(2)).recordSoFar();
+		verify(ledger, times(2)).lastNetTransfers();
+		verify(txnCtx, times(1)).recordSoFar();
 		verify(fees).computeStorageFee(record);
 		// and:
 		verify(ledger, times(2)).getBalance(a);
@@ -416,6 +417,7 @@ public class FeePayingRecordsHistorianTest {
 				.setReceipt(TransactionReceipt.newBuilder().setContractID(asContract(contractToUse)))
 				.build();
 		given(txnCtx.recordSoFar()).willReturn(record);
+		given(txnCtx.updatedToInclude(any())).willReturn(record);
 		given(txnCtx.status()).willReturn(ResponseCodeEnum.SUCCESS);
 		given(txnCtx.accessor()).willReturn(accessor);
 	}
@@ -430,6 +432,7 @@ public class FeePayingRecordsHistorianTest {
 
 		ledger = mock(HederaLedger.class);
 		given(ledger.netTransfersInTxn()).willReturn(initialTransfers);
+		given(ledger.lastNetTransfers()).willReturn(initialTransfers);
 		given(ledger.addRecord(any(), any())).willReturn(expiry);
 		given(ledger.isPendingCreation(any())).willReturn(false);
 
@@ -453,7 +456,8 @@ public class FeePayingRecordsHistorianTest {
 		given(txnCtx.status()).willReturn(SUCCESS);
 		given(txnCtx.accessor()).willReturn(accessor);
 		given(txnCtx.consensusTime()).willReturn(now);
-		given(txnCtx.recordSoFar()).willReturn(record).willReturn(finalRecord);
+		given(txnCtx.recordSoFar()).willReturn(record);
+		given(txnCtx.updatedToInclude(any())).willReturn(finalRecord);
 		given(txnCtx.isPayerSigKnownActive()).willReturn(true);
 
 		accounts = mock(FCMap.class);

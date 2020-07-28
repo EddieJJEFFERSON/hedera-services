@@ -147,6 +147,43 @@ public class HederaLedgerTest {
 	}
 
 	@Test
+	public void updatesLastTransfersCorrectly() {
+		// given:
+		var xfers = TransferList.newBuilder()
+				.addAccountAmounts(aa(2, 100))
+				.addAccountAmounts(aa(7, -40))
+				.addAccountAmounts(aa(8, -60));
+		// and:
+		subject.lastNetTransfers = xfers;
+		// and:
+		var expected = TransferList.newBuilder()
+				.addAccountAmounts(aa(2, 100))
+				.addAccountAmounts(aa(7, 60))
+				.addAccountAmounts(aa(8, -60))
+				.addAccountAmounts(aa(10, -100))
+				.build();
+
+		// when:
+		subject.updateLastNetTransfers(withNum(10), withNum(2), 100);
+		subject.updateLastNetTransfers(withNum(2), withNum(7), 100);
+
+		// then:
+		assertEquals(expected, subject.lastNetTransfers());
+	}
+
+	private AccountAmount aa(long id, long amount) {
+		return AccountAmount.newBuilder()
+				.setAccountID(withNum(id))
+				.setAmount(amount)
+				.build();
+	}
+
+	private AccountID withNum(long id) {
+		return IdUtils.asAccount(String.format("0.0.%d", id));
+	}
+
+
+	@Test
 	public void backingFcRootHashDoesDependsOnDeleteOrder() {
 		// when:
 		setupWithLiveFcBackedLedger();
@@ -213,6 +250,7 @@ public class HederaLedgerTest {
 						initialBalance,
 						new HederaAccountCustomizer()
 								.key(uncheckedMap(Key.newBuilder().setContractID(asContract(id)).build()))));
+		subject.netTransfersInTxn();
 		subject.commit();
 	}
 
@@ -300,9 +338,26 @@ public class HederaLedgerTest {
 		subject.begin();
 		subject.adjustBalance(genesis, -1L);
 		System.out.println(ledger.changeSetSoFar());
+		subject.netTransfersInTxn();
 
 		// then:
 		assertThrows(InconsistentAdjustmentsException.class, () -> subject.commit());
+	}
+
+	@Test
+	public void remembersLastNetTransfers() {
+		setupWithLiveLedger();
+
+		// when:
+		subject.begin();
+		AccountID a = subject.create(genesis, 1_000L, new HederaAccountCustomizer().memo("a"));
+		AccountID b = subject.create(genesis, 2_000L, new HederaAccountCustomizer().memo("b"));
+		// and:
+		var netTransfers = subject.netTransfersInTxn();
+		var lastNetTransfers = subject.lastNetTransfers();
+
+		// then:
+		assertEquals(netTransfers, lastNetTransfers);
 	}
 
 	@Test
@@ -313,6 +368,7 @@ public class HederaLedgerTest {
 		subject.begin();
 		AccountID a = subject.create(genesis, 1_000L, new HederaAccountCustomizer().memo("a"));
 		System.out.println(ledger.changeSetSoFar());
+		subject.netTransfersInTxn();
 		subject.commit();
 		System.out.println(ledger.changeSetSoFar());
 		// and:
@@ -348,6 +404,7 @@ public class HederaLedgerTest {
 		AccountID a = subject.create(genesis, 1_000L, new HederaAccountCustomizer().memo("a"));
 		subject.destroy(a);
 		System.out.println(ledger.changeSetSoFar());
+		subject.netTransfersInTxn();
 
 		// then:
 		assertThrows(InconsistentAdjustmentsException.class, () -> subject.commit());
@@ -363,6 +420,7 @@ public class HederaLedgerTest {
 		subject.spawn(a, 1_000L, new HederaAccountCustomizer().memo("a"));
 		subject.destroy(a);
 		System.out.println(ledger.changeSetSoFar());
+		subject.netTransfersInTxn();
 		subject.commit();
 
 		// then:
@@ -395,6 +453,7 @@ public class HederaLedgerTest {
 		// when:
 		subject.begin();
 		AccountID a = subject.create(genesis, 1_000L, new HederaAccountCustomizer().memo("a"));
+		subject.netTransfersInTxn();
 		subject.commit();
 
 		// then:
@@ -408,6 +467,7 @@ public class HederaLedgerTest {
 		// when:
 		subject.begin();
 		AccountID a = subject.create(genesis, 1_000L, new HederaAccountCustomizer().memo("a"));
+		subject.netTransfersInTxn();
 		subject.commit();
 
 		// then:
@@ -834,6 +894,7 @@ public class HederaLedgerTest {
 
 		// when:
 		subject.begin();
+		subject.netTransfersInTxn();
 		subject.commit();
 		subject.begin();
 		subject.rollback();

@@ -80,6 +80,8 @@ public class HederaLedger {
 			.thenComparingLong(AccountID::getShardNum)
 			.thenComparingLong(AccountID::getRealmNum);
 
+	TransferList.Builder lastNetTransfers;
+
 	private final EntityIdSource ids;
 	private final AccountRecordsHistorian historian;
 	private final ScopedDuplicateClassifier duplicateClassifier;
@@ -112,11 +114,32 @@ public class HederaLedger {
 	}
 
 	public void commit() {
-		throwIfPendingStateIsInconsistent();
 		historian.addNewRecords();
+		throwIfPendingStateIsInconsistent();
 		duplicateClassifier.incorporateCommitment();
 		ledger.commit();
 		priorBalances.clear();
+	}
+
+	public void updateLastNetTransfers(AccountID givenFrom, AccountID givenTo, long adjustment) {
+		updateLastNetTransfers(givenFrom, -1 * adjustment);
+		updateLastNetTransfers(givenTo, adjustment);
+	}
+
+	private void updateLastNetTransfers(AccountID given, long adjustment) {
+		for (AccountAmount.Builder aa : lastNetTransfers.getAccountAmountsBuilderList()) {
+			if (aa.getAccountID().equals(given)) {
+				aa.setAmount(aa.getAmount() + adjustment);
+				return;
+			}
+		}
+		lastNetTransfers.addAccountAmounts(AccountAmount.newBuilder()
+				.setAccountID(given)
+				.setAmount(adjustment));
+	}
+
+	public TransferList lastNetTransfers() {
+		return lastNetTransfers.build();
 	}
 
 	public TransferList netTransfersInTxn() {
@@ -125,14 +148,14 @@ public class HederaLedger {
 		/* Note we must sort here to ensure a deterministic order
 		* of transfers in the list (an invalid state signature
 		* exception is sure to appear otherwise!) */
-		return TransferList.newBuilder().addAllAccountAmounts(
+		lastNetTransfers = TransferList.newBuilder().addAllAccountAmounts(
 			priorBalances.keySet().stream()
 					.sorted(ACCOUNT_ID_COMPARATOR)
 					.filter(ledger::exists)
 					.map(this::netAdjustmentInTxn)
 					.filter(aa -> aa.getAmount() != 0)
-					.collect(toList())
-		).build();
+					.collect(toList()));
+		return lastNetTransfers();
 	}
 
 	public String currentChangeSet() {
@@ -287,7 +310,9 @@ public class HederaLedger {
 	}
 
 	private void throwIfPendingStateIsInconsistent() {
-		if (!isNetZeroAdjustment(netTransfersInTxn())) {
+		/* *IMPORTANT* This assumes the record historian called netTransfersInTxn
+		at least once _and_ updated lastNetTransfers for any additional fees charged. */
+		if (!isNetZeroAdjustment(lastNetTransfers())) {
 			throw new InconsistentAdjustmentsException();
 		}
 	}

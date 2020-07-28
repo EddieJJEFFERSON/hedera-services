@@ -29,6 +29,7 @@ import com.hederahashgraph.api.proto.java.ResponseCodeEnum;
 import com.hederahashgraph.api.proto.java.TopicID;
 import com.hederahashgraph.api.proto.java.TransactionRecord;
 import com.hedera.services.legacy.core.jproto.JKey;
+import com.hederahashgraph.api.proto.java.TransferList;
 
 import java.time.Instant;
 
@@ -111,6 +112,8 @@ public interface TransactionContext {
 	 * @return the historical record of processing the current txn thus far.
 	 */
 	TransactionRecord recordSoFar();
+
+	TransactionRecord updatedToInclude(TransferList withNewFees);
 
 	/**
 	 * Gets an accessor to the consensus {@link com.swirlds.common.Transaction}

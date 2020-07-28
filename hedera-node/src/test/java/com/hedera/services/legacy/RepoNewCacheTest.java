@@ -223,6 +223,7 @@ public class RepoNewCacheTest {
 
     track1.rollback();
 
+    ledger.netTransfersInTxn();
     repository.commit();
     ledger.commit();
 

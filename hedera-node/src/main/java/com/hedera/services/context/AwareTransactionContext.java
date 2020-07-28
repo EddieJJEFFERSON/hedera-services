@@ -74,6 +74,7 @@ public class AwareTransactionContext implements TransactionContext {
 	private Timestamp consensusTimestamp;
 	private ByteString hash;
 	private ResponseCodeEnum statusSoFar;
+	private TransactionRecord.Builder recordSoFar;
 	private PlatformTxnAccessor accessor;
 	private Consumer<TransactionRecord.Builder> recordConfig = noopRecordConfig;
 	private Consumer<TransactionReceipt.Builder> receiptConfig = noopReceiptConfig;
@@ -132,6 +133,16 @@ public class AwareTransactionContext implements TransactionContext {
 	}
 
 	@Override
+	public TransactionRecord updatedToInclude(TransferList newFees) {
+		long amount = ctx.charging().totalNonThresholdFeesChargedToPayer() + otherNonThresholdFees;
+
+		recordSoFar.setTransferList(newFees);
+		recordSoFar.setTransactionFee(amount);
+
+		return recordSoFar.build();
+	}
+
+	@Override
 	public TransactionRecord recordSoFar() {
 		long amount = ctx.charging().totalNonThresholdFeesChargedToPayer() + otherNonThresholdFees;
 
@@ -148,15 +159,16 @@ public class AwareTransactionContext implements TransactionContext {
 				.setConsensusTimestamp(consensusTimestamp);
 
 		recordConfig.accept(record);
+		recordSoFar = record;
 
-		return record.build();
+		return recordSoFar.build();
 	}
 
 	private void logItemized() {
 		Transaction signedTxn = accessor().getSignedTxn4Log();
 		String readableTransferList = MiscUtils.readableTransferList(itemizedRepresentation());
 		log.debug(
-				"Transfer list with temized fees for {} is {}",
+				"Transfer list with itemized fees for {} is {}",
 				signedTxn,
 				readableTransferList);
 	}
