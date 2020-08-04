@@ -891,7 +891,7 @@ workflows:
   nightly-services-regression:
     triggers:
       - schedule:
-          cron: "15 10 * * *"
+          cron: "19 10 * * *"
           filters:
             branches:
               only:
@@ -1316,7 +1316,7 @@ workflows:
               ignore:
                 - /.*-PERF/
                 - /.*-REGRESSION/
-                - JRS-in-circleCI
+                - 0379-D-Fix-Comments-Nightly
           workflow-name: "Continuous integration"
       - start-singlejob-testnet:
           requires:
