@@ -889,13 +889,13 @@ executors:
 
 workflows:
   nightly-services-regression:
-    triggers:
-      - schedule:
-          cron: "34 10 * * *"
-          filters:
-            branches:
-              only:
-                - 0379-D-Fix-Comments-Nightly
+#    triggers:
+#      - schedule:
+#          cron: "34 10 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - 0379-D-Fix-Comments-Nightly
 #    triggers:
 #      - schedule:
 #          cron: "26 10 * * *"
@@ -905,6 +905,10 @@ workflows:
 #                - 0379-D-Fix-Comments-Nightly
     jobs:
       - build-platform-and-services:
+          filters:
+            branches:
+              only:
+                - 0379-D-Fix-Comments-Nightly
           workflow-name: "nightly-services-regression"
 
   custom-migration:
