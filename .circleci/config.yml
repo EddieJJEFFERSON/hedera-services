@@ -891,17 +891,20 @@ workflows:
   nightly-services-regression:
     triggers:
       - schedule:
-          cron: "26 10 * * *"
+          cron: "34 10 * * *"
           filters:
             branches:
               only:
                 - 0379-D-Fix-Comments-Nightly
-    jobs:
-      - build-platform-and-services:
+#    triggers:
+#      - schedule:
+#          cron: "26 10 * * *"
 #          filters:
 #            branches:
-#               only:
-#                  - JRS-in-circleCI
+#              only:
+#                - 0379-D-Fix-Comments-Nightly
+    jobs:
+      - build-platform-and-services:
           workflow-name: "nightly-services-regression"
 
   custom-migration:
