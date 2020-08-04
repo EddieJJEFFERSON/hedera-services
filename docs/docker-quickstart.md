@@ -25,9 +25,11 @@ cd hedera-services
 
 Ensure the Docker Compose [.env file](../.env) has the following contents:
 ```
-TAG=0.5.0
+TAG=0.6.0
 REGISTRY_PREFIX=gcr.io/hedera-registry/
 ```
+
+You can now [start the network](#starting-the-compose-network).
 
 ### Building locally
 
@@ -74,7 +76,7 @@ node_0      | 2020-04-29 15:05:28.815 INFO  133  ServicesMain - Now current plat
 node_1      | 2020-04-29 15:05:28.854 INFO  133  ServicesMain - Now current platform status = ACTIVE in HederaNode#1.
 ```
 
-Notice that the Hedera Services and Swirlds Platform logs for each node are externalized 
+Notice that the Hedera Services and  Platform logs for each node are externalized 
 under paths of the form _compose-network/node0/output/_. 
 
 You can now run operations against your local network using any HAPI client. For example:
@@ -82,12 +84,6 @@ You can now run operations against your local network using any HAPI client. For
 cd test-clients
 ../mvnw exec:java -Dexec.mainClass=com.hedera.services.bdd.suites.compose.LocalNetworkCheck -Dexec.cleanupDaemonThreads=false
 ```
-
-The DER-encoded Ed25519 private key for the treasury account (`0.0.2`) on 
-this local network is stored in the PEM file [genesis.pem](../test-clients/src/main/resource/genesis.pem)
-encrypted with a PKCS8 AES-256-CBC cipher with passphrase "`swirlds`". For an example of 
-reading this key programmatically, see 
-[here](../test-clients/src/main/java/com/hedera/services/bdd/suites/utils/keypairs/Ed25519KeyStore.java#128).
 
 ## Stopping or reinitializing the Compose network
 
@@ -97,8 +93,11 @@ _compose-network/node0/saved/com.hedera.services.ServicesMain/0/hedera/_.
 
 To stop the network, use `Ctrl+C` (or `docker-compose stop` if running with detached containers).
 
-Assuming a clean shutdown of the containers, when you restart with `docker-compose start`, 
-the network will load from its last saved state. To completely reinitialize the network, use:
+Given a clean shutdown of the containers, when you restart with `docker-compose start`, 
+the network will load from its last saved state. 
+
+If an you have a problem restarting the network after stopping, you can simply re-initialize
+it via:
 ```
 docker-compose down
 rm -rf compose-network
@@ -110,7 +109,7 @@ rm -rf compose-network
 
 In general, the `services-node` image will be run with three bind mounts---one to provide
 the configuration and bootstrap assets; one to externalize the saved state data; and one to
-externalize the Hedera Services and Swirlds Platform logs. For example:
+externalize the Hedera Services and Platform logs. For example:
 
 ```
   docker run -d --name node0 \
@@ -133,4 +132,4 @@ all of which would be desirable for a production use case. The image also
 serves the gRPC API only on port 50211, without TLS.
 
 We suggest using the image only in enviroments such as the Docker Compose 
-network defined by the [docker-compose.yml](docker-compose.yml) in this repository.
+network defined by the [docker-compose.yml](../docker-compose.yml) in this repository.
